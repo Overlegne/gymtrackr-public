@@ -1,14 +1,10 @@
-
 import exercisesData from './exercises.json';
 import { getSettings } from './settings-store';
 
 /**
  * GYMTRACKR LOCAL-FIRST DATA LAYER
- * This file implements a durable asynchronous storage engine using IndexedDB.
- * Each device maintains its own isolated database. No cloud authentication required.
  */
 
-// Types
 export type MuscleGroup = 'Chest' | 'Back' | 'Legs' | 'Shoulders' | 'Arms' | 'Abs' | 'Cardio';
 export type Equipment = 'Dumbbell' | 'Barbell' | 'Machine' | 'Cable' | 'Bodyweight';
 export type LoggingType = 'weight_reps' | 'duration';
@@ -73,7 +69,7 @@ export interface WorkoutLog {
   routineId: string;
   routineName: string;
   routineColor: string;
-  date: string; // ISO YYYY-MM-DD
+  date: string;
   totalVolume?: number;
   durationSeconds?: number;
 }
@@ -119,8 +115,7 @@ export interface ProgressionSuggestion {
   lastStatsText: string;
 }
 
-// Storage Constants
-const DB_NAME = 'gymtrackr_local_db';
+const DB_NAME = 'gymtrackr_local_db_v2';
 const DB_VERSION = 1;
 const STORES = {
   EXERCISES: 'exercises',
@@ -132,16 +127,17 @@ const STORES = {
   ACTIVE_SESSION: 'active_session'
 };
 
-// IndexedDB Helper
 const openDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
-    if (typeof window === 'undefined') return reject('Not in browser');
+    if (typeof window === 'undefined' || typeof indexedDB === 'undefined') {
+      return reject('Storage not available in this environment');
+    }
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
       Object.values(STORES).forEach(store => {
         if (!db.objectStoreNames.contains(store)) {
-          db.createObjectStore(store, store === STORES.SUMMARY || store === STORES.ACTIVE_SESSION ? { keyPath: 'id' } : { keyPath: 'id' });
+          db.createObjectStore(store, { keyPath: 'id' });
         }
       });
     };
@@ -150,52 +146,57 @@ const openDB = (): Promise<IDBDatabase> => {
   });
 };
 
-// Generic CRUD helpers
 async function dbGet<T>(storeName: string, id: string): Promise<T | null> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(storeName, 'readonly');
-    const store = transaction.objectStore(storeName);
-    const request = store.get(id);
-    request.onsuccess = () => resolve(request.result || null);
-    request.onerror = () => reject(request.error);
-  });
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(storeName, 'readonly');
+      const store = transaction.objectStore(storeName);
+      const request = store.get(id);
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error);
+    });
+  } catch { return null; }
 }
 
 async function dbGetAll<T>(storeName: string): Promise<T[]> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(storeName, 'readonly');
-    const store = transaction.objectStore(storeName);
-    const request = store.getAll();
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(storeName, 'readonly');
+      const store = transaction.objectStore(storeName);
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  } catch { return []; }
 }
 
 async function dbPut<T>(storeName: string, data: T): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(storeName, 'readwrite');
-    const store = transaction.objectStore(storeName);
-    const request = store.put(data);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(storeName, 'readwrite');
+      const store = transaction.objectStore(storeName);
+      const request = store.put(data);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  } catch { return; }
 }
 
 async function dbDelete(storeName: string, id: string): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(storeName, 'readwrite');
-    const store = transaction.objectStore(storeName);
-    const request = store.delete(id);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(storeName, 'readwrite');
+      const store = transaction.objectStore(storeName);
+      const request = store.delete(id);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  } catch { return; }
 }
-
-// --- Domain Logic ---
 
 const KG_TO_LB = 2.20462;
 
@@ -251,7 +252,7 @@ export const addExercise = async (exercise: Omit<Exercise, 'id' | 'imageUrl'>): 
     imageUrl: imageData.url,
     imageNeedsReview: imageData.needsReview,
     ...coaching,
-    ...exercise // Allow overrides from UI
+    ...exercise
   };
   await dbPut(STORES.EXERCISES, newEx);
   return newEx;
@@ -265,8 +266,9 @@ export const getRoutines = async (): Promise<Routine[]> => {
   const stored = await dbGetAll<Routine>(STORES.ROUTINES);
   if (stored.length === 0) {
     const exercises = await getExercises();
+    if (exercises.length === 0) return [];
     const initial: Routine[] = [
-      { id: 'r1', name: 'Full Body Strength', exercises: [exercises[0], exercises[5] || exercises[0]], color: '#8b5cf6' },
+      { id: 'r1', name: 'Full Body Starter', exercises: exercises.slice(0, 4), color: '#8b5cf6' },
     ];
     for (const r of initial) await dbPut(STORES.ROUTINES, r);
     return initial;
@@ -324,7 +326,6 @@ export const saveAllWorkoutStats = async (exercises: RoutineExercise[]): Promise
 
     const prevBestWeight = Math.max(...exHistory.map(h => h.weight), 0);
     const prevBestVolume = Math.max(...exHistory.map(h => h.volume), 0);
-    const prevBestE1RM = Math.max(...exHistory.map(h => h.e1RM), 0);
 
     const currentStats = await getExerciseStats(ex.id);
 
@@ -348,10 +349,10 @@ export const saveAllWorkoutStats = async (exercises: RoutineExercise[]): Promise
       summary.exerciseCount++;
       muscleCounts[ex.muscleGroup] = (muscleCounts[ex.muscleGroup] || 0) + validSets;
 
-      if (maxWeight > prevBestWeight && maxWeight > 0) {
-        exerciseRecords.push(`New Max Weight: ${kgToDisplay(maxWeight, settings.unitSystem)}${unitLabel} (+${kgToDisplay(maxWeight - prevBestWeight, settings.unitSystem)}${unitLabel})`);
+      if (maxWeight > prevBestWeight && maxWeight > 0 && prevBestWeight > 0) {
+        exerciseRecords.push(`New Max Weight: ${kgToDisplay(maxWeight, settings.unitSystem)}${unitLabel}`);
       }
-      if (totalVolume > prevBestVolume && totalVolume > 0) {
+      if (totalVolume > prevBestVolume && totalVolume > 0 && prevBestVolume > 0) {
         exerciseRecords.push(`New Volume PR: ${Math.round(kgToDisplay(totalVolume, settings.unitSystem))}${unitLabel}`);
       }
 
@@ -382,14 +383,14 @@ export const saveAllWorkoutStats = async (exercises: RoutineExercise[]): Promise
   const allLogs = await dbGetAll<WorkoutLog>(STORES.LOGS);
   const prevMaxVol = Math.max(...allLogs.map(l => l.totalVolume || 0), 0);
   if (summary.totalVolume > prevMaxVol && allLogs.length > 0) {
-    summary.globalRecords.push(`New Total Volume PR: ${Math.round(kgToDisplay(summary.totalVolume, settings.unitSystem))}${unitLabel}`);
+    summary.globalRecords.push(`New Total Volume PR!`);
   }
 
   const totalSets = Object.values(muscleCounts).reduce((a, b) => a + b, 0);
   summary.muscleSplit = Object.entries(muscleCounts).map(([muscle, count]) => ({
     muscle: muscle as MuscleGroup,
     count,
-    percentage: Math.round((count / totalSets) * 100)
+    percentage: Math.round((count / (totalSets || 1)) * 100)
   })).sort((a, b) => b.count - a.count);
   
   await dbPut(STORES.SUMMARY, { id: 'latest', ...summary });
@@ -443,17 +444,14 @@ export const clearActiveWorkoutSession = async () => {
   await dbDelete(STORES.ACTIVE_SESSION, 'current');
 };
 
-// Suggestions & Analysis (Proxies to history)
-
 export const detectPlateau = async (exerciseId: string): Promise<PlateauAnalysis> => {
   const history = await getExerciseHistory(exerciseId);
-  if (history.length < 4) return { status: 'Progressing', reason: 'Collecting initial data...', suggestions: [] };
+  if (history.length < 4) return { status: 'Progressing', reason: 'New movement detected.', suggestions: [] };
   const recent = history.slice(-3);
   const prev = history[history.length - 4];
-  const isProgressing = Math.max(...recent.map(h => h.weight)) > prev.weight * 1.01 || Math.max(...recent.map(h => h.volume)) > prev.volume * 1.01;
-  if (isProgressing) return { status: 'Progressing', reason: 'Consistently hitting new records.', suggestions: [] };
-  const tips = ["Increase rep target", "Add extra set", "Swap variation", "Slow eccentrics", "Strategic reset"];
-  return { status: 'Plateau', reason: `Flat for ${recent.length} sessions.`, suggestions: tips.sort(() => 0.5 - Math.random()).slice(0, 2) };
+  const isProgressing = Math.max(...recent.map(h => h.weight)) > prev.weight;
+  if (isProgressing) return { status: 'Progressing', reason: 'Still hitting PRs.', suggestions: [] };
+  return { status: 'Plateau', reason: `Stuck for 3 sessions.`, suggestions: ["Add 1 set", "Slow tempo"] };
 };
 
 export const getProgressionSuggestion = async (exerciseId: string): Promise<ProgressionSuggestion | null> => {
@@ -467,14 +465,10 @@ export const getProgressionSuggestion = async (exerciseId: string): Promise<Prog
   if (!ex) return null;
   const lastText = ex.loggingType === 'duration' ? `${last.durationSeconds}s` : `${last.weight > 0 ? kgToDisplay(last.weight, settings.unitSystem) + unitLabel + ' x ' : ''}${last.reps} reps`;
 
-  if (ex.loggingType === 'duration') return { type: 'increase_duration', suggestedDuration: (last.durationSeconds || 0) + 10, reason: "Improve endurance.", lastStatsText: lastText };
-  const plateau = await detectPlateau(exerciseId);
-  if (plateau.status === 'Plateau') return { type: 'deload', suggestedWeight: last.weight * 0.9, suggestedReps: last.reps + 2, reason: "Break plateau.", lastStatsText: lastText };
-  if (last.reps >= 12) return { type: 'increase_weight', suggestedWeight: last.weight + displayToKg(settings.unitSystem === 'Metric' ? 0.25 : 5, settings.unitSystem), suggestedReps: 8, reason: "Strength build.", lastStatsText: lastText };
-  return { type: 'increase_reps', suggestedWeight: last.weight, suggestedReps: last.reps + 2, reason: "Volume overload.", lastStatsText: lastText };
+  if (ex.loggingType === 'duration') return { type: 'increase_duration', suggestedDuration: (last.durationSeconds || 0) + 5, reason: "Consistency.", lastStatsText: lastText };
+  if (last.reps >= 12) return { type: 'increase_weight', suggestedWeight: last.weight + 1, suggestedReps: 8, reason: "Overload.", lastStatsText: lastText };
+  return { type: 'increase_reps', suggestedWeight: last.weight, suggestedReps: last.reps + 1, reason: "Volume.", lastStatsText: lastText };
 };
-
-// Utils
 
 const mapBodyPart = (part: string | null): MuscleGroup => {
   if (!part) return 'Cardio';
@@ -493,28 +487,22 @@ const determineEquipment = (name: string): Equipment => {
   if (n.includes('dumbbell') || n.includes('db')) return 'Dumbbell';
   if (n.includes('barbell') || n.includes('bb')) return 'Barbell';
   if (n.includes('cable')) return 'Cable';
-  if (n.includes('machine') || n.includes('pressdown') || n.includes('extension')) return 'Machine';
+  if (n.includes('machine') || n.includes('pressdown')) return 'Machine';
   return 'Bodyweight';
 };
 
 const determineLoggingType = (name: string): LoggingType => {
   const n = name.toLowerCase();
-  if (n.includes('plank') || n.includes('hold') || n.includes('hang')) return 'duration';
+  if (n.includes('plank') || n.includes('hold')) return 'duration';
   return 'weight_reps';
 };
 
 export function getExerciseImage(name: string, id: string, muscleGroup: MuscleGroup, equipment: Equipment): { url: string; needsReview: boolean } {
-  const exerciseImageMap: Record<string, string> = { barbell_bench_press: 'bench_press', barbell_deadlift: 'deadlift', barbell_squat: 'barbell_squat', plank: 'plank_core', running_treadmill: 'treadmill_running' };
-  const mapped = exerciseImageMap[normalizeExerciseName(id)];
-  if (mapped) return { url: `https://picsum.photos/seed/${mapped}/600/400`, needsReview: false };
-  return { url: `https://picsum.photos/seed/${normalizeExerciseName(muscleGroup + equipment)}/600/400`, needsReview: true };
+  return { url: `https://picsum.photos/seed/${normalizeExerciseName(name)}/600/400`, needsReview: true };
 }
 
 export const getCoachingData = (name: string, equipment: Equipment, muscle: MuscleGroup) => {
-  if (muscle === 'Chest') return { cues: ["Retract blades", "Squeeze at top"], mistakes: ["Elbow flare"], secondaryMuscles: ["Triceps"] };
-  if (muscle === 'Back') return { cues: ["Pull with elbows", "Neutral spine"], mistakes: ["Body swing"], secondaryMuscles: ["Biceps"] };
-  if (muscle === 'Legs') return { cues: ["Heel drive", "Knees out"], mistakes: ["Knee cave"], secondaryMuscles: ["Glutes"] };
-  return { cues: ["Control movement"], mistakes: ["Using momentum"] };
+  return { cues: ["Slow control", "Full range"], mistakes: ["Rushing"], secondaryMuscles: [] };
 };
 
 export const ROUTINE_COLORS = [

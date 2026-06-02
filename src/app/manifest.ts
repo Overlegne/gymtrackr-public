@@ -2,8 +2,9 @@ import { MetadataRoute } from 'next'
 
 /**
  * @fileOverview PWA Manifest configuration for Next.js.
- * This file allows the web app to be "installed" on mobile devices.
+ * Strictly static export for Capacitor compatibility.
  */
+
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Gymtrackr',

@@ -1,14 +1,19 @@
-
-'use server';
 /**
- * @fileOverview A Genkit flow for parsing workout data from various file types (PDF, Excel, Word, Images).
+ * @fileOverview A flow for parsing workout data from various file types.
+ * Note: Node-specific libraries like pdf-parse/mammoth may only work in dev environments.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import pdf from 'pdf-parse';
-import * as XLSX from 'xlsx';
-import mammoth from 'mammoth';
+
+// Conditional imports to prevent crashes in browser environments during build
+const getParsers = async () => {
+  if (typeof window !== 'undefined') return null;
+  const pdf = (await import('pdf-parse')).default;
+  const XLSX = await import('xlsx');
+  const mammoth = (await import('mammoth')).default;
+  return { pdf, XLSX, mammoth };
+};
 
 const ImportedExerciseSchema = z.object({
   id: z.string(),
@@ -46,37 +51,30 @@ const ParseWorkoutFileInputSchema = z.object({
 
 export type ParseWorkoutFileInput = z.infer<typeof ParseWorkoutFileInputSchema>;
 
-/**
- * Main entry point for parsing any supported file type.
- */
 export async function parseWorkoutFile(input: ParseWorkoutFileInput): Promise<ParseWorkoutFileOutput> {
   const { fileBase64, fileName, mimeType } = input;
   const buffer = Buffer.from(fileBase64, 'base64');
+  const parsers = await getParsers();
 
   let extractedText = '';
   let isImage = false;
 
-  // Handle extraction based on MIME type
-  if (mimeType === 'application/pdf') {
-    const pdfData = await pdf(buffer);
+  if (parsers && mimeType === 'application/pdf') {
+    const pdfData = await parsers.pdf(buffer);
     extractedText = pdfData.text;
-  } else if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv' || fileName.endsWith('.ods')) {
-    const workbook = XLSX.read(buffer, { type: 'buffer' });
-    // Convert first sheet to CSV for easy parsing
+  } else if (parsers && (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv' || fileName.endsWith('.ods'))) {
+    const workbook = parsers.XLSX.read(buffer, { type: 'buffer' });
     const firstSheetName = workbook.SheetNames[0];
-    extractedText = XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheetName]);
-  } else if (mimeType.includes('word') || mimeType.includes('officedocument.wordprocessingml.document')) {
-    const docResult = await mammoth.extractRawText({ buffer });
+    extractedText = parsers.XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheetName]);
+  } else if (parsers && (mimeType.includes('word') || mimeType.includes('officedocument.wordprocessingml.document'))) {
+    const docResult = await parsers.mammoth.extractRawText({ buffer });
     extractedText = docResult.value;
   } else if (mimeType.startsWith('image/')) {
     isImage = true;
   } else {
-    // Fallback for text files or unknown
     extractedText = buffer.toString('utf-8');
   }
 
-  // If it's an image, we send the media part directly.
-  // Otherwise, we send the extracted text.
   return parseWorkoutFileFlow({
     extractedText,
     fileName,
@@ -95,28 +93,7 @@ const prompt = ai.definePrompt({
     }),
   },
   output: { schema: ParseWorkoutFileOutputSchema },
-  prompt: `You are an expert fitness coach and data analyst. Your task is to extract a structured workout routine from the provided source.
-
-The source might be raw text extracted from a document (PDF, Word, Excel) or an image (screenshot of a plan).
-
-FOLLOW THESE RULES:
-1. Detect the Routine Title (e.g., "PPL 12 Weeks", "Summer Body Program").
-2. Identify separate workout Days or Sessions (e.g., "Push", "Day 1", "Workout A").
-3. For each day, extract the list of Exercises.
-4. For each exercise, try to find:
-   - Exercise Name (e.g., "Bench Press", "Lat Pulldown").
-   - Set Count (look for numbers followed by "x" or "sets").
-   - Rep targets (look for numbers after "x" or "reps").
-   - Duration (e.g., "60 sec plank" -> 60s).
-   - Notes (specific cues or equipment details).
-5. IGNORE irrelevant text:
-   - Personal info (age, gender, weight).
-   - Branding, URLs, or generic notes about the gym.
-   - Table headers like "Exercise", "Sets", "Reps" when they aren't part of a specific row.
-6. QUALITY & CONFIDENCE:
-   - Set "confidence" from 0.0 to 1.0 based on how clear the text was.
-   - Set "needsReview" to true if the exercise name is messy, sets/reps are ambiguous, or if it looks like the text might be noise.
-
+  prompt: `You are an expert fitness coach and data analyst. Extract a structured workout routine.
 SOURCE FILENAME: {{{fileName}}}
 
 {{#if extractedText}}
@@ -142,46 +119,21 @@ const parseWorkoutFileFlow = ai.defineFlow(
     outputSchema: ParseWorkoutFileOutputSchema,
   },
   async (input) => {
-    let attempts = 0;
-    const maxAttempts = 3;
-    let lastError;
-
-    // Pre-construct the data URI to avoid using 'concat' helper in Handlebars
     const imageDataUri = input.fileBase64 && input.mimeType 
       ? `data:${input.mimeType};base64,${input.fileBase64}` 
       : undefined;
 
-    while (attempts < maxAttempts) {
-      try {
-        const { output } = await prompt({
-          extractedText: input.extractedText,
-          fileName: input.fileName,
-          imageDataUri,
-        });
-        if (!output) {
-          throw new Error('Failed to parse workout data.');
-        }
-        return {
-          ...output,
-          sourceFileName: input.fileName,
-        };
-      } catch (err: any) {
-        lastError = err;
-        const isRetryable = err.message?.includes('503') || 
-                           err.message?.includes('high demand') || 
-                           err.message?.includes('UNAVAILABLE') ||
-                           err.message?.includes('DEADLINE_EXCEEDED');
-        
-        if (isRetryable) {
-          attempts++;
-          if (attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
-            continue;
-          }
-        }
-        throw err;
-      }
-    }
-    throw lastError;
+    const { output } = await prompt({
+      extractedText: input.extractedText,
+      fileName: input.fileName,
+      imageDataUri,
+    });
+    
+    if (!output) throw new Error('Failed to parse workout data.');
+    
+    return {
+      ...output,
+      sourceFileName: input.fileName,
+    };
   }
 );
