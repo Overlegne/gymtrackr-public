@@ -2,13 +2,19 @@
 {
   "placeholderImages": [
     { "id": "bench", "description": "Barbell Bench Press", "imageUrl": "https://picsum.photos/seed/bench/600/400", "imageHint": "bench press" },
+    { "id": "incbench", "description": "Incline Bench Press", "imageUrl": "https://picsum.photos/seed/incbench/600/400", "imageHint": "incline bench" },
+    { "id": "dbbench", "description": "Dumbbell Bench Press", "imageUrl": "https://picsum.photos/seed/dbbench/600/400", "imageHint": "dumbbell press" },
     { "id": "squat", "description": "Barbell Squat", "imageUrl": "https://picsum.photos/seed/squat/600/400", "imageHint": "barbell squat" },
-    { "id": "deadlift", "description": "Conventional Deadlift", "imageUrl": "https://picsum.photos/seed/deadlift/600/400", "imageHint": "deadlift" },
+    { "id": "deadlift", "description": "Conventional Deadlift", "imageUrl": "https://picsum.photos/seed/deadlift/600/400", "imageHint": "deadlift exercise" },
     { "id": "shoulder", "description": "Shoulder Press", "imageUrl": "https://picsum.photos/seed/shoulder/600/400", "imageHint": "shoulder press" },
     { "id": "bicep", "description": "Bicep Curl", "imageUrl": "https://picsum.photos/seed/bicep/600/400", "imageHint": "bicep curl" },
     { "id": "tricep", "description": "Tricep Extension", "imageUrl": "https://picsum.photos/seed/tricep/600/400", "imageHint": "tricep pushdown" },
     { "id": "back", "description": "Lat Pulldown", "imageUrl": "https://picsum.photos/seed/back/600/400", "imageHint": "lat pulldown" },
     { "id": "abs", "description": "Core Exercise", "imageUrl": "https://picsum.photos/seed/abs/600/400", "imageHint": "abs workout" },
-    { "id": "cardio", "description": "Cardio Training", "imageUrl": "https://picsum.photos/seed/cardio/600/400", "imageHint": "running treadmill" }
+    { "id": "cardio", "description": "Cardio Training", "imageUrl": "https://picsum.photos/seed/cardio/600/400", "imageHint": "running treadmill" },
+    { "id": "row", "description": "Barbell Row", "imageUrl": "https://picsum.photos/seed/row/600/400", "imageHint": "bent row" },
+    { "id": "lpress", "description": "Leg Press", "imageUrl": "https://picsum.photos/seed/lpress/600/400", "imageHint": "leg press" },
+    { "id": "rdl", "description": "Romanian Deadlift", "imageUrl": "https://picsum.photos/seed/rdl/600/400", "imageHint": "stiff deadlift" },
+    { "id": "skull", "description": "Skull Crushers", "imageUrl": "https://picsum.photos/seed/skull/600/400", "imageHint": "tricep extension" }
   ]
 }

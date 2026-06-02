@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { BottomNav } from '@/components/BottomNav';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { getRoutines, type Routine } from '@/lib/store';
+import { getRoutines, getExercises, type Routine } from '@/lib/store';
 import { Play, Calendar, Trophy, ArrowRight, Dumbbell } from 'lucide-react';
 import Link from 'next/link';
 
