@@ -15,12 +15,10 @@ export function WorkoutCalendar() {
     setLogs(getWorkoutLogs())
   }, [])
 
-  // Map logs to dates for easier lookups
   const logsByDate = React.useMemo(() => {
     const map: Record<string, WorkoutLog[]> = {}
     logs.forEach(log => {
-      // Use local date string to avoid timezone shifts
-      const d = log.date // Expected format YYYY-MM-DD
+      const d = log.date
       if (!map[d]) map[d] = []
       map[d].push(log)
     })
@@ -28,15 +26,15 @@ export function WorkoutCalendar() {
   }, [logs])
 
   return (
-    <div className="bg-white rounded-3xl p-4 shadow-sm border space-y-3">
-      <div className="flex items-center justify-between px-2">
-        <h3 className="font-bold text-base text-primary">Activiteit</h3>
-        <Badge variant="secondary" className="bg-primary/5 text-primary text-[10px] border-none">
+    <div className="bg-white rounded-3xl p-5 shadow-sm border space-y-4">
+      <div className="flex items-center justify-between px-1">
+        <h3 className="font-bold text-lg text-primary">Activiteit</h3>
+        <Badge variant="secondary" className="bg-primary/5 text-primary text-[10px] border-none px-2 py-0.5">
           {logs.length} sessies
         </Badge>
       </div>
       
-      <div className="flex justify-center border-t pt-2">
+      <div className="flex justify-center">
         <Calendar
           mode="single"
           selected={date}
@@ -47,31 +45,31 @@ export function WorkoutCalendar() {
           className="p-0 w-full"
           classNames={{
             months: "w-full",
-            month: "space-y-4 w-full",
-            caption: "flex justify-center pt-1 relative items-center mb-2",
+            month: "w-full space-y-4",
+            caption: "flex justify-center pt-1 relative items-center mb-4",
             caption_label: "text-sm font-bold text-muted-foreground",
             nav: "space-x-1 flex items-center",
             nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
-            table: "w-full border-collapse space-y-1",
-            head_row: "grid grid-cols-7 w-full",
-            head_cell: "text-muted-foreground rounded-md font-bold text-[10px] uppercase text-center",
-            row: "grid grid-cols-7 w-full mt-1",
-            cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 h-10 w-full flex items-center justify-center",
-            day: "h-8 w-8 p-0 font-medium transition-all rounded-full flex items-center justify-center hover:bg-muted",
-            day_today: "bg-accent/20 text-accent-foreground border-2 border-accent/30",
+            table: "w-full border-collapse",
+            head_row: "flex w-full justify-between mb-2",
+            head_cell: "text-muted-foreground w-10 font-bold text-[10px] uppercase text-center",
+            row: "flex w-full justify-between mt-1",
+            cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 h-10 w-10 flex items-center justify-center",
+            day: "h-9 w-9 p-0 font-medium transition-all rounded-full flex items-center justify-center hover:bg-muted",
+            day_today: "bg-accent/10 text-accent-foreground border-2 border-accent/20",
             day_selected: "bg-primary text-white hover:bg-primary hover:text-white focus:bg-primary focus:text-white",
           }}
           components={{
             DayContent: ({ date: dayDate }) => {
               const d = dayDate.getDate();
-              const dateStr = dayDate.toLocaleDateString('en-CA'); // YYYY-MM-DD format
+              const dateStr = dayDate.toLocaleDateString('en-CA');
               const dayLogs = logsByDate[dateStr] || [];
               
               return (
-                <div className="flex flex-col items-center justify-center relative w-full h-full pt-1">
+                <div className="flex flex-col items-center justify-center relative w-full h-full">
                   <span className="z-10">{d}</span>
                   {dayLogs.length > 0 && (
-                    <div className="absolute bottom-0 flex gap-0.5 justify-center w-full pb-1">
+                    <div className="absolute bottom-1 flex gap-0.5 justify-center w-full">
                       {dayLogs.slice(0, 3).map((log) => (
                         <div 
                           key={log.id} 

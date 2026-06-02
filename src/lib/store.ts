@@ -195,9 +195,9 @@ export const DEFAULT_EXERCISES: Exercise[] = [
 
 export const getExercises = (): Exercise[] => {
   if (typeof window === 'undefined') return DEFAULT_EXERCISES;
-  const stored = localStorage.getItem('user_exercises_v10');
+  const stored = localStorage.getItem('user_exercises_v11');
   if (!stored) {
-    localStorage.setItem('user_exercises_v10', JSON.stringify(DEFAULT_EXERCISES));
+    localStorage.setItem('user_exercises_v11', JSON.stringify(DEFAULT_EXERCISES));
     return DEFAULT_EXERCISES;
   }
   return JSON.parse(stored);
@@ -210,36 +210,36 @@ export const addExercise = (exercise: Omit<Exercise, 'id'>) => {
     id: Date.now().toString(),
   };
   exercises.push(newExercise);
-  localStorage.setItem('user_exercises_v10', JSON.stringify(exercises));
+  localStorage.setItem('user_exercises_v11', JSON.stringify(exercises));
   return newExercise;
 };
 
 export const getExerciseStats = (exerciseId: string): ExerciseStats => {
   if (typeof window === 'undefined') return { sets: {} };
-  const allStats = JSON.parse(localStorage.getItem('exercise_stats_per_set_v7') || '{}');
+  const allStats = JSON.parse(localStorage.getItem('exercise_stats_v8') || '{}');
   return allStats[exerciseId] || { sets: {} };
 };
 
 export const saveExerciseSetStats = (exerciseId: string, setIndex: number, weight: number, reps: number) => {
   if (typeof window === 'undefined') return;
-  const allStats = JSON.parse(localStorage.getItem('exercise_stats_per_set_v7') || '{}');
+  const allStats = JSON.parse(localStorage.getItem('exercise_stats_v8') || '{}');
   if (!allStats[exerciseId]) {
     allStats[exerciseId] = { sets: {} };
   }
   allStats[exerciseId].sets[setIndex] = { weight, reps };
-  localStorage.setItem('exercise_stats_per_set_v7', JSON.stringify(allStats));
+  localStorage.setItem('exercise_stats_v8', JSON.stringify(allStats));
 };
 
 export const getRoutines = (): Routine[] => {
   if (typeof window === 'undefined') return [];
-  const stored = localStorage.getItem('user_routines_v8');
+  const stored = localStorage.getItem('user_routines_v9');
   if (!stored) {
     const exercises = getExercises();
     const initial: Routine[] = [
       { id: 'r1', name: 'Full Body Kracht', exercises: [exercises[0], exercises[14], exercises[7], exercises[20]], color: '#8b5cf6' },
       { id: 'r2', name: 'Bovenlichaam Focus', exercises: [exercises[0], exercises[7], exercises[21], exercises[25]], color: '#3b82f6' },
     ];
-    localStorage.setItem('user_routines_v8', JSON.stringify(initial));
+    localStorage.setItem('user_routines_v9', JSON.stringify(initial));
     return initial;
   }
   return JSON.parse(stored);
@@ -253,37 +253,36 @@ export const saveRoutine = (routine: Routine) => {
   } else {
     routines.push(routine);
   }
-  localStorage.setItem('user_routines_v8', JSON.stringify(routines));
+  localStorage.setItem('user_routines_v9', JSON.stringify(routines));
 };
 
 export const deleteRoutine = (id: string) => {
   const routines = getRoutines().filter(r => r.id !== id);
-  localStorage.setItem('user_routines_v8', JSON.stringify(routines));
+  localStorage.setItem('user_routines_v9', JSON.stringify(routines));
 };
 
 export const logWorkout = (routine: Routine) => {
   if (typeof window === 'undefined') return;
-  const logs: WorkoutLog[] = JSON.parse(localStorage.getItem('workout_logs_v2') || '[]');
+  const logs: WorkoutLog[] = JSON.parse(localStorage.getItem('workout_logs_v3') || '[]');
   const newLog: WorkoutLog = {
     id: Date.now().toString(),
     routineId: routine.id,
     routineName: routine.name,
     routineColor: routine.color || '#8b5cf6',
-    date: new Date().toLocaleDateString('en-CA'), // Correct YYYY-MM-DD format
+    date: new Date().toLocaleDateString('en-CA'),
   };
   logs.push(newLog);
-  localStorage.setItem('workout_logs_v2', JSON.stringify(logs));
+  localStorage.setItem('workout_logs_v3', JSON.stringify(logs));
   
-  // Update last performed on routine
   const routines = getRoutines();
   const index = routines.findIndex(r => r.id === routine.id);
   if (index > -1) {
     routines[index].lastPerformed = newLog.date;
-    localStorage.setItem('user_routines_v8', JSON.stringify(routines));
+    localStorage.setItem('user_routines_v9', JSON.stringify(routines));
   }
 };
 
 export const getWorkoutLogs = (): WorkoutLog[] => {
   if (typeof window === 'undefined') return [];
-  return JSON.parse(localStorage.getItem('workout_logs_v2') || '[]');
+  return JSON.parse(localStorage.getItem('workout_logs_v3') || '[]');
 };
