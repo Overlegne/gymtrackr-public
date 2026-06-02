@@ -2,7 +2,7 @@
 "use client"
 
 import { BottomNav } from '@/components/BottomNav';
-import { WorkoutCalendar } from '@/components/WorkoutCalendar';
+import { WorkoutCalendarMonth } from '@/components/WorkoutCalendarMonth';
 import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,7 @@ export default function ActivityPage() {
       </header>
 
       <main className="flex-1 p-5 pb-32">
-        <WorkoutCalendar />
+        <WorkoutCalendarMonth />
       </main>
 
       <BottomNav />
