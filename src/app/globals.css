@@ -1,29 +1,30 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 252 14% 95%; /* Lichte Nevel */
+    --background: 252 14% 95%; /* Default Light Background */
     --foreground: 250 20% 15%;
     --card: 0 0% 100%;
     --card-foreground: 250 20% 15%;
     --popover: 0 0% 100%;
     --popover-foreground: 250 20% 15%;
-    --primary: 250 69% 51%; /* Krachtviolet */
+    --primary: 250 69% 51%; /* Default Strength Violet */
     --primary-foreground: 0 0% 100%;
     --secondary: 250 20% 90%;
     --secondary-foreground: 250 69% 30%;
     --muted: 252 10% 90%;
     --muted-foreground: 250 10% 40%;
-    --accent: 217 100% 65%; /* Energetisch Blauw */
+    --accent: 217 100% 65%; /* Energetic Blue */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 252 10% 88%;
     --input: 252 10% 88%;
     --ring: 250 69% 51%;
-    --radius: 1rem;
+    --radius: 1.5rem;
     --chart-1: 250 69% 51%;
     --chart-2: 217 100% 65%;
     --chart-3: 173 58% 39%;
@@ -32,24 +33,24 @@
   }
 
   .dark {
-    --background: 250 30% 10%;
+    --background: 250 30% 6%;
     --foreground: 250 20% 98%;
-    --card: 250 30% 12%;
+    --card: 250 30% 10%;
     --card-foreground: 250 20% 98%;
-    --popover: 250 30% 12%;
+    --popover: 250 30% 10%;
     --popover-foreground: 250 20% 98%;
     --primary: 250 69% 60%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 250 20% 18%;
+    --secondary: 250 20% 15%;
     --secondary-foreground: 250 20% 98%;
-    --muted: 250 20% 18%;
+    --muted: 250 20% 15%;
     --muted-foreground: 250 10% 65%;
     --accent: 217 100% 70%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 250 20% 20%;
-    --input: 250 20% 20%;
+    --border: 250 20% 18%;
+    --input: 250 20% 18%;
     --ring: 250 69% 60%;
   }
 }
@@ -72,4 +73,15 @@
 
 .card-hover {
   @apply transition-transform duration-200 active:scale-[0.98];
+}
+
+/* Custom scrollbar for a cleaner feel */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full;
 }

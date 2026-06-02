@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ListPlus, Search, Calendar as CalendarIcon } from 'lucide-react';
+import { LayoutDashboard, ListPlus, Search, Calendar as CalendarIcon, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function BottomNav() {
@@ -14,10 +14,11 @@ export function BottomNav() {
     { label: 'Routines', icon: ListPlus, href: '/routines' },
     { label: 'Exercises', icon: Search, href: '/exercises' },
     { label: 'Activity', icon: CalendarIcon, href: '/activity' },
+    { label: 'Settings', icon: Settings, href: '/settings' },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 backdrop-blur-lg border-t flex justify-around items-center py-3 px-4 z-50 mobile-nav-shadow rounded-t-[2rem]">
+    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t flex justify-around items-center py-3 px-4 z-50 mobile-nav-shadow rounded-t-[2rem]">
       {navItems.map((item) => {
         const isActive = pathname === item.href;
         return (
