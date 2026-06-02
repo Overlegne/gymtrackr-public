@@ -1,71 +1,222 @@
-
 {
+  "version": "1.0-seed",
   "exercises": [
-    { "id": "1", "name": "Barbell Bench Press", "muscleGroup": "Chest", "equipment": "Barbell", "defaultSets": 3, "defaultReps": 10, "imageUrl": "https://picsum.photos/seed/bench1/600/400" },
-    { "id": "2", "name": "Incline Barbell Bench Press", "muscleGroup": "Chest", "equipment": "Barbell", "defaultSets": 3, "defaultReps": 10, "imageUrl": "https://picsum.photos/seed/incbench1/600/400" },
-    { "id": "3", "name": "Decline Barbell Bench Press", "muscleGroup": "Chest", "equipment": "Barbell", "defaultSets": 3, "defaultReps": 10, "imageUrl": "https://picsum.photos/seed/decbench1/600/400" },
-    { "id": "4", "name": "Dumbbell Bench Press", "muscleGroup": "Chest", "equipment": "Dumbbell", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/dbbench1/600/400" },
-    { "id": "5", "name": "Incline Dumbbell Press", "muscleGroup": "Chest", "equipment": "Dumbbell", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/incdb1/600/400" },
-    { "id": "6", "name": "Decline Dumbbell Press", "muscleGroup": "Chest", "equipment": "Dumbbell", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/decdb1/600/400" },
-    { "id": "7", "name": "Dumbbell Flys", "muscleGroup": "Chest", "equipment": "Dumbbell", "defaultSets": 3, "defaultReps": 15, "imageUrl": "https://picsum.photos/seed/flys1/600/400" },
-    { "id": "8", "name": "Incline Dumbbell Flys", "muscleGroup": "Chest", "equipment": "Dumbbell", "defaultSets": 3, "defaultReps": 15, "imageUrl": "https://picsum.photos/seed/incflys1/600/400" },
-    { "id": "9", "name": "Cable Crossover", "muscleGroup": "Chest", "equipment": "Cable", "defaultSets": 3, "defaultReps": 15, "imageUrl": "https://picsum.photos/seed/cablecross1/600/400" },
-    { "id": "10", "name": "Pec Deck Machine", "muscleGroup": "Chest", "equipment": "Machine", "defaultSets": 3, "defaultReps": 15, "imageUrl": "https://picsum.photos/seed/pecdeck1/600/400" },
-    { "id": "11", "name": "Push-Ups", "muscleGroup": "Chest", "equipment": "Bodyweight", "defaultSets": 3, "defaultReps": 20, "imageUrl": "https://picsum.photos/seed/pushup1/600/400" },
-    { "id": "12", "name": "Dips (Chest Version)", "muscleGroup": "Chest", "equipment": "Bodyweight", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/dips1/600/400" },
-    { "id": "13", "name": "Deadlift", "muscleGroup": "Back", "equipment": "Barbell", "defaultSets": 3, "defaultReps": 5, "imageUrl": "https://picsum.photos/seed/deadlift1/600/400" },
-    { "id": "14", "name": "Sumo Deadlift", "muscleGroup": "Back", "equipment": "Barbell", "defaultSets": 3, "defaultReps": 5, "imageUrl": "https://picsum.photos/seed/sumodead1/600/400" },
-    { "id": "15", "name": "Bent Over Row", "muscleGroup": "Back", "equipment": "Barbell", "defaultSets": 3, "defaultReps": 10, "imageUrl": "https://picsum.photos/seed/row1/600/400" },
-    { "id": "16", "name": "T-Bar Row", "muscleGroup": "Back", "equipment": "Barbell", "defaultSets": 3, "defaultReps": 10, "imageUrl": "https://picsum.photos/seed/tbar1/600/400" },
-    { "id": "17", "name": "One Arm Dumbbell Row", "muscleGroup": "Back", "equipment": "Dumbbell", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/dbrow1/600/400" },
-    { "id": "18", "name": "Lat Pulldown (Wide Grip)", "muscleGroup": "Back", "equipment": "Machine", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/lat1/600/400" },
-    { "id": "19", "name": "Lat Pulldown (Close Grip)", "muscleGroup": "Back", "equipment": "Machine", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/clat1/600/400" },
-    { "id": "20", "name": "Seated Cable Row", "muscleGroup": "Back", "equipment": "Cable", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/cablerow1/600/400" },
-    { "id": "21", "name": "Pull-Ups", "muscleGroup": "Back", "equipment": "Bodyweight", "defaultSets": 3, "defaultReps": 10, "imageUrl": "https://picsum.photos/seed/pullup1/600/400" },
-    { "id": "22", "name": "Chin-Ups", "muscleGroup": "Back", "equipment": "Bodyweight", "defaultSets": 3, "defaultReps": 10, "imageUrl": "https://picsum.photos/seed/chinup1/600/400" },
-    { "id": "23", "name": "Hyperextensions", "muscleGroup": "Back", "equipment": "Bodyweight", "defaultSets": 3, "defaultReps": 15, "imageUrl": "https://picsum.photos/seed/hyper1/600/400" },
-    { "id": "24", "name": "Barbell Squat", "muscleGroup": "Legs", "equipment": "Barbell", "defaultSets": 3, "defaultReps": 8, "imageUrl": "https://picsum.photos/seed/squat1/600/400" },
-    { "id": "25", "name": "Front Squat", "muscleGroup": "Legs", "equipment": "Barbell", "defaultSets": 3, "defaultReps": 8, "imageUrl": "https://picsum.photos/seed/fsquat1/600/400" },
-    { "id": "26", "name": "Leg Press", "muscleGroup": "Legs", "equipment": "Machine", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/lpress1/600/400" },
-    { "id": "27", "name": "Hack Squat", "muscleGroup": "Legs", "equipment": "Machine", "defaultSets": 3, "defaultReps": 10, "imageUrl": "https://picsum.photos/seed/hack1/600/400" },
-    { "id": "28", "name": "Lunges (Dumbbell)", "muscleGroup": "Legs", "equipment": "Dumbbell", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/lunge1/600/400" },
-    { "id": "29", "name": "Romanian Deadlift", "muscleGroup": "Legs", "equipment": "Barbell", "defaultSets": 3, "defaultReps": 10, "imageUrl": "https://picsum.photos/seed/rdl1/600/400" },
-    { "id": "30", "name": "Leg Extension", "muscleGroup": "Legs", "equipment": "Machine", "defaultSets": 3, "defaultReps": 15, "imageUrl": "https://picsum.photos/seed/lext1/600/400" },
-    { "id": "31", "name": "Lying Leg Curl", "muscleGroup": "Legs", "equipment": "Machine", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/lcurl1/600/400" },
-    { "id": "32", "name": "Seated Leg Curl", "muscleGroup": "Legs", "equipment": "Machine", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/scurl1/600/400" },
-    { "id": "33", "name": "Standing Calf Raise", "muscleGroup": "Legs", "equipment": "Machine", "defaultSets": 3, "defaultReps": 15, "imageUrl": "https://picsum.photos/seed/calf1/600/400" },
-    { "id": "34", "name": "Seated Calf Raise", "muscleGroup": "Legs", "equipment": "Machine", "defaultSets": 3, "defaultReps": 15, "imageUrl": "https://picsum.photos/seed/scalf1/600/400" },
-    { "id": "35", "name": "Military Press", "muscleGroup": "Shoulders", "equipment": "Barbell", "defaultSets": 3, "defaultReps": 10, "imageUrl": "https://picsum.photos/seed/mil1/600/400" },
-    { "id": "36", "name": "Dumbbell Shoulder Press", "muscleGroup": "Shoulders", "equipment": "Dumbbell", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/dbpress1/600/400" },
-    { "id": "37", "name": "Lateral Raise", "muscleGroup": "Shoulders", "equipment": "Dumbbell", "defaultSets": 3, "defaultReps": 15, "imageUrl": "https://picsum.photos/seed/latraise1/600/400" },
-    { "id": "38", "name": "Front Raise", "muscleGroup": "Shoulders", "equipment": "Dumbbell", "defaultSets": 3, "defaultReps": 15, "imageUrl": "https://picsum.photos/seed/frontraise1/600/400" },
-    { "id": "39", "name": "Rear Delt Fly", "muscleGroup": "Shoulders", "equipment": "Dumbbell", "defaultSets": 3, "defaultReps": 15, "imageUrl": "https://picsum.photos/seed/rearfly1/600/400" },
-    { "id": "40", "name": "Arnold Press", "muscleGroup": "Shoulders", "equipment": "Dumbbell", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/arnold1/600/400" },
-    { "id": "41", "name": "Upright Row", "muscleGroup": "Shoulders", "equipment": "Barbell", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/uprow1/600/400" },
-    { "id": "42", "name": "Face Pulls", "muscleGroup": "Shoulders", "equipment": "Cable", "defaultSets": 3, "defaultReps": 15, "imageUrl": "https://picsum.photos/seed/facepull1/600/400" },
-    { "id": "43", "name": "Barbell Curl", "muscleGroup": "Arms", "equipment": "Barbell", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/bcurl1/600/400" },
-    { "id": "44", "name": "EZ Bar Curl", "muscleGroup": "Arms", "equipment": "Barbell", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/ezcurl1/600/400" },
-    { "id": "45", "name": "Dumbbell Curl", "muscleGroup": "Arms", "equipment": "Dumbbell", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/dbcurl1/600/400" },
-    { "id": "46", "name": "Hammer Curl", "muscleGroup": "Arms", "equipment": "Dumbbell", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/hammer1/600/400" },
-    { "id": "47", "name": "Preacher Curl", "muscleGroup": "Arms", "equipment": "Barbell", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/preacher1/600/400" },
-    { "id": "48", "name": "Concentration Curl", "muscleGroup": "Arms", "equipment": "Dumbbell", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/conc1/600/400" },
-    { "id": "49", "name": "Cable Curl", "muscleGroup": "Arms", "equipment": "Cable", "defaultSets": 3, "defaultReps": 15, "imageUrl": "https://picsum.photos/seed/ccurl1/600/400" },
-    { "id": "50", "name": "Close Grip Bench Press", "muscleGroup": "Arms", "equipment": "Barbell", "defaultSets": 3, "defaultReps": 10, "imageUrl": "https://picsum.photos/seed/cgbench1/600/400" },
-    { "id": "51", "name": "Skull Crushers", "muscleGroup": "Arms", "equipment": "Barbell", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/skull1/600/400" },
-    { "id": "52", "name": "Tricep Pushdown", "muscleGroup": "Arms", "equipment": "Cable", "defaultSets": 3, "defaultReps": 15, "imageUrl": "https://picsum.photos/seed/tpush1/600/400" },
-    { "id": "53", "name": "Overhead Tricep Extension", "muscleGroup": "Arms", "equipment": "Dumbbell", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/text1/600/400" },
-    { "id": "54", "name": "Dips (Tricep Version)", "muscleGroup": "Arms", "equipment": "Bodyweight", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/tdips1/600/400" },
-    { "id": "55", "name": "Tricep Kickback", "muscleGroup": "Arms", "equipment": "Dumbbell", "defaultSets": 3, "defaultReps": 15, "imageUrl": "https://picsum.photos/seed/kick1/600/400" },
-    { "id": "56", "name": "Plank", "muscleGroup": "Abs", "equipment": "Bodyweight", "defaultSets": 3, "defaultReps": 60, "imageUrl": "https://picsum.photos/seed/plank1/600/400" },
-    { "id": "57", "name": "Crunches", "muscleGroup": "Abs", "equipment": "Bodyweight", "defaultSets": 3, "defaultReps": 20, "imageUrl": "https://picsum.photos/seed/crunch1/600/400" },
-    { "id": "58", "name": "Leg Raises", "muscleGroup": "Abs", "equipment": "Bodyweight", "defaultSets": 3, "defaultReps": 15, "imageUrl": "https://picsum.photos/seed/lraise1/600/400" },
-    { "id": "59", "name": "Hanging Leg Raises", "muscleGroup": "Abs", "equipment": "Bodyweight", "defaultSets": 3, "defaultReps": 12, "imageUrl": "https://picsum.photos/seed/hlraise1/600/400" },
-    { "id": "60", "name": "Russian Twists", "muscleGroup": "Abs", "equipment": "Bodyweight", "defaultSets": 3, "defaultReps": 20, "imageUrl": "https://picsum.photos/seed/twist1/600/400" },
-    { "id": "61", "name": "Cable Woodchopper", "muscleGroup": "Abs", "equipment": "Cable", "defaultSets": 3, "defaultReps": 15, "imageUrl": "https://picsum.photos/seed/wood1/600/400" },
-    { "id": "62", "name": "Running (Treadmill)", "muscleGroup": "Cardio", "equipment": "Machine", "defaultSets": 1, "defaultReps": 30, "imageUrl": "https://picsum.photos/seed/run1/600/400" },
-    { "id": "63", "name": "Cycling", "muscleGroup": "Cardio", "equipment": "Machine", "defaultSets": 1, "defaultReps": 30, "imageUrl": "https://picsum.photos/seed/cycle1/600/400" },
-    { "id": "64", "name": "Elliptical", "muscleGroup": "Cardio", "equipment": "Machine", "defaultSets": 1, "defaultReps": 20, "imageUrl": "https://picsum.photos/seed/ellip1/600/400" },
-    { "id": "65", "name": "Rowing Machine", "muscleGroup": "Cardio", "equipment": "Machine", "defaultSets": 1, "defaultReps": 15, "imageUrl": "https://picsum.photos/seed/rower1/600/400" },
-    { "id": "66", "name": "Jump Rope", "muscleGroup": "Cardio", "equipment": "Bodyweight", "defaultSets": 3, "defaultReps": 100, "imageUrl": "https://picsum.photos/seed/jump1/600/400" }
+    {
+      "id": "barbell_bench_press",
+      "canonical_name": "Barbell Bench Press",
+      "body_part": "chest"
+    },
+    {
+      "id": "incline_dumbbell_bench_press",
+      "canonical_name": "Incline Dumbbell Bench Press",
+      "body_part": "chest"
+    },
+    {
+      "id": "pec_deck",
+      "canonical_name": "Pec Deck",
+      "body_part": "chest"
+    },
+    {
+      "id": "cable_crossover",
+      "canonical_name": "Cable Crossover",
+      "body_part": "chest"
+    },
+    {
+      "id": "incline_barbell_bench_press",
+      "canonical_name": "Incline Barbell Bench Press",
+      "body_part": "chest"
+    },
+    {
+      "id": "dumbbell_bench_press",
+      "canonical_name": "Dumbbell Bench Press",
+      "body_part": "chest"
+    },
+    {
+      "id": "dumbbell_fly",
+      "canonical_name": "Dumbbell Fly",
+      "body_part": "chest"
+    },
+    {
+      "id": "incline_dumbbell_fly",
+      "canonical_name": "Incline Dumbbell Fly",
+      "body_part": "chest"
+    },
+    {
+      "id": "chest_press_machine",
+      "canonical_name": "Chest Press Machine",
+      "body_part": "chest"
+    },
+    {
+      "id": "push_ups",
+      "canonical_name": "Push Ups",
+      "body_part": "chest"
+    },
+    {
+      "id": "wide_grip_pulldown",
+      "canonical_name": "Wide-Grip Pulldown",
+      "body_part": "back"
+    },
+    {
+      "id": "seated_cable_row",
+      "canonical_name": "Seated Cable Row",
+      "body_part": "back"
+    },
+    {
+      "id": "barbell_row",
+      "canonical_name": "Barbell Row",
+      "body_part": "back"
+    },
+    {
+      "id": "pull_up",
+      "canonical_name": "Pull Up",
+      "body_part": "back"
+    },
+    {
+      "id": "barbell_deadlift",
+      "canonical_name": "Barbell Deadlift",
+      "body_part": "back"
+    },
+    {
+      "id": "dumbbell_shoulder_press",
+      "canonical_name": "Dumbbell Shoulder Press",
+      "body_part": "shoulders"
+    },
+    {
+      "id": "dumbbell_lateral_raise",
+      "canonical_name": "Dumbbell Lateral Raise",
+      "body_part": "shoulders"
+    },
+    {
+      "id": "barbell_curl",
+      "canonical_name": "Barbell Curl",
+      "body_part": "arms"
+    },
+    {
+      "id": "hammer_curl",
+      "canonical_name": "Hammer Curl",
+      "body_part": "arms"
+    },
+    {
+      "id": "triceps_pressdown",
+      "canonical_name": "Triceps Pressdown",
+      "body_part": "arms"
+    },
+    {
+      "id": "barbell_squat",
+      "canonical_name": "Barbell Squat",
+      "body_part": "legs"
+    },
+    {
+      "id": "leg_press",
+      "canonical_name": "Leg Press",
+      "body_part": "legs"
+    },
+    {
+      "id": "leg_extension",
+      "canonical_name": "Leg Extension",
+      "body_part": "legs"
+    },
+    {
+      "id": "lying_leg_curl",
+      "canonical_name": "Lying Leg Curl",
+      "body_part": "legs"
+    },
+    {
+      "id": "plank",
+      "canonical_name": "Plank",
+      "body_part": "abs"
+    },
+    {
+      "id": "crunch",
+      "canonical_name": "Crunch",
+      "body_part": "abs"
+    },
+    {
+      "id": "hanging_leg_raise",
+      "canonical_name": "Hanging Leg Raise",
+      "body_part": "abs"
+    },
+    { "id": "db_row_single", "canonical_name": "Single Arm Dumbbell Row", "body_part": "back" },
+    { "id": "lat_pulldown_close", "canonical_name": "Close Grip Lat Pulldown", "body_part": "back" },
+    { "id": "t_bar_row", "canonical_name": "T-Bar Row", "body_part": "back" },
+    { "id": "face_pull", "canonical_name": "Face Pull", "body_part": "shoulders" },
+    { "id": "upright_row", "canonical_name": "Upright Barbell Row", "body_part": "shoulders" },
+    { "id": "front_raise", "canonical_name": "Dumbbell Front Raise", "body_part": "shoulders" },
+    { "id": "arnold_press", "canonical_name": "Arnold Press", "body_part": "shoulders" },
+    { "id": "shrugs", "canonical_name": "Dumbbell Shrugs", "body_part": "back" },
+    { "id": "romanian_deadlift", "canonical_name": "Romanian Deadlift", "body_part": "legs" },
+    { "id": "bulgarian_split_squat", "canonical_name": "Bulgarian Split Squat", "body_part": "legs" },
+    { "id": "goblet_squat", "canonical_name": "Goblet Squat", "body_part": "legs" },
+    { "id": "walking_lunges", "canonical_name": "Walking Lunges", "body_part": "legs" },
+    { "id": "calf_raise_standing", "canonical_name": "Standing Calf Raise", "body_part": "legs" },
+    { "id": "calf_raise_seated", "canonical_name": "Seated Calf Raise", "body_part": "legs" },
+    { "id": "preacher_curl", "canonical_name": "Preacher Curl", "body_part": "arms" },
+    { "id": "concentration_curl", "canonical_name": "Concentration Curl", "body_part": "arms" },
+    { "id": "skull_crushers", "canonical_name": "Skull Crushers", "body_part": "arms" },
+    { "id": "overhead_extension", "canonical_name": "Overhead Tricep Extension", "body_part": "arms" },
+    { "id": "dips", "canonical_name": "Tricep Dips", "body_part": "arms" },
+    { "id": "diamond_pushups", "canonical_name": "Diamond Push Ups", "body_part": "arms" },
+    { "id": "russian_twist", "canonical_name": "Russian Twist", "body_part": "abs" },
+    { "id": "bicycle_crunch", "canonical_name": "Bicycle Crunch", "body_part": "abs" },
+    { "id": "mountain_climbers", "canonical_name": "Mountain Climbers", "body_part": "abs" },
+    { "id": "burpees", "canonical_name": "Burpees", "body_part": "cardio" },
+    { "id": "jumping_jacks", "canonical_name": "Jumping Jacks", "body_part": "cardio" },
+    { "id": "kettlebell_swing", "canonical_name": "Kettlebell Swing", "body_part": "legs" },
+    { "id": "thrusters", "canonical_name": "Dumbbell Thrusters", "body_part": "legs" },
+    { "id": "box_jumps", "canonical_name": "Box Jumps", "body_part": "legs" },
+    { "id": "sumo_deadlift", "canonical_name": "Sumo Deadlift", "body_part": "legs" },
+    { "id": "good_mornings", "canonical_name": "Good Mornings", "body_part": "back" },
+    { "id": "hyperextensions", "canonical_name": "Hyperextensions", "body_part": "back" },
+    { "id": "reverse_fly", "canonical_name": "Reverse Dumbbell Fly", "body_part": "shoulders" },
+    { "id": "clean_and_press", "canonical_name": "Clean and Press", "body_part": "shoulders" },
+    { "id": "side_plank", "canonical_name": "Side Plank", "body_part": "abs" },
+    { "id": "leg_raise_lying", "canonical_name": "Lying Leg Raise", "body_part": "abs" },
+    { "id": "flutter_kicks", "canonical_name": "Flutter Kicks", "body_part": "abs" },
+    { "id": "v_ups", "canonical_name": "V-Ups", "body_part": "abs" },
+    { "id": "hollow_body_hold", "canonical_name": "Hollow Body Hold", "body_part": "abs" },
+    { "id": "barbell_glute_bridge", "canonical_name": "Barbell Glute Bridge", "body_part": "legs" },
+    { "id": "hip_thrusts", "canonical_name": "Hip Thrusts", "body_part": "legs" },
+    { "id": "hack_squat", "canonical_name": "Hack Squat", "body_part": "legs" },
+    { "id": "step_ups", "canonical_name": "Dumbbell Step Ups", "body_part": "legs" },
+    { "id": "overhead_squat", "canonical_name": "Overhead Squat", "body_part": "legs" },
+    { "id": "front_squat", "canonical_name": "Front Barbell Squat", "body_part": "legs" },
+    { "id": "stiff_leg_deadlift", "canonical_name": "Stiff Leg Deadlift", "body_part": "legs" },
+    { "id": "glute_ham_raise", "canonical_name": "Glute Ham Raise", "body_part": "legs" },
+    { "id": "adductor_machine", "canonical_name": "Adductor Machine", "body_part": "legs" },
+    { "id": "abductor_machine", "canonical_name": "Abductor Machine", "body_part": "legs" },
+    { "id": "cable_kickbacks", "canonical_name": "Cable Kickbacks", "body_part": "legs" },
+    { "id": "donkey_kicks", "canonical_name": "Donkey Kicks", "body_part": "legs" },
+    { "id": "spider_curl", "canonical_name": "Spider Curl", "body_part": "arms" },
+    { "id": "zotto_curl", "canonical_name": "Zottman Curl", "body_part": "arms" },
+    { "id": "cable_curl", "canonical_name": "Cable Bicep Curl", "body_part": "arms" },
+    { "id": "reverse_curl", "canonical_name": "Reverse Barbell Curl", "body_part": "arms" },
+    { "id": "wrist_curl", "canonical_name": "Wrist Curl", "body_part": "arms" },
+    { "id": "kickbacks_tricep", "canonical_name": "Dumbbell Tricep Kickbacks", "body_part": "arms" },
+    { "id": "bench_press_close_grip", "canonical_name": "Close Grip Bench Press", "body_part": "arms" },
+    { "id": "floor_press", "canonical_name": "Dumbbell Floor Press", "body_part": "chest" },
+    { "id": "chest_dips", "canonical_name": "Chest Dips", "body_part": "chest" },
+    { "id": "svend_press", "canonical_name": "Svend Press", "body_part": "chest" },
+    { "id": "landmine_press", "canonical_name": "Landmine Press", "body_part": "chest" },
+    { "id": "pull_over", "canonical_name": "Dumbbell Pull Over", "body_part": "chest" },
+    { "id": "chin_up", "canonical_name": "Chin Up", "body_part": "back" },
+    { "id": "inverted_row", "canonical_name": "Inverted Row", "body_part": "back" },
+    { "id": "cable_row_one_arm", "canonical_name": "Single Arm Cable Row", "body_part": "back" },
+    { "id": "meadows_row", "canonical_name": "Meadows Row", "body_part": "back" },
+    { "id": "pendlay_row", "canonical_name": "Pendlay Row", "body_part": "back" },
+    { "id": "seal_row", "canonical_name": "Seal Row", "body_part": "back" },
+    { "id": "face_pull_rope", "canonical_name": "Rope Face Pull", "body_part": "shoulders" },
+    { "id": "high_pull", "canonical_name": "High Pull", "body_part": "shoulders" },
+    { "id": "lu_raises", "canonical_name": "Lu Raises", "body_part": "shoulders" },
+    { "id": "bus_drivers", "canonical_name": "Bus Drivers", "body_part": "shoulders" },
+    { "id": "plank_to_pushup", "canonical_name": "Plank to Pushup", "body_part": "abs" },
+    { "id": "ab_wheel_rollout", "canonical_name": "Ab Wheel Rollout", "body_part": "abs" },
+    { "id": "windshield_wipers", "canonical_name": "Windshield Wipers", "body_part": "abs" },
+    { "id": "dead_bug", "canonical_name": "Dead Bug", "body_part": "abs" },
+    { "id": "bird_dog", "canonical_name": "Bird Dog", "body_part": "abs" },
+    { "id": "running_treadmill", "canonical_name": "Treadmill Running", "body_part": "cardio" },
+    { "id": "cycling_stationary", "canonical_name": "Stationary Cycling", "body_part": "cardio" },
+    { "id": "rowing_machine", "canonical_name": "Rowing Machine", "body_part": "cardio" },
+    { "id": "elliptical", "canonical_name": "Elliptical Trainer", "body_part": "cardio" },
+    { "id": "battle_ropes", "canonical_name": "Battle Ropes", "body_part": "cardio" }
   ]
 }

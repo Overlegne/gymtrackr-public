@@ -59,13 +59,33 @@ export const ROUTINE_COLORS = [
   { name: 'Gray Grit', value: '#64748b' },
 ];
 
-export const DEFAULT_EXERCISES: Exercise[] = exercisesData.exercises as Exercise[];
+const mapBodyPart = (part: string | null): MuscleGroup => {
+  if (!part) return 'Cardio';
+  const p = part.toLowerCase();
+  if (p.includes('chest')) return 'Chest';
+  if (p.includes('back')) return 'Back';
+  if (p.includes('legs') || p.includes('calves')) return 'Legs';
+  if (p.includes('shoulders')) return 'Shoulders';
+  if (p.includes('biceps') || p.includes('triceps') || p.includes('arms')) return 'Arms';
+  if (p.includes('abdominals') || p.includes('abs')) return 'Abs';
+  return 'Cardio';
+};
+
+export const DEFAULT_EXERCISES: Exercise[] = (exercisesData.exercises as any[]).map(ex => ({
+  id: ex.id,
+  name: ex.canonical_name,
+  muscleGroup: mapBodyPart(ex.body_part),
+  equipment: 'Barbell',
+  defaultSets: 3,
+  defaultReps: 12,
+  imageUrl: `https://picsum.photos/seed/${ex.id}/600/400`
+}));
 
 export const getExercises = (): Exercise[] => {
   if (typeof window === 'undefined') return DEFAULT_EXERCISES;
-  const stored = localStorage.getItem('user_exercises_v12');
+  const stored = localStorage.getItem('user_exercises_v13');
   if (!stored) {
-    localStorage.setItem('user_exercises_v12', JSON.stringify(DEFAULT_EXERCISES));
+    localStorage.setItem('user_exercises_v13', JSON.stringify(DEFAULT_EXERCISES));
     return DEFAULT_EXERCISES;
   }
   return JSON.parse(stored);
@@ -78,7 +98,7 @@ export const addExercise = (exercise: Omit<Exercise, 'id'>) => {
     id: Date.now().toString(),
   };
   exercises.push(newExercise);
-  localStorage.setItem('user_exercises_v12', JSON.stringify(exercises));
+  localStorage.setItem('user_exercises_v13', JSON.stringify(exercises));
   return newExercise;
 };
 
@@ -104,8 +124,7 @@ export const getRoutines = (): Routine[] => {
   if (!stored) {
     const exercises = getExercises();
     const initial: Routine[] = [
-      { id: 'r1', name: 'Full Body Strength', exercises: [exercises[0], exercises[12], exercises[23], exercises[55]], color: '#8b5cf6' },
-      { id: 'r2', name: 'Upper Body Focus', exercises: [exercises[0], exercises[17], exercises[34], exercises[42]], color: '#3b82f6' },
+      { id: 'r1', name: 'Full Body Strength', exercises: [exercises[0], exercises[5] || exercises[0]], color: '#8b5cf6' },
     ];
     localStorage.setItem('user_routines_v10', JSON.stringify(initial));
     return initial;

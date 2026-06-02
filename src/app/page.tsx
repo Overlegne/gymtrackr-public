@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from 'react';
@@ -29,13 +28,12 @@ export default function HomePage() {
         <p className="text-muted-foreground">Ready for your next workout?</p>
       </header>
 
-      {/* Stats Quick View */}
       <div className="grid grid-cols-2 gap-4">
         <Card className="bg-primary text-white border-none shadow-lg">
           <CardContent className="p-4 flex flex-col gap-1">
             <CalendarIcon className="h-5 w-5 mb-1 opacity-80" />
-            <span className="text-2xl font-bold">{routines.filter(r => r.lastPerformed).length}</span>
-            <span className="text-xs opacity-80 font-medium">Active Routines</span>
+            <span className="text-2xl font-bold">{routines.length}</span>
+            <span className="text-xs opacity-80 font-medium">My Routines</span>
           </CardContent>
         </Card>
         <Card className="bg-accent text-white border-none shadow-lg">
@@ -63,11 +61,13 @@ export default function HomePage() {
                   <h3 className="font-bold text-lg">{routine.name}</h3>
                   <p className="text-xs text-muted-foreground">{routine.exercises.length} exercises</p>
                 </div>
-                <Link href={`/workout/${routine.id}`}>
-                  <Button size="icon" className="rounded-full h-12 w-12 shadow-lg" style={{ backgroundColor: routine.color || '#8b5cf6' }}>
-                    <Play className="h-6 w-6 fill-current" />
-                  </Button>
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link href={`/workout/${routine.id}`}>
+                    <Button size="icon" className="rounded-full h-12 w-12 shadow-lg" style={{ backgroundColor: routine.color || '#8b5cf6' }}>
+                      <Play className="h-6 w-6 fill-current" />
+                    </Button>
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           ))}
