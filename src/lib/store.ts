@@ -355,6 +355,7 @@ const ROUTINES_KEY = 'user_routines_v12';
 const LOGS_KEY = 'workout_logs_v6';
 const HISTORY_KEY = 'exercise_history_v2';
 const LAST_SUMMARY_KEY = 'last_workout_summary_v1';
+const ACTIVE_SESSION_KEY = 'active_workout_session_v1';
 
 export const getExercises = (): Exercise[] => {
   if (typeof window === 'undefined') return DEFAULT_EXERCISES;
@@ -715,6 +716,8 @@ export const logWorkout = (routine: Routine, durationSeconds: number, totalVolum
     lastSummary.durationSeconds = durationSeconds;
     localStorage.setItem(LAST_SUMMARY_KEY, JSON.stringify(lastSummary));
   }
+
+  clearActiveWorkoutSession();
 };
 
 export const getWorkoutLogs = (): WorkoutLog[] => {
@@ -726,4 +729,28 @@ export const getLastWorkoutSummary = (): WorkoutSummaryData | null => {
   if (typeof window === 'undefined') return null;
   const stored = localStorage.getItem(LAST_SUMMARY_KEY);
   return stored ? JSON.parse(stored) : null;
+};
+
+/**
+ * Active Workout Session Management
+ * Stores the start time and routine ID of an ongoing workout.
+ */
+export const startActiveWorkoutSession = (routineId: string) => {
+  if (typeof window === 'undefined') return;
+  const session = {
+    routineId,
+    startTime: Date.now()
+  };
+  localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(session));
+};
+
+export const getActiveWorkoutSession = (): { routineId: string; startTime: number } | null => {
+  if (typeof window === 'undefined') return null;
+  const stored = localStorage.getItem(ACTIVE_SESSION_KEY);
+  return stored ? JSON.parse(stored) : null;
+};
+
+export const clearActiveWorkoutSession = () => {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(ACTIVE_SESSION_KEY);
 };

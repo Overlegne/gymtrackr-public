@@ -10,6 +10,8 @@ import {
   kgToDisplay,
   displayToKg,
   getProgressionSuggestion,
+  startActiveWorkoutSession,
+  getActiveWorkoutSession,
   type Routine, 
   type RoutineExercise,
   type ProgressionSuggestion
@@ -36,7 +38,8 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
   const { toast } = useToast();
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [exercises, setExercises] = useState<RoutineExercise[]>([]);
-  const [startTime] = useState(Date.now());
+  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
   
   // Settings
   const settings = useMemo(() => getSettings(), []);
@@ -50,6 +53,16 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
 
   useEffect(() => {
     setRestDuration(settings.defaultRestDuration);
+
+    // Session Management: Check if we already have an active session for this routine
+    const existingSession = getActiveWorkoutSession();
+    if (existingSession && existingSession.routineId === id) {
+      setSessionStartTime(existingSession.startTime);
+    } else {
+      const newStartTime = Date.now();
+      setSessionStartTime(newStartTime);
+      startActiveWorkoutSession(id);
+    }
 
     const routines = getRoutines();
     const found = routines.find(r => r.id === id);
@@ -73,6 +86,18 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
       setExercises(initialized);
     }
   }, [id, settings]);
+
+  // Live Timer Update
+  useEffect(() => {
+    if (!sessionStartTime) return;
+
+    const interval = setInterval(() => {
+      const seconds = Math.floor((Date.now() - sessionStartTime) / 1000);
+      setElapsedTime(seconds);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [sessionStartTime]);
 
   const toggleSet = (exIndex: number, setIndex: number) => {
     const newExs = [...exercises];
@@ -113,8 +138,19 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const formatElapsedTime = (totalSeconds: number) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const handleFinish = () => {
-    if (routine) {
+    if (routine && sessionStartTime) {
       const processedExercises = exercises.map(ex => ({
         ...ex,
         sets: ex.sets.map(s => ({
@@ -124,8 +160,8 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
       }));
       
       const summary = saveAllWorkoutStats(processedExercises);
-      const durationSeconds = Math.round((Date.now() - startTime) / 1000);
-      logWorkout(routine, durationSeconds, summary.totalVolume);
+      const finalDurationSeconds = Math.round((Date.now() - sessionStartTime) / 1000);
+      logWorkout(routine, finalDurationSeconds, summary.totalVolume);
       
       router.push('/workout/summary');
     } else {
@@ -144,11 +180,16 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
               <ChevronLeft className="h-6 w-6" />
             </Button>
           </Link>
-          <div>
+          <div className="min-w-0">
             <h1 className="text-lg font-bold truncate max-w-[150px]">{routine.name}</h1>
-            <div className="flex items-center text-xs text-muted-foreground gap-1">
-              <Timer className="h-3 w-3" />
-              <span>Training now...</span>
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1 px-2 py-0.5 bg-primary/10 rounded-full">
+                <Timer className="h-3 w-3 text-primary animate-pulse" />
+                <span className="text-[10px] font-black tabular-nums text-primary tracking-tight">
+                  {formatElapsedTime(elapsedTime)}
+                </span>
+              </div>
+              <span className="text-[9px] text-muted-foreground uppercase font-black tracking-widest opacity-60">Live Session</span>
             </div>
           </div>
         </div>
