@@ -1,4 +1,3 @@
-
 import exercisesData from './exercises.json';
 import { getSettings } from './settings-store';
 
@@ -131,14 +130,15 @@ const KG_TO_LB = 2.20462;
 /**
  * Unit Conversion Helpers
  * Internally we store everything in KG.
+ * Support 0.25 precision for Metric.
  */
 export function kgToDisplay(kg: number, system: 'Metric' | 'Imperial'): number {
-  if (system === 'Metric') return Math.round(kg * 10) / 10;
+  if (system === 'Metric') return Math.round(kg * 100) / 100;
   return Math.round(kg * KG_TO_LB * 10) / 10;
 }
 
 export function displayToKg(value: number, system: 'Metric' | 'Imperial'): number {
-  if (system === 'Metric') return value;
+  if (system === 'Metric') return Math.round(value * 100) / 100;
   return value / KG_TO_LB;
 }
 
@@ -603,7 +603,7 @@ export const getProgressionSuggestion = (exerciseId: string): ProgressionSuggest
   const last = history[history.length - 1];
   const settings = getSettings();
   const unitLabel = settings.unitSystem === 'Metric' ? 'kg' : 'lb';
-  const weightStep = settings.unitSystem === 'Metric' ? 2.5 : 5;
+  const weightStep = settings.unitSystem === 'Metric' ? 0.25 : 5;
 
   const ex = getExercises().find(e => e.id === exerciseId);
   if (!ex) return null;
@@ -640,7 +640,7 @@ export const getProgressionSuggestion = (exerciseId: string): ProgressionSuggest
       type: 'increase_weight',
       suggestedWeight: last.weight + displayToKg(weightStep, settings.unitSystem),
       suggestedReps: 8,
-      reason: "You hit 12 reps easily. Time to increase the weight and work in a lower rep range to build strength.",
+      reason: `You hit 12 reps easily. Time to increase the weight by ${weightStep}${unitLabel} and work in a lower rep range to build strength.`,
       lastStatsText
     };
   }

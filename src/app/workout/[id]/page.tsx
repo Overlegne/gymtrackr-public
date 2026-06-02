@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState, use, useMemo } from 'react';
@@ -42,7 +41,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
   // Settings
   const settings = useMemo(() => getSettings(), []);
   const unitLabel = settings.unitSystem === 'Metric' ? 'kg' : 'lb';
-  const weightStep = settings.unitSystem === 'Metric' ? 2.5 : 5;
+  const weightStep = settings.unitSystem === 'Metric' ? 0.25 : 5;
 
   // Timer State
   const [timerTrigger, setTimerTrigger] = useState(0);
@@ -285,6 +284,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
                             </button>
                             <input
                               type="number"
+                              step={weightStep}
                               value={displayWeight}
                               onChange={(e) => updateSetWeight(exIdx, setIdx, parseFloat(e.target.value) || 0)}
                               disabled={set.completed}
