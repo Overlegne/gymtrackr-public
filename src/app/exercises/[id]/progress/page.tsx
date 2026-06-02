@@ -49,14 +49,18 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
   const unitLabel = settings.unitSystem === 'Metric' ? 'kg' : 'lb';
 
   useEffect(() => {
-    setIsMounted(true);
-    const foundExercise = getExercises().find(e => e.id === id);
-    if (foundExercise) {
-      setExercise(foundExercise);
+    async function load() {
+      setIsMounted(true);
+      const exercises = await getExercises();
+      const foundExercise = exercises.find(e => e.id === id);
+      if (foundExercise) {
+        setExercise(foundExercise);
+      }
+      const exerciseHistory = await getExerciseHistory(id);
+      setHistory(exerciseHistory.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
+      setPlateau(await detectPlateau(id));
     }
-    const exerciseHistory = getExerciseHistory(id).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    setHistory(exerciseHistory);
-    setPlateau(detectPlateau(id));
+    load();
   }, [id]);
 
   const filteredHistory = useMemo(() => {

@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from 'react';
@@ -34,10 +33,10 @@ export function AiRoutineGenerator() {
     }
   };
 
-  const handleAddRoutine = () => {
+  const handleAddRoutine = async () => {
     if (!suggestion) return;
     
-    const allExercises = getExercises();
+    const allExercises = await getExercises();
     
     const mappedExercises = suggestion.exercises.map((ex, i) => {
       const existing = allExercises.find(e => e.name.toLowerCase() === ex.name.toLowerCase());
@@ -48,11 +47,12 @@ export function AiRoutineGenerator() {
         equipment: (ex.equipment[0] || 'Machine') as any,
         defaultSets: 3,
         defaultReps: 12,
-        imageUrl: `https://picsum.photos/seed/gym-${i}/600/400`
+        imageUrl: `https://picsum.photos/seed/gym-${i}/600/400`,
+        loggingType: 'weight_reps'
       };
     });
 
-    saveRoutine({
+    await saveRoutine({
       id: `ai-${Date.now()}`,
       name: suggestion.routineName,
       exercises: mappedExercises

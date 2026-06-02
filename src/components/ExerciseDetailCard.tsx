@@ -1,9 +1,8 @@
-
 "use client"
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Exercise, kgToDisplay, getProgressionSuggestion, type SetStats } from '@/lib/store';
+import { Exercise, kgToDisplay, getProgressionSuggestion, type SetStats, type ProgressionSuggestion } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -25,6 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Button } from '@/components/ui/button';
 
 interface ExerciseDetailCardProps {
   exercise: Exercise;
@@ -34,7 +34,14 @@ interface ExerciseDetailCardProps {
 export function ExerciseDetailCard({ exercise, lastPerformance }: ExerciseDetailCardProps) {
   const settings = useMemo(() => getSettings(), []);
   const unitLabel = settings.unitSystem === 'Metric' ? 'KG' : 'LB';
-  const suggestion = useMemo(() => getProgressionSuggestion(exercise.id), [exercise.id]);
+  const [suggestion, setSuggestion] = useState<ProgressionSuggestion | null>(null);
+
+  useEffect(() => {
+    async function loadSuggestion() {
+      setSuggestion(await getProgressionSuggestion(exercise.id));
+    }
+    loadSuggestion();
+  }, [exercise.id]);
 
   return (
     <div className="space-y-6">

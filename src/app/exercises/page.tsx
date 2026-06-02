@@ -35,6 +35,7 @@ export default function ExercisesPage() {
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'All'>('All');
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [lastPerformance, setLastPerformance] = useState<{index: number, weight: number, reps: number}[]>([]);
   
   // UI Modes
   const [isEditingImage, setIsEditingImage] = useState(false);
@@ -52,7 +53,10 @@ export default function ExercisesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setExercises(getExercises());
+    async function load() {
+      setExercises(await getExercises());
+    }
+    load();
   }, []);
 
   const muscleGroups: (MuscleGroup | 'All')[] = ['All', 'Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Abs', 'Cardio'];
@@ -63,31 +67,41 @@ export default function ExercisesPage() {
     return matchesSearch && matchesMuscle;
   });
 
-  const handleExerciseAdded = () => {
-    setExercises(getExercises());
+  const handleExerciseAdded = async () => {
+    setExercises(await getExercises());
   };
 
-  const lastPerformance = useMemo(() => {
-    if (!selectedExercise) return [];
-    const stats = getExerciseStats(selectedExercise.id);
-    if (!stats.sets) return [];
-    
-    return Object.entries(stats.sets)
-      .map(([idx, values]) => ({
-        index: parseInt(idx),
-        weight: values.weight,
-        reps: values.reps
-      }))
-      .sort((a, b) => a.index - b.index);
+  useEffect(() => {
+    async function loadStats() {
+      if (!selectedExercise) {
+        setLastPerformance([]);
+        return;
+      }
+      const stats = await getExerciseStats(selectedExercise.id);
+      if (!stats.sets) {
+        setLastPerformance([]);
+        return;
+      }
+      
+      const perf = Object.entries(stats.sets)
+        .map(([idx, values]) => ({
+          index: parseInt(idx),
+          weight: values.weight,
+          reps: values.reps
+        }))
+        .sort((a, b) => a.index - b.index);
+      setLastPerformance(perf);
+    }
+    loadStats();
   }, [selectedExercise]);
 
-  const handleUpdateImage = () => {
+  const handleUpdateImage = async () => {
     if (!selectedExercise || !tempImageUrl) return;
     
     const updatedEx = { ...selectedExercise, imageUrl: tempImageUrl };
-    updateExercise(updatedEx);
+    await updateExercise(updatedEx);
     
-    setExercises(getExercises());
+    setExercises(await getExercises());
     setSelectedExercise(updatedEx);
     setIsEditingImage(false);
     setTempImageUrl('');
@@ -98,7 +112,7 @@ export default function ExercisesPage() {
     });
   };
 
-  const handleUpdateDetails = () => {
+  const handleUpdateDetails = async () => {
     if (!selectedExercise) return;
 
     const updatedEx: Exercise = {
@@ -109,8 +123,8 @@ export default function ExercisesPage() {
       cues: editCues.split('\n').filter(c => c.trim() !== '')
     };
 
-    updateExercise(updatedEx);
-    setExercises(getExercises());
+    await updateExercise(updatedEx);
+    setExercises(await getExercises());
     setSelectedExercise(updatedEx);
     setIsEditingDetails(false);
 

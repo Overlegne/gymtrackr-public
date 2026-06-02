@@ -26,18 +26,21 @@ export default function EditRoutinePage({ params }: { params: Promise<{ id: stri
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const routines = getRoutines();
-    const found = routines.find(r => r.id === id);
-    if (found) {
-      setName(found.name);
-      setSelectedColor(found.color || ROUTINE_COLORS[0].value);
-      setSelectedExercises(found.exercises);
+    async function load() {
+      const routines = await getRoutines();
+      const found = routines.find(r => r.id === id);
+      if (found) {
+        setName(found.name);
+        setSelectedColor(found.color || ROUTINE_COLORS[0].value);
+        setSelectedExercises(found.exercises);
+      }
+      setAllExercises(await getExercises());
+      setLoading(false);
     }
-    setAllExercises(getExercises());
-    setLoading(false);
+    load();
   }, [id]);
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!name) {
       toast({ variant: "destructive", title: "Name required" });
       return;
@@ -47,7 +50,7 @@ export default function EditRoutinePage({ params }: { params: Promise<{ id: stri
       return;
     }
 
-    saveRoutine({
+    await saveRoutine({
       id,
       name,
       exercises: selectedExercises,

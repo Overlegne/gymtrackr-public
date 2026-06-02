@@ -27,10 +27,13 @@ export default function NewRoutinePage() {
   const unitLabel = settings.unitSystem === 'Metric' ? 'kg' : 'lb';
 
   useEffect(() => {
-    setAllExercises(getExercises());
+    async function load() {
+      setAllExercises(await getExercises());
+    }
+    load();
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name) {
       toast({ variant: "destructive", title: "Name required", description: "Please give your routine a name." });
       return;
@@ -40,7 +43,7 @@ export default function NewRoutinePage() {
       return;
     }
 
-    saveRoutine({
+    await saveRoutine({
       id: Date.now().toString(),
       name,
       exercises: selectedExercises,
@@ -115,35 +118,31 @@ export default function NewRoutinePage() {
           </div>
 
           <div className="space-y-3">
-            {selectedExercises.map((ex) => {
-              const stats = getExerciseStats(ex.id);
-              const lastSet = stats.sets[0] || null;
-              return (
-                <Card key={ex.id} className="border-none shadow-sm card-hover overflow-hidden bg-card">
-                  <CardContent className="p-0 flex items-center">
-                    <div className="relative h-16 w-20 bg-muted shrink-0">
-                      <Image src={ex.imageUrl} alt={ex.name} fill className="object-cover" data-ai-hint="gym exercise" />
+            {selectedExercises.map((ex) => (
+              <Card key={ex.id} className="border-none shadow-sm card-hover overflow-hidden bg-card">
+                <CardContent className="p-0 flex items-center">
+                  <div className="relative h-16 w-20 bg-muted shrink-0">
+                    <Image src={ex.imageUrl} alt={ex.name} fill className="object-cover" data-ai-hint="gym exercise" />
+                  </div>
+                  <div className="flex-1 p-4 flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold">{ex.name}</h3>
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
+                        {ex.defaultSets} sets • {ex.defaultReps} reps
+                      </p>
                     </div>
-                    <div className="flex-1 p-4 flex items-center justify-between">
-                      <div>
-                        <h3 className="font-bold">{ex.name}</h3>
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
-                          {ex.defaultSets} sets • {lastSet?.reps || ex.defaultReps} reps {lastSet?.weight ? `• ${kgToDisplay(lastSet.weight, settings.unitSystem)}${unitLabel}` : ''}
-                        </p>
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="text-destructive hover:bg-destructive/10"
-                        onClick={() => setSelectedExercises(prev => prev.filter(e => e.id !== ex.id))}
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-destructive hover:bg-destructive/10"
+                      onClick={() => setSelectedExercises(prev => prev.filter(e => e.id !== ex.id))}
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
 
             {selectedExercises.length === 0 && (
               <div 
