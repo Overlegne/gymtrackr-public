@@ -47,7 +47,7 @@ export default function HomePage() {
 
       <section className="space-y-4">
         <div className="flex justify-between items-end">
-          <h2 className="text-xl font-bold">Jouw Routines</h2>
+          <h2 className="text-xl font-bold">Recente Routines</h2>
           <Link href="/routines" className="text-sm text-primary font-medium flex items-center gap-1">
             Alles tonen <ArrowRight className="h-4 w-4" />
           </Link>
