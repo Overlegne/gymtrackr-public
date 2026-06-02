@@ -5,7 +5,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { getExercises, getExerciseStats, updateExercise, type Exercise, type MuscleGroup, type Equipment } from '@/lib/store';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ChevronRight, Edit, Upload, Link as LinkIcon, Settings2 } from 'lucide-react';
+import { Search, ChevronRight, Edit, Upload, Link as LinkIcon, Settings2, TrendingUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { AddExerciseDialog } from '@/components/AddExerciseDialog';
 import {
