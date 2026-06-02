@@ -39,28 +39,17 @@ export function AddExerciseDialog({ onExerciseAdded }: AddExerciseDialogProps) {
     e.preventDefault();
     if (!name) return;
 
-    const seedMap: Record<string, string> = {
-      'Chest': 'bench',
-      'Legs': 'squat',
-      'Back': 'deadlift',
-      'Shoulders': 'shoulder',
-      'Arms': 'bicep',
-      'Abs': 'abs',
-      'Cardio': 'cardio'
-    };
-
     addExercise({
       name,
       muscleGroup,
       equipment,
       defaultSets: 3,
-      defaultReps: 12,
-      imageUrl: `https://picsum.photos/seed/${seedMap[muscleGroup] || 'gym'}/600/400`
+      defaultReps: 12
     });
 
     toast({
       title: "Exercise added",
-      description: `"${name}" has been successfully created.`
+      description: `"${name}" has been successfully created with a category-specific image.`
     });
 
     setOpen(false);

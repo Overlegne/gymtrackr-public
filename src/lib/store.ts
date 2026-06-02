@@ -12,6 +12,7 @@ export interface Exercise {
   defaultSets: number;
   defaultReps: number;
   imageUrl: string;
+  imageNeedsReview?: boolean;
 }
 
 export interface SetStats {
@@ -59,6 +60,122 @@ export const ROUTINE_COLORS = [
   { name: 'Gray Grit', value: '#64748b' },
 ];
 
+/**
+ * Normalizes an exercise name for consistent mapping.
+ */
+export function normalizeExerciseName(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]/g, '_')
+    .replace(/_{2,}/g, '_');
+}
+
+/**
+ * Deterministic mapping of exercises to stable image seeds/hints.
+ */
+const exerciseImageMap: Record<string, string> = {
+  // Chest
+  barbell_bench_press: 'bench_press',
+  dumbbell_bench_press: 'dumbbell_press',
+  incline_barbell_bench_press: 'incline_bench',
+  pec_deck: 'pec_deck_machine',
+  chest_dips: 'chest_dips',
+  push_ups: 'push_ups',
+  
+  // Back
+  barbell_deadlift: 'deadlift',
+  barbell_row: 'bent_over_row',
+  pull_up: 'pull_up',
+  wide_grip_pulldown: 'lat_pulldown',
+  seated_cable_row: 'cable_row',
+  hyperextensions: 'back_extension',
+
+  // Legs
+  barbell_squat: 'barbell_squat',
+  leg_press: 'leg_press_machine',
+  leg_extension: 'leg_extension_machine',
+  lying_leg_curl: 'leg_curl_machine',
+  romanian_deadlift: 'romanian_deadlift',
+  calf_raise_standing: 'calf_raise',
+
+  // Shoulders
+  dumbbell_shoulder_press: 'shoulder_press',
+  dumbbell_lateral_raise: 'lateral_raise',
+  face_pull: 'face_pull_cable',
+  arnold_press: 'arnold_press',
+
+  // Arms
+  barbell_curl: 'bicep_curl',
+  triceps_pressdown: 'tricep_pushdown',
+  skull_crushers: 'skull_crusher_tricep',
+  hammer_curl: 'hammer_curl',
+
+  // Abs
+  plank: 'plank_core',
+  crunch: 'abs_crunch',
+  hanging_leg_raise: 'hanging_leg_raise',
+
+  // Cardio
+  running_treadmill: 'treadmill_running',
+  burpees: 'burpees_exercise',
+};
+
+/**
+ * Category-based fallback images for items without exact matches.
+ */
+const categoryFallbackMap: Record<string, string> = {
+  'Chest_Barbell': 'barbell_chest_generic',
+  'Chest_Dumbbell': 'dumbbell_chest_generic',
+  'Chest_Machine': 'machine_chest_generic',
+  'Back_Barbell': 'barbell_back_generic',
+  'Back_Cable': 'cable_back_generic',
+  'Legs_Barbell': 'barbell_legs_generic',
+  'Legs_Machine': 'machine_legs_generic',
+  'Arms_Dumbbell': 'dumbbell_arms_generic',
+  'Shoulders_Dumbbell': 'dumbbell_shoulders_generic',
+  'Abs_Bodyweight': 'bodyweight_abs_generic',
+  'Cardio_Bodyweight': 'cardio_generic',
+};
+
+/**
+ * Gets the most appropriate image URL for an exercise.
+ */
+export function getExerciseImage(
+  name: string,
+  id: string,
+  muscleGroup: MuscleGroup,
+  equipment: Equipment
+): { url: string; needsReview: boolean } {
+  const normalizedId = normalizeExerciseName(id);
+  const normalizedName = normalizeExerciseName(name);
+
+  // 1. Exact ID/Slug match
+  if (exerciseImageMap[normalizedId]) {
+    return {
+      url: `https://picsum.photos/seed/${exerciseImageMap[normalizedId]}/600/400`,
+      needsReview: false,
+    };
+  }
+
+  // 2. Exact name match
+  if (exerciseImageMap[normalizedName]) {
+    return {
+      url: `https://picsum.photos/seed/${exerciseImageMap[normalizedName]}/600/400`,
+      needsReview: false,
+    };
+  }
+
+  // 3. Category Fallback
+  const fallbackKey = `${muscleGroup}_${equipment}`;
+  const fallbackSeed = categoryFallbackMap[fallbackKey] || normalizeExerciseName(`${muscleGroup}_${equipment}`);
+  
+  return {
+    url: `https://picsum.photos/seed/${fallbackSeed}/600/400`,
+    needsReview: true,
+  };
+}
+
 const mapBodyPart = (part: string | null): MuscleGroup => {
   if (!part) return 'Cardio';
   const p = part.toLowerCase();
@@ -71,17 +188,33 @@ const mapBodyPart = (part: string | null): MuscleGroup => {
   return 'Cardio';
 };
 
-export const DEFAULT_EXERCISES: Exercise[] = (exercisesData.exercises as any[]).map(ex => ({
-  id: ex.id,
-  name: ex.canonical_name,
-  muscleGroup: mapBodyPart(ex.body_part),
-  equipment: 'Barbell',
-  defaultSets: 3,
-  defaultReps: 12,
-  imageUrl: `https://picsum.photos/seed/${ex.id}/600/400`
-}));
+const determineEquipment = (name: string): Equipment => {
+  const n = name.toLowerCase();
+  if (n.includes('dumbbell') || n.includes('db')) return 'Dumbbell';
+  if (n.includes('barbell') || n.includes('bb')) return 'Barbell';
+  if (n.includes('cable')) return 'Cable';
+  if (n.includes('machine') || n.includes('pressdown') || n.includes('extension') || n.includes('pec deck')) return 'Machine';
+  return 'Bodyweight';
+};
 
-const EXERCISES_KEY = 'user_exercises_v14';
+export const DEFAULT_EXERCISES: Exercise[] = (exercisesData.exercises as any[]).map(ex => {
+  const muscleGroup = mapBodyPart(ex.body_part);
+  const equipment = determineEquipment(ex.canonical_name);
+  const imageData = getExerciseImage(ex.canonical_name, ex.id, muscleGroup, equipment);
+
+  return {
+    id: ex.id,
+    name: ex.canonical_name,
+    muscleGroup,
+    equipment,
+    defaultSets: 3,
+    defaultReps: 12,
+    imageUrl: imageData.url,
+    imageNeedsReview: imageData.needsReview
+  };
+});
+
+const EXERCISES_KEY = 'user_exercises_v15';
 const STATS_KEY = 'exercise_stats_v11';
 const ROUTINES_KEY = 'user_routines_v11';
 const LOGS_KEY = 'workout_logs_v5';
@@ -96,11 +229,14 @@ export const getExercises = (): Exercise[] => {
   return JSON.parse(stored);
 };
 
-export const addExercise = (exercise: Omit<Exercise, 'id'>) => {
+export const addExercise = (exercise: Omit<Exercise, 'id' | 'imageUrl'>) => {
   const exercises = getExercises();
-  const newExercise = {
+  const imageData = getExerciseImage(exercise.name, '', exercise.muscleGroup, exercise.equipment);
+  const newExercise: Exercise = {
     ...exercise,
     id: Date.now().toString(),
+    imageUrl: imageData.url,
+    imageNeedsReview: imageData.needsReview
   };
   exercises.push(newExercise);
   localStorage.setItem(EXERCISES_KEY, JSON.stringify(exercises));
