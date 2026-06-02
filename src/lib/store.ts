@@ -88,33 +88,67 @@ export function normalizeExerciseName(name: string): string {
 
 /**
  * Coaching Cues and Metadata Database
+ * Generates context-aware coaching information.
  */
-const getCoachingData = (name: string, equipment: Equipment, muscle: MuscleGroup) => {
+export const getCoachingData = (name: string, equipment: Equipment, muscle: MuscleGroup) => {
   const n = name.toLowerCase();
   const data: Partial<Exercise> = {
     cues: ["Control the movement", "Full range of motion", "Brace your core"],
     alternatives: [],
-    mistakes: ["Using momentum", "Short range of motion"]
+    mistakes: ["Using momentum", "Short range of motion"],
+    secondaryMuscles: []
   };
 
-  if (n.includes('bench press')) {
-    data.cues = ["Keep chest up", "Retract shoulder blades", "Stack wrists under elbows", "Drive through heels"];
-    data.alternatives = n.includes('barbell') 
-      ? [{ name: "Dumbbell Bench Press", id: "dumbbell_bench_press" }] 
-      : [{ name: "Barbell Bench Press", id: "barbell_bench_press" }];
-    data.secondaryMuscles = ["Triceps", "Front Deltoids"];
-  } else if (n.includes('squat')) {
-    data.cues = ["Keep chest proud", "Drive knees outward", "Core braced", "Weight on heels"];
-    data.alternatives = [{ name: "Leg Press", id: "leg_press" }];
+  // Chest Patterns
+  if (muscle === 'Chest') {
+    data.cues = ["Retract shoulder blades", "Squeeze chest at top", "Control descent", "Stack wrists over elbows"];
+    data.secondaryMuscles = ["Triceps", "Front Delts"];
+    data.mistakes = ["Flaring elbows too wide", "Bouncing bar off chest"];
+    if (n.includes('dumbbell')) {
+      data.alternatives = [{ name: "Barbell Bench Press", id: "barbell_bench_press" }];
+    } else {
+      data.alternatives = [{ name: "Dumbbell Bench Press", id: "dumbbell_bench_press" }];
+    }
+  } 
+  // Back Patterns
+  else if (muscle === 'Back') {
+    data.cues = ["Pull with elbows", "Squeeze shoulder blades", "Avoid torso rock", "Chest up throughout"];
+    data.secondaryMuscles = ["Biceps", "Rear Delts", "Forearms"];
+    data.mistakes = ["Using too much body English", "Rounded lower back"];
+    if (n.includes('row')) {
+      data.alternatives = [{ name: "Lat Pulldown", id: "wide_grip_pulldown" }];
+    } else {
+      data.alternatives = [{ name: "Seated Cable Row", id: "seated_cable_row" }];
+    }
+  }
+  // Leg Patterns
+  else if (muscle === 'Legs') {
+    data.cues = ["Drive through heels", "Keep chest proud", "Knees out", "Brace core heavily"];
     data.secondaryMuscles = ["Glutes", "Lower Back", "Adductors"];
-  } else if (n.includes('deadlift')) {
-    data.cues = ["Flat back", "Keep bar close to body", "Push the floor away", "Lock out at top"];
-    data.alternatives = [{ name: "Romanian Deadlift", id: "romanian_deadlift" }];
-    data.secondaryMuscles = ["Hamstrings", "Glutes", "Traps", "Forearms"];
-  } else if (n.includes('row')) {
-    data.cues = ["Pull to hips", "Squeeze shoulder blades", "Avoid torso rock", "Full stretch at bottom"];
-    data.alternatives = [{ name: "Lat Pulldown", id: "wide_grip_pulldown" }];
-    data.secondaryMuscles = ["Biceps", "Rear Deltoids", "Lower Back"];
+    data.mistakes = ["Knees caving in", "Heels lifting off floor"];
+    if (n.includes('squat')) {
+      data.alternatives = [{ name: "Leg Press", id: "leg_press" }];
+    } else if (n.includes('deadlift')) {
+      data.alternatives = [{ name: "Romanian Deadlift", id: "romanian_deadlift" }];
+    }
+  }
+  // Arm Patterns
+  else if (muscle === 'Arms') {
+    data.cues = ["Isolate the muscle", "No momentum", "Full extension", "Keep elbows stationary"];
+    data.secondaryMuscles = ["Forearms"];
+    data.mistakes = ["Swinging the weight", "Partial range of motion"];
+    if (n.includes('bicep')) {
+      data.alternatives = [{ name: "Hammer Curl", id: "hammer_curl" }];
+    } else {
+      data.alternatives = [{ name: "Skull Crushers", id: "skull_crushers" }];
+    }
+  }
+  // Shoulder Patterns
+  else if (muscle === 'Shoulders') {
+    data.cues = ["Neutral wrists", "Drive vertically", "Core braced", "Controlled negative"];
+    data.secondaryMuscles = ["Triceps", "Upper Traps"];
+    data.mistakes = ["Arching lower back", "Partial reps"];
+    data.alternatives = [{ name: "Arnold Press", id: "arnold_press" }];
   }
 
   return data;
@@ -186,7 +220,7 @@ export function getExerciseImage(
 
   if (exerciseImageMap[normalizedName]) {
     return {
-      url: `https://picsum.photos/seed/${exerciseImageMap[normalizedName]}/600/400`,
+      url: `https://picsum.photos/seed/${exerciseImageNameMap[normalizedName]}/600/400`,
       needsReview: false,
     };
   }
@@ -259,10 +293,16 @@ export const getExercises = (): Exercise[] => {
 export const addExercise = (exercise: Omit<Exercise, 'id' | 'imageUrl'>) => {
   const exercises = getExercises();
   const imageData = getExerciseImage(exercise.name, '', exercise.muscleGroup, exercise.equipment);
-  const coaching = getCoachingData(exercise.name, exercise.equipment, exercise.muscleGroup);
+  
+  // If user didn't provide cues, generate them
+  const generatedCoaching = getCoachingData(exercise.name, exercise.equipment, exercise.muscleGroup);
+  
   const newExercise: Exercise = {
     ...exercise,
-    ...coaching,
+    cues: exercise.cues && exercise.cues.length > 0 ? exercise.cues : generatedCoaching.cues,
+    secondaryMuscles: exercise.secondaryMuscles && exercise.secondaryMuscles.length > 0 ? exercise.secondaryMuscles : generatedCoaching.secondaryMuscles,
+    alternatives: exercise.alternatives && exercise.alternatives.length > 0 ? exercise.alternatives : generatedCoaching.alternatives,
+    mistakes: exercise.mistakes && exercise.mistakes.length > 0 ? exercise.mistakes : generatedCoaching.mistakes,
     id: Date.now().toString(),
     imageUrl: imageData.url,
     imageNeedsReview: imageData.needsReview

@@ -3,10 +3,10 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { BottomNav } from '@/components/BottomNav';
-import { getExercises, getExerciseStats, updateExercise, type Exercise, type MuscleGroup } from '@/lib/store';
+import { getExercises, getExerciseStats, updateExercise, type Exercise, type MuscleGroup, type Equipment } from '@/lib/store';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ChevronRight, Edit, Upload, Link as LinkIcon, Check, TrendingUp } from 'lucide-react';
+import { Search, ChevronRight, Edit, Upload, Link as LinkIcon, Check, TrendingUp, Settings2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { AddExerciseDialog } from '@/components/AddExerciseDialog';
 import {
@@ -17,6 +17,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { ExerciseDetailCard } from '@/components/ExerciseDetailCard';
 import Image from 'next/image';
@@ -29,8 +37,17 @@ export default function ExercisesPage() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   
-  // Image editing state
+  // UI Modes
   const [isEditingImage, setIsEditingImage] = useState(false);
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
+  
+  // Detail Editing state
+  const [editName, setEditName] = useState('');
+  const [editMuscle, setEditMuscle] = useState<MuscleGroup>('Chest');
+  const [editEquipment, setEditEquipment] = useState<Equipment>('Barbell');
+  const [editCues, setEditCues] = useState('');
+
+  // Image editing state
   const [imageInputMode, setImageInputMode] = useState<'url' | 'upload'>('url');
   const [tempImageUrl, setTempImageUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -71,7 +88,6 @@ export default function ExercisesPage() {
     const updatedEx = { ...selectedExercise, imageUrl: tempImageUrl };
     updateExercise(updatedEx);
     
-    // Refresh local lists
     setExercises(getExercises());
     setSelectedExercise(updatedEx);
     setIsEditingImage(false);
@@ -81,6 +97,38 @@ export default function ExercisesPage() {
       title: "Image updated",
       description: `New picture saved for ${selectedExercise.name}.`
     });
+  };
+
+  const handleUpdateDetails = () => {
+    if (!selectedExercise) return;
+
+    const updatedEx: Exercise = {
+      ...selectedExercise,
+      name: editName,
+      muscleGroup: editMuscle,
+      equipment: editEquipment,
+      cues: editCues.split('\n').filter(c => c.trim() !== '')
+    };
+
+    updateExercise(updatedEx);
+    setExercises(getExercises());
+    setSelectedExercise(updatedEx);
+    setIsEditingDetails(false);
+
+    toast({
+      title: "Details updated",
+      description: `Coaching cues and exercise metadata saved.`
+    });
+  };
+
+  const openDetailsEditor = () => {
+    if (!selectedExercise) return;
+    setEditName(selectedExercise.name);
+    setEditMuscle(selectedExercise.muscleGroup);
+    setEditEquipment(selectedExercise.equipment);
+    setEditCues(selectedExercise.cues?.join('\n') || '');
+    setIsEditingDetails(true);
+    setIsEditingImage(false);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -138,6 +186,7 @@ export default function ExercisesPage() {
               onClick={() => {
                 setSelectedExercise(ex);
                 setIsEditingImage(false);
+                setIsEditingDetails(false);
               }}
             >
               <CardContent className="p-0 flex items-center">
@@ -164,11 +213,6 @@ export default function ExercisesPage() {
               </CardContent>
             </Card>
           ))}
-          {filtered.length === 0 && (
-            <div className="text-center py-20 bg-white rounded-[2.5rem] shadow-inner border border-dashed">
-              <p className="text-muted-foreground font-bold italic">No exercises found.</p>
-            </div>
-          )}
         </div>
       </div>
 
@@ -181,16 +225,29 @@ export default function ExercisesPage() {
                   <div className="flex justify-between items-start">
                     <div>
                       <DialogTitle className="text-2xl font-black leading-tight text-slate-900">{selectedExercise.name}</DialogTitle>
-                      <p className="text-[10px] text-primary uppercase font-black tracking-widest mt-1">Exercise Blueprints</p>
+                      <p className="text-[10px] text-primary uppercase font-black tracking-widest mt-1">Movement Details</p>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="rounded-full bg-slate-50 h-10 w-10 shrink-0"
-                      onClick={() => setIsEditingImage(!isEditingImage)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="rounded-full bg-slate-50 h-10 w-10 shrink-0"
+                        onClick={openDetailsEditor}
+                      >
+                        <Settings2 className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="rounded-full bg-slate-50 h-10 w-10 shrink-0"
+                        onClick={() => {
+                          setIsEditingImage(!isEditingImage);
+                          setIsEditingDetails(false);
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </DialogHeader>
 
@@ -227,41 +284,68 @@ export default function ExercisesPage() {
                       />
                     ) : (
                       <div className="space-y-2">
-                        <input 
-                          type="file" 
-                          className="hidden" 
-                          ref={fileInputRef} 
-                          accept="image/*"
-                          onChange={handleFileUpload}
-                        />
-                        <Button 
-                          variant="outline" 
-                          className="w-full rounded-xl h-12 border-dashed border-slate-300 bg-white"
-                          onClick={() => fileInputRef.current?.click()}
-                        >
+                        <input type="file" className="hidden" ref={fileInputRef} accept="image/*" onChange={handleFileUpload}/>
+                        <Button variant="outline" className="w-full rounded-xl h-12 border-dashed border-slate-300 bg-white" onClick={() => fileInputRef.current?.click()}>
                           <Upload className="h-4 w-4 mr-2" /> Choose Image File
                         </Button>
                       </div>
                     )}
 
                     <div className="flex gap-2">
-                      <Button 
-                        className="flex-1 rounded-xl font-black uppercase tracking-widest text-[10px] h-11" 
-                        onClick={handleUpdateImage}
-                        disabled={!tempImageUrl || tempImageUrl === selectedExercise.imageUrl}
-                      >
-                        <Check className="h-4 w-4 mr-2" /> Save Image
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        className="flex-1 rounded-xl font-black uppercase tracking-widest text-[10px] h-11" 
-                        onClick={() => {
-                          setIsEditingImage(false);
-                          setTempImageUrl('');
-                        }}
-                      >
-                        Cancel
-                      </Button>
+                      <Button className="flex-1 rounded-xl font-black h-11" onClick={handleUpdateImage} disabled={!tempImageUrl}>Save</Button>
+                      <Button variant="ghost" className="flex-1 rounded-xl font-black h-11" onClick={() => setIsEditingImage(false)}>Cancel</Button>
+                    </div>
+                  </div>
+                )}
+
+                {isEditingDetails && (
+                  <div className="mb-6 bg-slate-50 p-5 rounded-3xl border border-slate-200 space-y-4 animate-in fade-in slide-in-from-top-2">
+                    <div className="space-y-4">
+                      <div className="space-y-1">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Name</Label>
+                        <Input value={editName} onChange={e => setEditName(e.target.value)} className="bg-white rounded-xl" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Muscle</Label>
+                          <Select value={editMuscle} onValueChange={v => setEditMuscle(v as MuscleGroup)}>
+                            <SelectTrigger className="bg-white rounded-xl">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {['Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Abs', 'Cardio'].map(m => (
+                                <SelectItem key={m} value={m}>{m}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Equipment</Label>
+                          <Select value={editEquipment} onValueChange={v => setEditEquipment(v as Equipment)}>
+                            <SelectTrigger className="bg-white rounded-xl">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {['Dumbbell', 'Barbell', 'Machine', 'Cable', 'Bodyweight'].map(e => (
+                                <SelectItem key={e} value={e}>{e}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Form Cues (One per line)</Label>
+                        <Textarea 
+                          value={editCues} 
+                          onChange={e => setEditCues(e.target.value)} 
+                          className="bg-white rounded-xl min-h-[100px] text-sm"
+                          placeholder="Drive through heels..."
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button className="flex-1 rounded-xl font-black h-11" onClick={handleUpdateDetails}>Save Details</Button>
+                      <Button variant="ghost" className="flex-1 rounded-xl font-black h-11" onClick={() => setIsEditingDetails(false)}>Cancel</Button>
                     </div>
                   </div>
                 )}

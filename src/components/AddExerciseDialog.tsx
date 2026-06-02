@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Select, 
   SelectContent, 
@@ -34,6 +35,7 @@ export function AddExerciseDialog({ onExerciseAdded }: AddExerciseDialogProps) {
   const [name, setName] = useState('');
   const [muscleGroup, setMuscleGroup] = useState<MuscleGroup>('Chest');
   const [equipment, setEquipment] = useState<Equipment>('Barbell');
+  const [cues, setCues] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,16 +46,18 @@ export function AddExerciseDialog({ onExerciseAdded }: AddExerciseDialogProps) {
       muscleGroup,
       equipment,
       defaultSets: 3,
-      defaultReps: 12
+      defaultReps: 12,
+      cues: cues.split('\n').filter(c => c.trim() !== '')
     });
 
     toast({
       title: "Exercise added",
-      description: `"${name}" has been successfully created with a category-specific image.`
+      description: `"${name}" has been successfully created with custom coaching details.`
     });
 
     setOpen(false);
     setName('');
+    setCues('');
     onExerciseAdded();
   };
 
@@ -64,26 +68,27 @@ export function AddExerciseDialog({ onExerciseAdded }: AddExerciseDialogProps) {
           <Plus className="h-5 w-5" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] rounded-[2rem]">
         <DialogHeader>
-          <DialogTitle>New Exercise</DialogTitle>
+          <DialogTitle className="text-xl font-black">New Exercise</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Exercise Name</Label>
             <Input 
               id="name" 
               placeholder="e.g. Incline Dumbbell Press" 
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className="rounded-xl h-12"
               required
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Muscle Group</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Muscle Group</Label>
               <Select value={muscleGroup} onValueChange={(v) => setMuscleGroup(v as MuscleGroup)}>
-                <SelectTrigger>
+                <SelectTrigger className="rounded-xl">
                   <SelectValue placeholder="Choose..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -98,9 +103,9 @@ export function AddExerciseDialog({ onExerciseAdded }: AddExerciseDialogProps) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Equipment</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Equipment</Label>
               <Select value={equipment} onValueChange={(v) => setEquipment(v as Equipment)}>
-                <SelectTrigger>
+                <SelectTrigger className="rounded-xl">
                   <SelectValue placeholder="Choose..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -113,8 +118,17 @@ export function AddExerciseDialog({ onExerciseAdded }: AddExerciseDialogProps) {
               </Select>
             </div>
           </div>
+          <div className="space-y-2">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Form Cues (Optional, one per line)</Label>
+            <Textarea 
+              placeholder="Drive through heels..."
+              value={cues}
+              onChange={(e) => setCues(e.target.value)}
+              className="rounded-xl min-h-[100px]"
+            />
+          </div>
           <DialogFooter className="pt-4">
-            <Button type="submit" className="w-full">Add Exercise</Button>
+            <Button type="submit" className="w-full rounded-xl h-12 font-black uppercase tracking-widest">Add Exercise</Button>
           </DialogFooter>
         </form>
       </DialogContent>
