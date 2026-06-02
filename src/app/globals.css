@@ -43,7 +43,7 @@
     --secondary: 250 20% 15%;
     --secondary-foreground: 250 20% 98%;
     --muted: 250 20% 15%;
-    --muted-foreground: 250 10% 75%;
+    --muted-foreground: 250 10% 75%; /* Significantly lightened for better contrast */
     --accent: 217 100% 70%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 40%;

@@ -50,7 +50,7 @@ export default function SettingsPage() {
     <div className="flex flex-col min-h-screen bg-background">
       <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border/50 px-5 py-6 flex items-center gap-4">
         <Link href="/">
-          <Button variant="ghost" size="icon" className="rounded-full bg-muted/30">
+          <Button variant="ghost" size="icon" className="rounded-full bg-muted/30 hover:bg-muted/50 transition-colors">
             <ChevronLeft className="h-5 w-5 text-foreground" />
           </Button>
         </Link>
@@ -61,13 +61,14 @@ export default function SettingsPage() {
       </header>
 
       <main className="flex-1 p-5 space-y-6 pb-32">
+        {/* Appearance Section */}
         <Card className="border-none shadow-sm bg-card rounded-[2rem] overflow-hidden ring-1 ring-border/50">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-black flex items-center gap-2 text-foreground">
               <Sun className="h-5 w-5 text-primary" />
               Appearance
             </CardTitle>
-            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">Theme & Dark Mode</CardDescription>
+            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Theme & Dark Mode</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
             <div className="flex items-center justify-between bg-muted/20 p-4 rounded-2xl border border-border/40">
@@ -77,7 +78,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <p className="text-xs font-black uppercase text-foreground">Theme Mode</p>
-                  <p className="text-[9px] text-muted-foreground uppercase font-black">{theme}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase font-black">{theme}</p>
                 </div>
               </div>
               <div className="flex bg-card rounded-xl p-1 shadow-sm border border-border/50">
@@ -110,6 +111,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Custom Branding Section */}
         <Card className="border-none shadow-sm bg-card rounded-[2rem] overflow-hidden ring-1 ring-border/50">
           <CardHeader className="pb-2">
             <div className="flex justify-between items-start">
@@ -118,13 +120,13 @@ export default function SettingsPage() {
                   <Palette className="h-5 w-5 text-primary" />
                   Custom Branding
                 </CardTitle>
-                <CardDescription className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">Primary Color Engine</CardDescription>
+                <CardDescription className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Primary Color Engine</CardDescription>
               </div>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={handleReset} 
-                className="h-8 text-[9px] font-black uppercase tracking-widest text-foreground hover:text-primary bg-muted/30 rounded-full px-3"
+                className="h-8 text-[9px] font-black uppercase tracking-widest text-foreground hover:text-primary bg-muted/40 hover:bg-muted/60 rounded-full px-3 transition-colors"
               >
                 <RotateCcw className="h-3 w-3 mr-1" /> Reset
               </Button>
@@ -147,7 +149,8 @@ export default function SettingsPage() {
               ))}
             </div>
 
-            <div className="bg-muted/10 p-5 rounded-[2rem] border border-border/50">
+            {/* Live Preview Container */}
+            <div className="bg-muted/10 p-5 rounded-[2rem] border border-border/60">
               <h4 className="text-[10px] font-black uppercase tracking-widest text-primary mb-3">Live Preview</h4>
               <div className="flex flex-col gap-3">
                 <Button className="w-full rounded-xl h-12 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">Main Action Button</Button>
@@ -160,9 +163,10 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Footer Text */}
         <div className="text-center space-y-2 pb-10">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-foreground/70">My Strength Path v2.0</p>
-          <p className="text-[9px] font-bold leading-relaxed max-w-[200px] mx-auto text-muted-foreground">Design & Colors are optimized for contrast and readability in all modes.</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-foreground">My Strength Path v2.0</p>
+          <p className="text-[10px] font-bold leading-relaxed max-w-[240px] mx-auto text-muted-foreground">Design and colors are optimized for contrast and readability in all lighting conditions.</p>
         </div>
       </main>
 
