@@ -86,7 +86,7 @@ export default function RoutineImportPage() {
         const enhancedDays = result.days.map(day => ({
           ...day,
           exercises: day.exercises.map(ex => {
-            const match = matchExerciseToDatabase(ex.displayName);
+            const match = matchExerciseToDatabase(ex.displayName, allExercises);
             return {
               ...ex,
               matchedExerciseId: match.exercise?.id,

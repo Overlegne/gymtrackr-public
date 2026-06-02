@@ -1,10 +1,9 @@
-import { getExercises, normalizeExerciseName, type Exercise } from './store';
+import { normalizeExerciseName, type Exercise } from './store';
 
 /**
  * Intelligent matcher to map imported exercise text to our local database.
  */
-export function matchExerciseToDatabase(text: string): { exercise: Exercise | null, confidence: number } {
-  const allExercises = getExercises();
+export function matchExerciseToDatabase(text: string, allExercises: Exercise[]): { exercise: Exercise | null, confidence: number } {
   const normalizedInput = normalizeExerciseName(text);
 
   // 1. Exact Name Match (Normalized)
