@@ -10,6 +10,8 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
+export const maxDuration = 60; // Increase timeout for this specific server action file
+
 const AiGeneratedRoutineSuggestionInputSchema = z.object({
   muscleGroupFocus: z
     .array(z.string())
@@ -92,7 +94,8 @@ const aiGeneratedRoutineSuggestionFlow = ai.defineFlow(
         lastError = err;
         const isRetryable = err.message?.includes('503') || 
                            err.message?.includes('high demand') || 
-                           err.message?.includes('UNAVAILABLE');
+                           err.message?.includes('UNAVAILABLE') ||
+                           err.message?.includes('DEADLINE_EXCEEDED');
 
         if (isRetryable) {
           attempts++;

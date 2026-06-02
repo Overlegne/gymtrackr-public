@@ -7,6 +7,8 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import pdf from 'pdf-parse';
 
+export const maxDuration = 60; // Increase timeout for this specific server action file
+
 const ImportedExerciseSchema = z.object({
   id: z.string(),
   originalText: z.string().describe('The raw text for the exercise as it appeared in the PDF.'),
@@ -47,6 +49,10 @@ export async function parseWorkoutPdf(input: ParseWorkoutPdfInput): Promise<Pars
   const buffer = Buffer.from(input.pdfBase64, 'base64');
   const pdfData = await pdf(buffer);
   const rawText = pdfData.text;
+
+  if (!rawText || rawText.trim().length === 0) {
+    throw new Error('De PDF bevat geen leesbare tekst.');
+  }
 
   return parseWorkoutPdfFlow({ rawText, fileName: input.fileName });
 }
@@ -110,7 +116,8 @@ const parseWorkoutPdfFlow = ai.defineFlow(
         // Check for 503 or high demand errors
         const isRetryable = err.message?.includes('503') || 
                            err.message?.includes('high demand') || 
-                           err.message?.includes('UNAVAILABLE');
+                           err.message?.includes('UNAVAILABLE') ||
+                           err.message?.includes('DEADLINE_EXCEEDED');
         
         if (isRetryable) {
           attempts++;
