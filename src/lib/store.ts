@@ -73,6 +73,7 @@ export function normalizeExerciseName(name: string): string {
 
 /**
  * Deterministic mapping of exercises to stable image seeds/hints.
+ * Maps normalized names/IDs to specific descriptive seeds.
  */
 const exerciseImageMap: Record<string, string> = {
   // Chest
@@ -123,6 +124,7 @@ const exerciseImageMap: Record<string, string> = {
 
 /**
  * Category-based fallback images for items without exact matches.
+ * Uses Equipment + Muscle Group pattern.
  */
 const categoryFallbackMap: Record<string, string> = {
   'Chest_Barbell': 'barbell_chest_generic',
@@ -139,7 +141,10 @@ const categoryFallbackMap: Record<string, string> = {
 };
 
 /**
- * Gets the most appropriate image URL for an exercise.
+ * Gets the most appropriate image URL for an exercise based on strict priority.
+ * 1. Exact slug/ID match
+ * 2. Exact name match
+ * 3. Category fallback (Equipment + Muscle Group)
  */
 export function getExerciseImage(
   name: string,
@@ -150,7 +155,7 @@ export function getExerciseImage(
   const normalizedId = normalizeExerciseName(id);
   const normalizedName = normalizeExerciseName(name);
 
-  // 1. Exact ID/Slug match
+  // 1. Check for exact ID/Slug match
   if (exerciseImageMap[normalizedId]) {
     return {
       url: `https://picsum.photos/seed/${exerciseImageMap[normalizedId]}/600/400`,
@@ -158,7 +163,7 @@ export function getExerciseImage(
     };
   }
 
-  // 2. Exact name match
+  // 2. Check for exact Name match
   if (exerciseImageMap[normalizedName]) {
     return {
       url: `https://picsum.photos/seed/${exerciseImageMap[normalizedName]}/600/400`,
@@ -166,7 +171,7 @@ export function getExerciseImage(
     };
   }
 
-  // 3. Category Fallback
+  // 3. Fallback to category-specific image
   const fallbackKey = `${muscleGroup}_${equipment}`;
   const fallbackSeed = categoryFallbackMap[fallbackKey] || normalizeExerciseName(`${muscleGroup}_${equipment}`);
   
