@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState, use } from 'react';
@@ -17,6 +18,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import Image from 'next/image';
+import { RestTimer } from '@/components/RestTimer';
+import { getSettings } from '@/lib/settings-store';
 
 export default function WorkoutPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -24,8 +27,16 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
   const { toast } = useToast();
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [exercises, setExercises] = useState<RoutineExercise[]>([]);
+  
+  // Timer State
+  const [timerTrigger, setTimerTrigger] = useState(0);
+  const [showTimer, setShowTimer] = useState(false);
+  const [restDuration, setRestDuration] = useState(60);
 
   useEffect(() => {
+    const settings = getSettings();
+    setRestDuration(settings.defaultRestDuration);
+
     const routines = getRoutines();
     const found = routines.find(r => r.id === id);
     if (found) {
@@ -51,7 +62,15 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
   const toggleSet = (exIndex: number, setIndex: number) => {
     const newExs = [...exercises];
     const set = newExs[exIndex].sets[setIndex];
+    const wasCompleted = set.completed;
     set.completed = !set.completed;
+    
+    // Automatically trigger rest timer when a set is completed
+    if (!wasCompleted) {
+      setTimerTrigger(Date.now());
+      setShowTimer(true);
+    }
+    
     setExercises(newExs);
   };
 
@@ -63,7 +82,6 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
 
   const handleFinish = () => {
     if (routine) {
-      // Mark all non-zero sets as completed for saving logic
       const processedExercises = exercises.map(ex => ({
         ...ex,
         sets: ex.sets.map(s => ({
@@ -106,7 +124,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
         </Button>
       </header>
 
-      <div className="p-5 space-y-6 pb-20">
+      <div className="p-5 space-y-6 pb-40">
         {exercises.map((ex, exIdx) => (
           <Card key={ex.id} className="border-none shadow-md overflow-hidden bg-card">
             <CardHeader className="pb-3" style={{ backgroundColor: `${routine.color}10` }}>
@@ -237,6 +255,14 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
           </Card>
         ))}
       </div>
+
+      {showTimer && (
+        <RestTimer 
+          duration={restDuration} 
+          trigger={timerTrigger} 
+          onClose={() => setShowTimer(false)} 
+        />
+      )}
     </div>
   );
 }

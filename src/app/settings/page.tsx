@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -5,9 +6,10 @@ import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useTheme } from 'next-themes';
-import { ChevronLeft, Palette, Moon, Sun, Monitor, RotateCcw, Check } from 'lucide-react';
+import { ChevronLeft, Palette, Moon, Sun, Monitor, RotateCcw, Check, Timer } from 'lucide-react';
 import Link from 'next/link';
 import { getCustomTheme, saveCustomTheme, resetCustomTheme } from '@/lib/theme-store';
+import { getSettings, saveSettings, type UserSettings } from '@/lib/settings-store';
 
 const PRESET_COLORS = [
   { name: 'Strength Violet', value: '250 69% 51%' },
@@ -18,10 +20,13 @@ const PRESET_COLORS = [
   { name: 'Noir Edge', value: '0 0% 10%' },
 ];
 
+const REST_OPTIONS = [30, 45, 60, 90, 120, 180];
+
 export default function SettingsPage() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [activePrimary, setActivePrimary] = useState('250 69% 51%');
+  const [userSettings, setUserSettings] = useState<UserSettings>(getSettings());
 
   useEffect(() => {
     setMounted(true);
@@ -44,6 +49,11 @@ export default function SettingsPage() {
     setActivePrimary('250 69% 51%');
   };
 
+  const handleRestDurationChange = (duration: number) => {
+    setUserSettings(prev => ({ ...prev, defaultRestDuration: duration }));
+    saveSettings({ defaultRestDuration: duration });
+  };
+
   if (!mounted) return null;
 
   return (
@@ -61,6 +71,37 @@ export default function SettingsPage() {
       </header>
 
       <main className="flex-1 p-5 space-y-6 pb-32">
+        {/* Workout Settings Section */}
+        <Card className="border-none shadow-sm bg-card rounded-[2rem] overflow-hidden ring-1 ring-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-black flex items-center gap-2 text-foreground">
+              <Timer className="h-5 w-5 text-primary" />
+              Workout Options
+            </CardTitle>
+            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Timer & Behavior</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-4">
+            <div className="space-y-3">
+              <p className="text-xs font-black uppercase text-foreground">Default Rest Timer</p>
+              <div className="grid grid-cols-3 gap-2">
+                {REST_OPTIONS.map((opt) => (
+                  <Button
+                    key={opt}
+                    variant={userSettings.defaultRestDuration === opt ? 'default' : 'outline'}
+                    className="rounded-xl h-10 text-[10px] font-black uppercase tracking-widest"
+                    onClick={() => handleRestDurationChange(opt)}
+                  >
+                    {opt < 60 ? `${opt}s` : `${opt / 60}m`}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground font-medium italic">
+                This timer starts automatically after checking a set.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Appearance Section */}
         <Card className="border-none shadow-sm bg-card rounded-[2rem] overflow-hidden ring-1 ring-border/50">
           <CardHeader className="pb-2">
