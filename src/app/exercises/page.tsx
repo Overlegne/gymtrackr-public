@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { BottomNav } from '@/components/BottomNav';
 import { getExercises, getExerciseStats, updateExercise, type Exercise, type MuscleGroup, type Equipment } from '@/lib/store';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ChevronRight, Edit, Upload, Link as LinkIcon, Check, TrendingUp, Settings2 } from 'lucide-react';
+import { Search, ChevronRight, Edit, Upload, Link as LinkIcon, Settings2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { AddExerciseDialog } from '@/components/AddExerciseDialog';
 import {
@@ -31,6 +31,7 @@ import Link from 'next/link';
 
 export default function ExercisesPage() {
   const { toast } = useToast();
+  const [mounted, setMounted] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'All'>('All');
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -53,6 +54,7 @@ export default function ExercisesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    setMounted(true);
     async function load() {
       setExercises(await getExercises());
     }
@@ -154,6 +156,8 @@ export default function ExercisesPage() {
       reader.readAsDataURL(file);
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
