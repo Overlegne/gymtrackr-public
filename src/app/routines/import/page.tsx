@@ -20,7 +20,8 @@ import {
   Search,
   Check,
   Save,
-  Dumbbell
+  Dumbbell,
+  Type
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -35,6 +36,7 @@ export default function RoutineImportPage() {
   const { toast } = useToast();
   const [step, setStep] = useState<ImportStep>('upload');
   const [draft, setDraft] = useState<ParseWorkoutPdfOutput | null>(null);
+  const [editedTitle, setEditedTitle] = useState('');
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -75,6 +77,7 @@ export default function RoutineImportPage() {
         }));
 
         setDraft({ ...result, days: enhancedDays });
+        setEditedTitle(result.title);
         setStep('review');
       };
       reader.readAsDataURL(file);
@@ -86,12 +89,29 @@ export default function RoutineImportPage() {
     }
   };
 
+  const updateDayName = (idx: number, name: string) => {
+    if (!draft) return;
+    const newDays = [...draft.days];
+    newDays[idx].name = name;
+    setDraft({ ...draft, days: newDays });
+  };
+
+  const updateExerciseField = (dIdx: number, eIdx: number, field: string, value: any) => {
+    if (!draft) return;
+    const newDays = [...draft.days];
+    newDays[dIdx].exercises[eIdx] = { ...newDays[dIdx].exercises[eIdx], [field]: value };
+    setDraft({ ...draft, days: newDays });
+  };
+
+  const removeExercise = (dIdx: number, eIdx: number) => {
+    if (!draft) return;
+    const newDays = [...draft.days];
+    newDays[dIdx].exercises.splice(eIdx, 1);
+    setDraft({ ...draft, days: newDays });
+  };
+
   const handleFinalSave = () => {
     if (!draft) return;
-
-    // Convert draft days into individual routines
-    // Since our app supports single routines, we'll ask the user or just save them as separate routines if multi-day
-    // For MVP, we'll save it as one routine with all exercises, or if multiple days, we'll save each day as a routine.
     
     draft.days.forEach((day, index) => {
       const allExercises = getExercises();
@@ -99,13 +119,11 @@ export default function RoutineImportPage() {
         const existing = allExercises.find(e => e.id === ex.matchedExerciseId);
         if (existing) return existing;
         
-        // Create a temporary exercise if not found? 
-        // For simplicity, we fallback to a generic one or create it.
         return {
           id: `imported-${Date.now()}-${ex.id}`,
           name: ex.displayName,
-          muscleGroup: 'Chest', // Placeholder
-          equipment: 'Machine', // Placeholder
+          muscleGroup: 'Chest',
+          equipment: 'Machine',
           defaultSets: ex.sets || 3,
           defaultReps: ex.reps || 12,
           imageUrl: `https://picsum.photos/seed/${ex.id}/600/400`
@@ -114,7 +132,7 @@ export default function RoutineImportPage() {
 
       saveRoutine({
         id: `imported-${Date.now()}-${index}`,
-        name: draft.days.length > 1 ? `${draft.title} - ${day.name}` : draft.title,
+        name: draft.days.length > 1 ? `${editedTitle} - ${day.name}` : editedTitle,
         exercises: mappedExercises,
         color: '#8b5cf6'
       });
@@ -185,32 +203,24 @@ export default function RoutineImportPage() {
                 Extracting exercises and workout days
               </p>
             </div>
-            <Card className="w-full max-w-sm bg-muted/30 border-none rounded-3xl p-6">
-              <ul className="space-y-3">
-                <li className="flex items-center gap-3 text-sm font-bold text-primary">
-                  <CheckCircle2 className="h-4 w-4" /> Reading text layers
-                </li>
-                <li className="flex items-center gap-3 text-sm font-bold text-muted-foreground animate-pulse">
-                  <div className="h-4 w-4 rounded-full border-2 border-primary/40 border-t-primary animate-spin" /> Identifying tables
-                </li>
-                <li className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
-                  <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground" /> Matching exercises
-                </li>
-              </ul>
-            </Card>
           </div>
         )}
 
         {step === 'review' && draft && (
           <div className="space-y-6 animate-in slide-in-from-bottom-5 duration-500">
-            <div className="flex justify-between items-start">
-              <div>
-                <h2 className="text-2xl font-black tracking-tight">{draft.title}</h2>
-                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-1">Imported Draft Routine</p>
+            <div className="flex justify-between items-end gap-4">
+              <div className="flex-1 min-w-0">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 mb-1 block">Routine Name</Label>
+                <Input 
+                  value={editedTitle}
+                  onChange={(e) => setEditedTitle(e.target.value)}
+                  className="text-2xl font-black tracking-tight bg-transparent border-none p-0 h-auto focus-visible:ring-0 focus-visible:border-primary placeholder:text-muted-foreground/30"
+                  placeholder="Enter Routine Name..."
+                />
               </div>
               <Button 
                 onClick={handleFinalSave}
-                className="bg-primary text-white rounded-2xl h-12 px-6 font-black uppercase tracking-widest shadow-lg shadow-primary/20"
+                className="bg-primary text-white rounded-2xl h-12 px-6 font-black uppercase tracking-widest shadow-lg shadow-primary/20 shrink-0"
               >
                 Save All
               </Button>
@@ -221,7 +231,7 @@ export default function RoutineImportPage() {
               <div>
                 <p className="text-xs font-bold text-amber-500 uppercase tracking-widest">Review Required</p>
                 <p className="text-[11px] text-amber-700 dark:text-amber-300 font-medium leading-relaxed">
-                  We found {draft.days.reduce((acc, day) => acc + day.exercises.filter(ex => ex.needsReview).length, 0)} items that might need correction. Please verify the sets and exercise matches.
+                  We found {draft.days.reduce((acc, day) => acc + day.exercises.filter(ex => ex.needsReview).length, 0)} items that might need correction. Please verify the details.
                 </p>
               </div>
             </div>
@@ -229,11 +239,15 @@ export default function RoutineImportPage() {
             {draft.days.map((day, dIdx) => (
               <div key={dIdx} className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-xs">
+                  <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-xs shrink-0">
                     {dIdx + 1}
                   </div>
-                  <h3 className="text-lg font-black">{day.name}</h3>
-                  <Badge variant="outline" className="text-[9px] uppercase font-black tracking-widest border-border text-muted-foreground">
+                  <Input 
+                    value={day.name}
+                    onChange={(e) => updateDayName(dIdx, e.target.value)}
+                    className="text-lg font-black bg-transparent border-none p-0 h-auto focus-visible:ring-0 w-full"
+                  />
+                  <Badge variant="outline" className="text-[9px] uppercase font-black tracking-widest border-border text-muted-foreground shrink-0">
                     {day.exercises.length} Exercises
                   </Badge>
                 </div>
@@ -242,7 +256,7 @@ export default function RoutineImportPage() {
                   {day.exercises.map((ex, eIdx) => (
                     <Card key={ex.id} className={`border-none shadow-sm overflow-hidden bg-card ${ex.needsReview ? 'ring-2 ring-amber-500/30' : ''}`}>
                       <CardContent className="p-0 flex items-center">
-                        <div className="relative h-20 w-24 shrink-0 bg-muted">
+                        <div className="relative h-24 w-24 shrink-0 bg-muted">
                            {ex.matchedExerciseId ? (
                              <Image 
                                src={`https://picsum.photos/seed/${ex.matchedExerciseId}/200/200`}
@@ -257,8 +271,12 @@ export default function RoutineImportPage() {
                            )}
                         </div>
                         <div className="flex-1 p-4 flex flex-col justify-center min-w-0">
-                          <div className="flex justify-between items-start mb-1">
-                            <h4 className="font-black text-sm truncate pr-2">{ex.displayName}</h4>
+                          <div className="flex justify-between items-start mb-2">
+                            <Input 
+                              value={ex.displayName}
+                              onChange={(e) => updateExerciseField(dIdx, eIdx, 'displayName', e.target.value)}
+                              className="font-black text-sm p-0 h-auto bg-transparent border-none focus-visible:ring-0 truncate pr-2"
+                            />
                             {ex.needsReview && (
                               <Badge variant="destructive" className="text-[8px] h-4 font-black uppercase tracking-tighter bg-amber-500 hover:bg-amber-600 border-none shrink-0">
                                 Review
@@ -266,18 +284,28 @@ export default function RoutineImportPage() {
                             )}
                           </div>
                           
-                          <div className="flex gap-3 items-center">
+                          <div className="flex gap-4 items-center">
                             <div className="flex flex-col">
                               <span className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Sets</span>
-                              <span className="text-xs font-black">{ex.sets || '—'}</span>
+                              <input 
+                                type="number"
+                                value={ex.sets || ''}
+                                onChange={(e) => updateExerciseField(dIdx, eIdx, 'sets', parseInt(e.target.value) || 0)}
+                                className="w-10 bg-muted/30 rounded px-1 text-xs font-black focus:outline-none"
+                              />
                             </div>
                             <div className="flex flex-col">
                               <span className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Reps</span>
-                              <span className="text-xs font-black">{ex.reps || '—'}</span>
+                              <input 
+                                type="number"
+                                value={ex.reps || ''}
+                                onChange={(e) => updateExerciseField(dIdx, eIdx, 'reps', parseInt(e.target.value) || 0)}
+                                className="w-10 bg-muted/30 rounded px-1 text-xs font-black focus:outline-none"
+                              />
                             </div>
                             {ex.matchedExerciseName && (
                               <div className="flex flex-col ml-auto">
-                                <span className="text-[8px] text-primary uppercase font-black tracking-widest text-right">Match</span>
+                                <span className="text-[8px] text-primary uppercase font-black tracking-widest text-right">Database Match</span>
                                 <span className="text-[10px] font-bold text-foreground truncate max-w-[100px] text-right">{ex.matchedExerciseName}</span>
                               </div>
                             )}
@@ -285,36 +313,21 @@ export default function RoutineImportPage() {
                         </div>
                         
                         <div className="p-2 flex flex-col gap-1 border-l border-border/40">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-muted">
-                            <Edit2 className="h-3 w-3" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-destructive/60 hover:bg-destructive/10">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 rounded-lg text-destructive/60 hover:bg-destructive/10"
+                            onClick={() => removeExercise(dIdx, eIdx)}
+                          >
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
                       </CardContent>
                     </Card>
                   ))}
-                  
-                  <Button variant="outline" className="w-full h-12 rounded-2xl border-dashed border-border bg-transparent text-muted-foreground font-bold text-xs gap-2">
-                    <Plus className="h-4 w-4" /> Add Exercise to {day.name}
-                  </Button>
                 </div>
               </div>
             ))}
-
-            {draft.unmatchedItems.length > 0 && (
-              <Card className="bg-muted/10 border-none rounded-3xl p-6 space-y-4">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unmatched Snippets</h4>
-                <div className="flex flex-wrap gap-2">
-                  {draft.unmatchedItems.map((item, i) => (
-                    <Badge key={i} variant="secondary" className="bg-muted text-[10px] font-medium py-1 px-3 rounded-lg">
-                      {item}
-                    </Badge>
-                  ))}
-                </div>
-              </Card>
-            )}
 
             <div className="pt-10 pb-20">
               <Button 
@@ -323,9 +336,6 @@ export default function RoutineImportPage() {
               >
                 Complete Import
               </Button>
-              <p className="text-center mt-4 text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
-                Check all items before finishing
-              </p>
             </div>
           </div>
         )}

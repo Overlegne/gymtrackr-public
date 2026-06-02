@@ -5,7 +5,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { getRoutines, deleteRoutine, type Routine } from '@/lib/store';
-import { Plus, Dumbbell, Play, Trash2, FileUp } from 'lucide-react';
+import { Plus, Dumbbell, Play, Trash2, FileUp, Edit2 } from 'lucide-react';
 import Link from 'next/link';
 import {
   AlertDialog,
@@ -71,6 +71,12 @@ export default function RoutinesPage() {
                   </div>
                 </div>
                 <div className="flex gap-2 shrink-0">
+                  <Link href={`/routines/edit/${routine.id}`}>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground h-10 w-10 bg-muted/50 rounded-full">
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                  </Link>
+
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive h-10 w-10 bg-muted/50 rounded-full">
