@@ -1,16 +1,18 @@
+
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { getExercises, saveRoutine, type Exercise, getExerciseStats, ROUTINE_COLORS } from '@/lib/store';
+import { getExercises, saveRoutine, getExerciseStats, kgToDisplay, ROUTINE_COLORS, type Exercise } from '@/lib/store';
 import { ChevronLeft, Plus, Search, Trash2, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { getSettings } from '@/lib/settings-store';
 
 export default function NewRoutinePage() {
   const router = useRouter();
@@ -21,6 +23,9 @@ export default function NewRoutinePage() {
   const [search, setSearch] = useState('');
   const [showPicker, setShowPicker] = useState(false);
   const [allExercises, setAllExercises] = useState<Exercise[]>([]);
+
+  const settings = useMemo(() => getSettings(), []);
+  const unitLabel = settings.unitSystem === 'Metric' ? 'kg' : 'lb';
 
   useEffect(() => {
     setAllExercises(getExercises());
@@ -124,7 +129,7 @@ export default function NewRoutinePage() {
                       <div>
                         <h3 className="font-bold">{ex.name}</h3>
                         <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
-                          {ex.defaultSets} sets • {lastSet?.reps || ex.defaultReps} reps {lastSet?.weight ? `• ${lastSet.weight}kg` : ''}
+                          {ex.defaultSets} sets • {lastSet?.reps || ex.defaultReps} reps {lastSet?.weight ? `• ${kgToDisplay(lastSet.weight, settings.unitSystem)}${unitLabel}` : ''}
                         </p>
                       </div>
                       <Button 

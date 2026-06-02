@@ -1,13 +1,15 @@
 
 "use client"
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState, use, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   getRoutines, 
   getExerciseStats, 
   saveAllWorkoutStats, 
   logWorkout,
+  kgToDisplay,
+  displayToKg,
   type Routine, 
   type RoutineExercise 
 } from '@/lib/store';
@@ -28,13 +30,17 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [exercises, setExercises] = useState<RoutineExercise[]>([]);
   
+  // Settings
+  const settings = useMemo(() => getSettings(), []);
+  const unitLabel = settings.unitSystem === 'Metric' ? 'kg' : 'lb';
+  const weightStep = settings.unitSystem === 'Metric' ? 2.5 : 5;
+
   // Timer State
   const [timerTrigger, setTimerTrigger] = useState(0);
   const [showTimer, setShowTimer] = useState(false);
   const [restDuration, setRestDuration] = useState(60);
 
   useEffect(() => {
-    const settings = getSettings();
     setRestDuration(settings.defaultRestDuration);
 
     const routines = getRoutines();
@@ -49,7 +55,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
             const prevSetStats = stats.sets[i.toString()] || stats.sets["0"] || null;
             return {
               reps: prevSetStats?.reps || ex.defaultReps,
-              weight: prevSetStats?.weight || 0,
+              weight: prevSetStats?.weight || 0, // internally stored in kg
               completed: false
             };
           })
@@ -57,7 +63,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
       });
       setExercises(initialized);
     }
-  }, [id]);
+  }, [id, settings]);
 
   const toggleSet = (exIndex: number, setIndex: number) => {
     const newExs = [...exercises];
@@ -65,7 +71,6 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
     const wasCompleted = set.completed;
     set.completed = !set.completed;
     
-    // Automatically trigger rest timer when a set is completed
     if (!wasCompleted) {
       setTimerTrigger(Date.now());
       setShowTimer(true);
@@ -74,9 +79,16 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
     setExercises(newExs);
   };
 
-  const updateSet = (exIndex: number, setIndex: number, field: 'reps' | 'weight', value: number) => {
+  const updateSetWeight = (exIdx: number, setIdx: number, displayValue: number) => {
     const newExs = [...exercises];
-    newExs[exIndex].sets[setIndex][field] = Math.max(0, value);
+    const kgValue = displayToKg(Math.max(0, displayValue), settings.unitSystem);
+    newExs[exIdx].sets[setIdx].weight = kgValue;
+    setExercises(newExs);
+  };
+
+  const updateSetReps = (exIdx: number, setIdx: number, value: number) => {
+    const newExs = [...exercises];
+    newExs[exIdx].sets[setIdx].reps = Math.max(0, value);
     setExercises(newExs);
   };
 
@@ -149,85 +161,88 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
             <CardContent className="p-0">
               <div className="grid grid-cols-12 gap-2 p-4 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border">
                 <div className="col-span-2 text-center">Set</div>
-                <div className="col-span-4 text-center">Weight (kg)</div>
+                <div className="col-span-4 text-center">Weight ({unitLabel})</div>
                 <div className="col-span-4 text-center">Reps</div>
                 <div className="col-span-2"></div>
               </div>
               
-              {ex.sets.map((set, setIdx) => (
-                <div 
-                  key={setIdx} 
-                  className={`grid grid-cols-12 gap-2 p-3 items-center border-b border-border last:border-0 transition-colors ${set.completed ? 'bg-primary/5' : ''}`}
-                >
-                  <div className="col-span-2 text-center font-bold text-muted-foreground">{setIdx + 1}</div>
-                  
-                  <div className="col-span-4 flex items-center bg-muted/30 rounded-lg p-1">
-                    <button 
-                      onClick={() => updateSet(exIdx, setIdx, 'weight', set.weight - 2.5)}
-                      className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
-                      disabled={set.completed}
-                      style={{ color: routine.color }}
-                    >
-                      <Minus className="h-3 w-3" />
-                    </button>
-                    <input
-                      type="number"
-                      value={set.weight}
-                      onChange={(e) => updateSet(exIdx, setIdx, 'weight', parseFloat(e.target.value) || 0)}
-                      disabled={set.completed}
-                      className="w-full bg-transparent text-center font-bold text-sm focus:outline-none"
-                    />
-                    <button 
-                      onClick={() => updateSet(exIdx, setIdx, 'weight', set.weight + 2.5)}
-                      className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
-                      disabled={set.completed}
-                      style={{ color: routine.color }}
-                    >
-                      <Plus className="h-3 w-3" />
-                    </button>
-                  </div>
+              {ex.sets.map((set, setIdx) => {
+                const displayWeight = kgToDisplay(set.weight, settings.unitSystem);
+                return (
+                  <div 
+                    key={setIdx} 
+                    className={`grid grid-cols-12 gap-2 p-3 items-center border-b border-border last:border-0 transition-colors ${set.completed ? 'bg-primary/5' : ''}`}
+                  >
+                    <div className="col-span-2 text-center font-bold text-muted-foreground">{setIdx + 1}</div>
+                    
+                    <div className="col-span-4 flex items-center bg-muted/30 rounded-lg p-1">
+                      <button 
+                        onClick={() => updateSetWeight(exIdx, setIdx, displayWeight - weightStep)}
+                        className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
+                        disabled={set.completed}
+                        style={{ color: routine.color }}
+                      >
+                        <Minus className="h-3 w-3" />
+                      </button>
+                      <input
+                        type="number"
+                        value={displayWeight}
+                        onChange={(e) => updateSetWeight(exIdx, setIdx, parseFloat(e.target.value) || 0)}
+                        disabled={set.completed}
+                        className="w-full bg-transparent text-center font-bold text-sm focus:outline-none"
+                      />
+                      <button 
+                        onClick={() => updateSetWeight(exIdx, setIdx, displayWeight + weightStep)}
+                        className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
+                        disabled={set.completed}
+                        style={{ color: routine.color }}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
+                    </div>
 
-                  <div className="col-span-4 flex items-center bg-muted/30 rounded-lg p-1">
-                    <button 
-                      onClick={() => updateSet(exIdx, setIdx, 'reps', set.reps - 1)}
-                      className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
-                      disabled={set.completed}
-                      style={{ color: routine.color }}
-                    >
-                      <Minus className="h-3 w-3" />
-                    </button>
-                    <input
-                      type="number"
-                      value={set.reps}
-                      onChange={(e) => updateSet(exIdx, setIdx, 'reps', parseInt(e.target.value) || 0)}
-                      disabled={set.completed}
-                      className="w-full bg-transparent text-center font-bold text-sm focus:outline-none"
-                    />
-                    <button 
-                      onClick={() => updateSet(exIdx, setIdx, 'reps', set.reps + 1)}
-                      className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
-                      disabled={set.completed}
-                      style={{ color: routine.color }}
-                    >
-                      <Plus className="h-3 w-3" />
-                    </button>
-                  </div>
+                    <div className="col-span-4 flex items-center bg-muted/30 rounded-lg p-1">
+                      <button 
+                        onClick={() => updateSetReps(exIdx, setIdx, set.reps - 1)}
+                        className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
+                        disabled={set.completed}
+                        style={{ color: routine.color }}
+                      >
+                        <Minus className="h-3 w-3" />
+                      </button>
+                      <input
+                        type="number"
+                        value={set.reps}
+                        onChange={(e) => updateSetReps(exIdx, setIdx, parseInt(e.target.value) || 0)}
+                        disabled={set.completed}
+                        className="w-full bg-transparent text-center font-bold text-sm focus:outline-none"
+                      />
+                      <button 
+                        onClick={() => updateSetReps(exIdx, setIdx, set.reps + 1)}
+                        className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
+                        disabled={set.completed}
+                        style={{ color: routine.color }}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
+                    </div>
 
-                  <div className="col-span-2 flex justify-end">
-                    <button
-                      onClick={() => toggleSet(exIdx, setIdx)}
-                      className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
-                        set.completed 
-                          ? 'bg-primary text-primary-foreground shadow-inner scale-90' 
-                          : 'border border-border'
-                      }`}
-                      style={!set.completed ? { backgroundColor: `${routine.color}10`, color: routine.color, borderColor: `${routine.color}20` } : {}}
-                    >
-                      <Check className={`h-5 w-5 ${set.completed ? 'stroke-[3px]' : 'stroke-1'}`} />
-                    </button>
+                    <div className="col-span-2 flex justify-end">
+                      <button
+                        onClick={() => toggleSet(exIdx, setIdx)}
+                        className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
+                          set.completed 
+                            ? 'bg-primary text-primary-foreground shadow-inner scale-90' 
+                            : 'border border-border'
+                        }`}
+                        style={!set.completed ? { backgroundColor: `${routine.color}10`, color: routine.color, borderColor: `${routine.color}20` } : {}}
+                      >
+                        <Check className={`h-5 w-5 ${set.completed ? 'stroke-[3px]' : 'stroke-1'}`} />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               
               <div className="p-3">
                 <Button 

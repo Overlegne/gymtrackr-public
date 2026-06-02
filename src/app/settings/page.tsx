@@ -6,7 +6,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useTheme } from 'next-themes';
-import { ChevronLeft, Palette, Moon, Sun, Monitor, RotateCcw, Check, Timer } from 'lucide-react';
+import { ChevronLeft, Palette, Moon, Sun, Monitor, RotateCcw, Check, Timer, Ruler } from 'lucide-react';
 import Link from 'next/link';
 import { getCustomTheme, saveCustomTheme, resetCustomTheme } from '@/lib/theme-store';
 import { getSettings, saveSettings, type UserSettings } from '@/lib/settings-store';
@@ -21,6 +21,7 @@ const PRESET_COLORS = [
 ];
 
 const REST_OPTIONS = [30, 45, 60, 90, 120, 180];
+const UNIT_OPTIONS = ['Metric', 'Imperial'];
 
 export default function SettingsPage() {
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -54,6 +55,11 @@ export default function SettingsPage() {
     saveSettings({ defaultRestDuration: duration });
   };
 
+  const handleUnitChange = (unit: 'Metric' | 'Imperial') => {
+    setUserSettings(prev => ({ ...prev, unitSystem: unit }));
+    saveSettings({ unitSystem: unit });
+  };
+
   if (!mounted) return null;
 
   return (
@@ -78,9 +84,9 @@ export default function SettingsPage() {
               <Timer className="h-5 w-5 text-primary" />
               Workout Options
             </CardTitle>
-            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Timer & Behavior</CardDescription>
+            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Timer & Units</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 pt-4">
+          <CardContent className="space-y-6 pt-4">
             <div className="space-y-3">
               <p className="text-xs font-black uppercase text-foreground">Default Rest Timer</p>
               <div className="grid grid-cols-3 gap-2">
@@ -95,9 +101,25 @@ export default function SettingsPage() {
                   </Button>
                 ))}
               </div>
-              <p className="text-[10px] text-muted-foreground font-medium italic">
-                This timer starts automatically after checking a set.
-              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Ruler className="h-4 w-4 text-primary" />
+                <p className="text-xs font-black uppercase text-foreground">Unit System</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {UNIT_OPTIONS.map((opt) => (
+                  <Button
+                    key={opt}
+                    variant={userSettings.unitSystem === opt ? 'default' : 'outline'}
+                    className="rounded-xl h-10 text-[10px] font-black uppercase tracking-widest"
+                    onClick={() => handleUnitChange(opt as any)}
+                  >
+                    {opt === 'Metric' ? 'Metric (kg)' : 'Imperial (lb)'}
+                  </Button>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>

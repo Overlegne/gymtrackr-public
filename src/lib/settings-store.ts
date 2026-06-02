@@ -3,12 +3,14 @@
 
 export interface UserSettings {
   defaultRestDuration: number; // in seconds
+  unitSystem: 'Metric' | 'Imperial';
 }
 
 const SETTINGS_KEY = 'my_strength_path_user_settings';
 
 const DEFAULT_SETTINGS: UserSettings = {
   defaultRestDuration: 60,
+  unitSystem: 'Metric',
 };
 
 export const getSettings = (): UserSettings => {

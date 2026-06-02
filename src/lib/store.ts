@@ -75,6 +75,23 @@ export const ROUTINE_COLORS = [
   { name: 'Gray Grit', value: '#64748b' },
 ];
 
+// Conversion Constants
+const KG_TO_LB = 2.20462;
+
+/**
+ * Unit Conversion Helpers
+ * Internally we store everything in KG.
+ */
+export function kgToDisplay(kg: number, system: 'Metric' | 'Imperial'): number {
+  if (system === 'Metric') return Math.round(kg * 10) / 10;
+  return Math.round(kg * KG_TO_LB * 10) / 10;
+}
+
+export function displayToKg(value: number, system: 'Metric' | 'Imperial'): number {
+  if (system === 'Metric') return value;
+  return value / KG_TO_LB;
+}
+
 /**
  * Normalizes an exercise name for consistent mapping.
  */
@@ -218,13 +235,6 @@ export function getExerciseImage(
     };
   }
 
-  if (exerciseImageMap[normalizedName]) {
-    return {
-      url: `https://picsum.photos/seed/${exerciseImageNameMap[normalizedName]}/600/400`,
-      needsReview: false,
-    };
-  }
-
   const fallbackKey = `${muscleGroup}_${equipment}`;
   const fallbackSeed = categoryFallbackMap[fallbackKey] || normalizeExerciseName(`${muscleGroup}_${equipment}`);
   
@@ -294,7 +304,6 @@ export const addExercise = (exercise: Omit<Exercise, 'id' | 'imageUrl'>) => {
   const exercises = getExercises();
   const imageData = getExerciseImage(exercise.name, '', exercise.muscleGroup, exercise.equipment);
   
-  // If user didn't provide cues, generate them
   const generatedCoaching = getCoachingData(exercise.name, exercise.equipment, exercise.muscleGroup);
   
   const newExercise: Exercise = {
@@ -334,12 +343,10 @@ export const saveAllWorkoutStats = (exercises: RoutineExercise[]) => {
   const date = new Date().toLocaleDateString('en-CA');
   
   exercises.forEach(ex => {
-    // Current Best Stats
     if (!allStats[ex.id]) {
       allStats[ex.id] = { sets: {} };
     }
     
-    // Calculate best metrics for this workout session
     let maxWeight = 0;
     let maxReps = 0;
     let totalVolume = 0;
@@ -348,16 +355,13 @@ export const saveAllWorkoutStats = (exercises: RoutineExercise[]) => {
 
     ex.sets.forEach((set, idx) => {
       if (set.completed || set.weight > 0 || set.reps > 0) {
-        // Update current bests per set index
         allStats[ex.id].sets[idx.toString()] = { weight: set.weight, reps: set.reps };
         
-        // Tracking for history
         maxWeight = Math.max(maxWeight, set.weight);
         maxReps = Math.max(maxReps, set.reps);
         totalVolume += (set.weight * set.reps);
         validSets++;
 
-        // Epley 1RM Formula: w * (1 + r/30)
         if (set.reps >= 1 && set.reps <= 10 && set.weight > 0) {
           const e1rm = set.weight * (1 + set.reps / 30);
           bestE1RM = Math.max(bestE1RM, e1rm);
@@ -365,7 +369,6 @@ export const saveAllWorkoutStats = (exercises: RoutineExercise[]) => {
       }
     });
 
-    // Save historical data if any sets were performed
     if (validSets > 0) {
       if (!history[ex.id]) history[ex.id] = [];
       const historyPoint: HistoryPoint = {
@@ -376,7 +379,6 @@ export const saveAllWorkoutStats = (exercises: RoutineExercise[]) => {
         volume: totalVolume,
         e1RM: bestE1RM
       };
-      // Only keep one entry per day per exercise (latest)
       const existingIdx = history[ex.id].findIndex((p: HistoryPoint) => p.date === date);
       if (existingIdx > -1) {
         history[ex.id][existingIdx] = historyPoint;

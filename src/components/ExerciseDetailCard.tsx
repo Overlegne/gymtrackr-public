@@ -1,9 +1,9 @@
 
 "use client"
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Image from 'next/image';
-import { Exercise, type SetStats } from '@/lib/store';
+import { Exercise, kgToDisplay, type SetStats } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -16,6 +16,7 @@ import {
   ClipboardList
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { getSettings } from '@/lib/settings-store';
 
 interface ExerciseDetailCardProps {
   exercise: Exercise;
@@ -23,6 +24,9 @@ interface ExerciseDetailCardProps {
 }
 
 export function ExerciseDetailCard({ exercise, lastPerformance }: ExerciseDetailCardProps) {
+  const settings = useMemo(() => getSettings(), []);
+  const unitLabel = settings.unitSystem === 'Metric' ? 'KG' : 'LB';
+
   return (
     <div className="space-y-6">
       <div className="relative aspect-video w-full rounded-[2.5rem] overflow-hidden bg-muted shadow-inner group border border-border/20">
@@ -134,8 +138,8 @@ export function ExerciseDetailCard({ exercise, lastPerformance }: ExerciseDetail
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Set {i + 1}</span>
                   <div className="flex gap-6">
                     <div className="flex flex-col items-end">
-                      <span className="text-lg font-black">{set.weight}</span>
-                      <span className="text-[8px] text-slate-600 font-black uppercase tracking-widest">KG</span>
+                      <span className="text-lg font-black">{kgToDisplay(set.weight, settings.unitSystem)}</span>
+                      <span className="text-[8px] text-slate-600 font-black uppercase tracking-widest">{unitLabel}</span>
                     </div>
                     <div className="flex flex-col items-end">
                       <span className="text-lg font-black">{set.reps}</span>

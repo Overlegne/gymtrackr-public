@@ -3,7 +3,7 @@
 
 import { use, useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { getExercises, getExerciseHistory, type HistoryPoint, type Exercise } from '@/lib/store';
+import { getExercises, getExerciseHistory, kgToDisplay, type HistoryPoint, type Exercise } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChevronLeft, TrendingUp, Calendar, Info } from 'lucide-react';
@@ -25,6 +25,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { getSettings } from '@/lib/settings-store';
 
 type TimeRange = '30d' | '90d' | '1y' | 'all';
 
@@ -35,6 +36,9 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
   const [isMounted, setIsMounted] = useState(false);
   const [exercise, setExercise] = useState<Exercise | null>(null);
   const [history, setHistory] = useState<HistoryPoint[]>([]);
+
+  const settings = useMemo(() => getSettings(), []);
+  const unitLabel = settings.unitSystem === 'Metric' ? 'kg' : 'lb';
 
   useEffect(() => {
     setIsMounted(true);
@@ -48,28 +52,36 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
 
   const filteredHistory = useMemo(() => {
     if (!isMounted || history.length === 0) return [];
-    if (timeRange === 'all') return history;
+    let baseHistory = history;
+    if (timeRange !== 'all') {
+      const now = new Date();
+      const rangeMs = {
+        '30d': 30 * 24 * 60 * 60 * 1000,
+        '90d': 90 * 24 * 60 * 60 * 1000,
+        '1y': 365 * 24 * 60 * 60 * 1000,
+      }[timeRange];
+      baseHistory = history.filter(p => (now.getTime() - new Date(p.date).getTime()) <= rangeMs);
+    }
     
-    const now = new Date();
-    const rangeMs = {
-      '30d': 30 * 24 * 60 * 60 * 1000,
-      '90d': 90 * 24 * 60 * 60 * 1000,
-      '1y': 365 * 24 * 60 * 60 * 1000,
-    }[timeRange];
-    
-    return history.filter(p => (now.getTime() - new Date(p.date).getTime()) <= rangeMs);
-  }, [history, timeRange, isMounted]);
+    // Map units
+    return baseHistory.map(p => ({
+      ...p,
+      weight: kgToDisplay(p.weight, settings.unitSystem),
+      volume: kgToDisplay(p.volume, settings.unitSystem),
+      e1RM: kgToDisplay(p.e1RM, settings.unitSystem),
+    }));
+  }, [history, timeRange, isMounted, settings]);
 
   const stats = useMemo(() => {
-    if (!isMounted || history.length === 0) return null;
+    if (!isMounted || filteredHistory.length === 0) return null;
     
-    const weights = history.map(p => p.weight);
-    const reps = history.map(p => p.reps);
-    const volumes = history.map(p => p.volume);
-    const e1rms = history.map(p => p.e1RM).filter(v => v > 0);
+    const weights = filteredHistory.map(p => p.weight);
+    const reps = filteredHistory.map(p => p.reps);
+    const volumes = filteredHistory.map(p => p.volume);
+    const e1rms = filteredHistory.map(p => p.e1RM).filter(v => v > 0);
 
-    const firstPoint = history[0];
-    const lastPoint = history[history.length - 1];
+    const firstPoint = filteredHistory[0];
+    const lastPoint = filteredHistory[filteredHistory.length - 1];
     const weightDiff = lastPoint.weight - firstPoint.weight;
 
     return {
@@ -77,9 +89,9 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
       bestReps: Math.max(...reps),
       maxVolume: Math.max(...volumes),
       bestE1RM: e1rms.length > 0 ? Math.max(...e1rms) : 0,
-      weightTrend: weightDiff
+      weightTrend: Math.round(weightDiff * 10) / 10
     };
-  }, [history, isMounted]);
+  }, [filteredHistory, isMounted]);
 
   if (!isMounted || !exercise) {
     return (
@@ -140,7 +152,7 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
               tickLine={false}
               tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))', fontWeight: 'bold' }}
               domain={['auto', 'auto']}
-              width={30}
+              width={35}
             />
             <Tooltip 
               content={({ active, payload }) => {
@@ -186,7 +198,7 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
         </Link>
         <div className="min-w-0 flex-1">
           <h1 className="text-xl font-black truncate text-foreground">{exercise.name}</h1>
-          <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Progress Analytics</p>
+          <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Progress Analytics ({unitLabel})</p>
         </div>
       </header>
 
@@ -198,7 +210,7 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
                 <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Best Weight</span>
                 <div className="flex items-baseline gap-1">
                   <span className="text-2xl font-black text-foreground">{stats.bestWeight}</span>
-                  <span className="text-[10px] font-black text-muted-foreground uppercase">kg</span>
+                  <span className="text-[10px] font-black text-muted-foreground uppercase">{unitLabel}</span>
                 </div>
               </CardContent>
             </Card>
@@ -207,7 +219,7 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
                 <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Best e1RM</span>
                 <div className="flex items-baseline gap-1">
                   <span className="text-2xl font-black text-foreground">{Math.round(stats.bestE1RM)}</span>
-                  <span className="text-[10px] font-black text-muted-foreground uppercase">kg</span>
+                  <span className="text-[10px] font-black text-muted-foreground uppercase">{unitLabel}</span>
                 </div>
               </CardContent>
             </Card>
@@ -216,7 +228,7 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
                 <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Max Volume</span>
                 <div className="flex items-baseline gap-1">
                   <span className="text-2xl font-black text-foreground">{Math.round(stats.maxVolume)}</span>
-                  <span className="text-[10px] font-black text-muted-foreground uppercase">kg</span>
+                  <span className="text-[10px] font-black text-muted-foreground uppercase">{unitLabel}</span>
                 </div>
               </CardContent>
             </Card>
@@ -254,11 +266,11 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
               <div className="flex justify-between items-start">
                 <div>
                   <CardTitle className="text-lg font-black text-foreground">Performance Chart</CardTitle>
-                  <CardDescription className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Metrics over time</CardDescription>
+                  <CardDescription className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Metrics over time ({unitLabel})</CardDescription>
                 </div>
                 {stats && stats.weightTrend !== 0 && (
                   <Badge variant={stats.weightTrend > 0 ? 'default' : 'destructive'} className="rounded-full h-7 px-4 font-black uppercase tracking-widest text-[9px]">
-                    {stats.weightTrend > 0 ? '+' : ''}{stats.weightTrend}kg Trend
+                    {stats.weightTrend > 0 ? '+' : ''}{stats.weightTrend}{unitLabel} Trend
                   </Badge>
                 )}
               </div>
@@ -272,9 +284,9 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
                   <TabsTrigger value="e1RM" className="text-[9px] font-black uppercase tracking-widest rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-sm">1RM</TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="weight">{renderChart('weight', 'Max Weight', 'kg')}</TabsContent>
+                <TabsContent value="weight">{renderChart('weight', 'Max Weight', unitLabel)}</TabsContent>
                 <TabsContent value="reps">{renderChart('reps', 'Max Reps', 'reps')}</TabsContent>
-                <TabsContent value="volume">{renderChart('volume', 'Total Volume', 'kg')}</TabsContent>
+                <TabsContent value="volume">{renderChart('volume', 'Total Volume', unitLabel)}</TabsContent>
                 <TabsContent value="e1RM">
                   <div className="relative">
                     <TooltipProvider>
@@ -289,7 +301,7 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
                         </TooltipContent>
                       </UITooltip>
                     </TooltipProvider>
-                    {renderChart('e1RM', 'Estimated 1RM', 'kg')}
+                    {renderChart('e1RM', 'Estimated 1RM', unitLabel)}
                   </div>
                 </TabsContent>
               </Tabs>
