@@ -104,18 +104,36 @@ export const addExercise = (exercise: Omit<Exercise, 'id'>) => {
 
 export const getExerciseStats = (exerciseId: string): ExerciseStats => {
   if (typeof window === 'undefined') return { sets: {} };
-  const allStats = JSON.parse(localStorage.getItem('exercise_stats_v9') || '{}');
+  const allStats = JSON.parse(localStorage.getItem('exercise_stats_v10') || '{}');
   return allStats[exerciseId] || { sets: {} };
 };
 
 export const saveExerciseSetStats = (exerciseId: string, setIndex: number, weight: number, reps: number) => {
   if (typeof window === 'undefined') return;
-  const allStats = JSON.parse(localStorage.getItem('exercise_stats_v9') || '{}');
+  const allStats = JSON.parse(localStorage.getItem('exercise_stats_v10') || '{}');
   if (!allStats[exerciseId]) {
     allStats[exerciseId] = { sets: {} };
   }
   allStats[exerciseId].sets[setIndex] = { weight, reps };
-  localStorage.setItem('exercise_stats_v9', JSON.stringify(allStats));
+  localStorage.setItem('exercise_stats_v10', JSON.stringify(allStats));
+};
+
+export const saveAllWorkoutStats = (exercises: RoutineExercise[]) => {
+  if (typeof window === 'undefined') return;
+  const allStats = JSON.parse(localStorage.getItem('exercise_stats_v10') || '{}');
+  
+  exercises.forEach(ex => {
+    if (!allStats[ex.id]) {
+      allStats[ex.id] = { sets: {} };
+    }
+    ex.sets.forEach((set, idx) => {
+      if (set.completed) {
+        allStats[ex.id].sets[idx] = { weight: set.weight, reps: set.reps };
+      }
+    });
+  });
+  
+  localStorage.setItem('exercise_stats_v10', JSON.stringify(allStats));
 };
 
 export const getRoutines = (): Routine[] => {

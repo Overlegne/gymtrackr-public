@@ -6,7 +6,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { getExercises, getExerciseStats, type Exercise, type MuscleGroup } from '@/lib/store';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ChevronRight, Info, Dumbbell, Target } from 'lucide-react';
+import { Search, ChevronRight, Info, Dumbbell, Target, History } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { AddExerciseDialog } from '@/components/AddExerciseDialog';
 import {
@@ -41,9 +41,10 @@ export default function ExercisesPage() {
   };
 
   const selectedStats = selectedExercise ? getExerciseStats(selectedExercise.id) : null;
-  const lastSet = selectedStats && Object.keys(selectedStats.sets).length > 0 
-    ? selectedStats.sets[0] // Showing first set as a summary
-    : null;
+  const loggedSets = selectedStats ? Object.entries(selectedStats.sets).map(([idx, stats]) => ({
+    index: parseInt(idx),
+    ...stats
+  })).sort((a, b) => a.index - b.index) : [];
 
   return (
     <div className="p-5 space-y-6">
@@ -122,10 +123,10 @@ export default function ExercisesPage() {
             <>
               <DialogHeader>
                 <DialogTitle className="text-2xl font-bold">{selectedExercise.name}</DialogTitle>
-                <DialogDescription className="flex gap-2 mt-2">
+                <div className="flex gap-2 mt-2">
                   <Badge variant="secondary" className="rounded-full px-3">{selectedExercise.muscleGroup}</Badge>
                   <Badge variant="outline" className="rounded-full px-3">{selectedExercise.equipment}</Badge>
-                </DialogDescription>
+                </div>
               </DialogHeader>
               
               <div className="space-y-6 py-4">
@@ -158,32 +159,33 @@ export default function ExercisesPage() {
 
                 <div className="space-y-3">
                   <h4 className="font-bold flex items-center gap-2">
-                    <Info className="h-4 w-4 text-primary" />
-                    Personal Progress
+                    <History className="h-4 w-4 text-primary" />
+                    Performance History
                   </h4>
-                  {lastSet ? (
-                    <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="text-xs text-muted-foreground font-medium">Last weight</p>
-                          <p className="text-xl font-extrabold text-primary">{lastSet.weight} kg</p>
+                  {loggedSets.length > 0 ? (
+                    <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 space-y-3">
+                      <p className="text-xs text-muted-foreground font-medium border-b pb-2">Last recorded workout values:</p>
+                      {loggedSets.map((set) => (
+                        <div key={set.index} className="flex justify-between items-center text-sm">
+                          <span className="font-bold text-muted-foreground">Set {set.index + 1}</span>
+                          <div className="flex gap-4">
+                            <span className="font-extrabold text-primary">{set.weight} kg</span>
+                            <span className="text-muted-foreground">×</span>
+                            <span className="font-extrabold text-primary">{set.reps} reps</span>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-xs text-muted-foreground font-medium">Reps per set</p>
-                          <p className="text-xl font-extrabold text-primary">{lastSet.reps}</p>
-                        </div>
-                      </div>
+                      ))}
                     </div>
                   ) : (
-                    <div className="bg-muted/20 border border-dashed rounded-2xl p-6 text-center">
-                      <p className="text-sm text-muted-foreground italic">No history logged yet. Start a workout to track your progress!</p>
+                    <div className="bg-muted/20 border border-dashed rounded-2xl p-8 text-center">
+                      <p className="text-sm text-muted-foreground italic">No history logged yet. Complete a workout to see your progress here!</p>
                     </div>
                   )}
                 </div>
 
                 <div className="pt-2">
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Consistent form and progressive overload are key to success. Use this exercise as part of your routine to see results over time.
+                    Tip: Focus on progressive overload. Try to slightly increase the weight or reps compared to your previous session to see constant improvement.
                   </p>
                 </div>
               </div>

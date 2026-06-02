@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { 
   getRoutines, 
   getExerciseStats, 
-  saveExerciseSetStats, 
+  saveAllWorkoutStats, 
   logWorkout,
   type Routine, 
   type RoutineExercise 
@@ -53,11 +53,6 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
     const newExs = [...exercises];
     const set = newExs[exIndex].sets[setIndex];
     set.completed = !set.completed;
-    
-    if (set.completed) {
-      saveExerciseSetStats(newExs[exIndex].id, setIndex, set.weight, set.reps);
-    }
-    
     setExercises(newExs);
   };
 
@@ -70,10 +65,11 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
   const handleFinish = () => {
     if (routine) {
       logWorkout(routine);
+      saveAllWorkoutStats(exercises);
     }
     toast({
       title: "Workout Completed!",
-      description: "Great job. Your progress has been saved to the activity log.",
+      description: "Great job. Your progress has been saved to your history.",
     });
     router.push('/');
   };
