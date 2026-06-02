@@ -364,7 +364,7 @@ export default function ExercisesPage() {
                 )}
 
                 <div className="pb-6">
-                  <Link href={`/exercises/${selectedExercise.id}/progress`} className="block">
+                  <Link href={`/exercises/progress?id=${selectedExercise.id}`} className="block">
                     <Button className="w-full rounded-2xl h-14 font-black uppercase tracking-widest gap-2 bg-foreground text-background shadow-xl hover:opacity-90 transition-all active:scale-95 mb-6">
                       <TrendingUp className="h-5 w-5" />
                       Visual Progress

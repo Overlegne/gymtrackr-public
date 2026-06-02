@@ -16,7 +16,12 @@ const DEFAULT_SETTINGS: UserSettings = {
 export const getSettings = (): UserSettings => {
   if (typeof window === 'undefined') return DEFAULT_SETTINGS;
   const stored = localStorage.getItem(SETTINGS_KEY);
-  return stored ? { ...DEFAULT_SETTINGS, ...JSON.parse(stored) } : DEFAULT_SETTINGS;
+  if (!stored) return DEFAULT_SETTINGS;
+  try {
+    return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
+  } catch (e) {
+    return DEFAULT_SETTINGS;
+  }
 };
 
 export const saveSettings = (settings: Partial<UserSettings>) => {

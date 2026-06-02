@@ -1,9 +1,6 @@
-import { MetadataRoute } from 'next'
+import type { MetadataRoute } from 'next'
 
-/**
- * @fileOverview PWA Manifest configuration for Next.js.
- * Strictly static export for Capacitor compatibility.
- */
+export const dynamic = 'force-static'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -16,12 +13,17 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#8b5cf6',
     icons: [
       {
-        src: 'https://picsum.photos/seed/gymtrackr-icon/192/192',
+        src: '/favicon.ico',
+        sizes: 'any',
+        type: 'image/x-icon',
+      },
+      {
+        src: '/icon-192.png',
         sizes: '192x192',
         type: 'image/png',
       },
       {
-        src: 'https://picsum.photos/seed/gymtrackr-icon/512/512',
+        src: '/icon-512.png',
         sizes: '512x512',
         type: 'image/png',
       },

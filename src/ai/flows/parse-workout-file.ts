@@ -1,18 +1,23 @@
+
 /**
  * @fileOverview A flow for parsing workout data from various file types.
- * Note: Node-specific libraries like pdf-parse/mammoth may only work in dev environments.
+ * Note: Node-specific libraries like pdf-parse/mammoth are guarded for browser compatibility.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-// Conditional imports to prevent crashes in browser environments during build
+// Conditional imports to prevent crashes in browser environments
 const getParsers = async () => {
   if (typeof window !== 'undefined') return null;
-  const pdf = (await import('pdf-parse')).default;
-  const XLSX = await import('xlsx');
-  const mammoth = (await import('mammoth')).default;
-  return { pdf, XLSX, mammoth };
+  try {
+    const pdf = (await import('pdf-parse')).default;
+    const XLSX = await import('xlsx');
+    const mammoth = (await import('mammoth')).default;
+    return { pdf, XLSX, mammoth };
+  } catch (e) {
+    return null;
+  }
 };
 
 const ImportedExerciseSchema = z.object({
@@ -53,26 +58,41 @@ export type ParseWorkoutFileInput = z.infer<typeof ParseWorkoutFileInputSchema>;
 
 export async function parseWorkoutFile(input: ParseWorkoutFileInput): Promise<ParseWorkoutFileOutput> {
   const { fileBase64, fileName, mimeType } = input;
-  const buffer = Buffer.from(fileBase64, 'base64');
   const parsers = await getParsers();
 
   let extractedText = '';
   let isImage = false;
 
   if (parsers && mimeType === 'application/pdf') {
-    const pdfData = await parsers.pdf(buffer);
-    extractedText = pdfData.text;
+    const buffer = typeof window === 'undefined' ? Buffer.from(fileBase64, 'base64') : null;
+    if (buffer) {
+      const pdfData = await parsers.pdf(buffer);
+      extractedText = pdfData.text;
+    }
   } else if (parsers && (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv' || fileName.endsWith('.ods'))) {
-    const workbook = parsers.XLSX.read(buffer, { type: 'buffer' });
-    const firstSheetName = workbook.SheetNames[0];
-    extractedText = parsers.XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheetName]);
+    const buffer = typeof window === 'undefined' ? Buffer.from(fileBase64, 'base64') : null;
+    if (buffer) {
+      const workbook = parsers.XLSX.read(buffer, { type: 'buffer' });
+      const firstSheetName = workbook.SheetNames[0];
+      extractedText = parsers.XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheetName]);
+    }
   } else if (parsers && (mimeType.includes('word') || mimeType.includes('officedocument.wordprocessingml.document'))) {
-    const docResult = await parsers.mammoth.extractRawText({ buffer });
-    extractedText = docResult.value;
+    const buffer = typeof window === 'undefined' ? Buffer.from(fileBase64, 'base64') : null;
+    if (buffer) {
+      const docResult = await parsers.mammoth.extractRawText({ buffer });
+      extractedText = docResult.value;
+    }
   } else if (mimeType.startsWith('image/')) {
     isImage = true;
   } else {
-    extractedText = buffer.toString('utf-8');
+    // Basic text fallback for browser or unknown types
+    try {
+      extractedText = typeof window === 'undefined' 
+        ? Buffer.from(fileBase64, 'base64').toString('utf-8') 
+        : atob(fileBase64);
+    } catch (e) {
+      extractedText = '';
+    }
   }
 
   return parseWorkoutFileFlow({

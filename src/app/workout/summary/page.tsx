@@ -9,28 +9,33 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Timer, Dumbbell, CheckCircle2, Share2, Target, Clock } from 'lucide-react';
 import Link from 'next/link';
-import { getSettings } from '@/lib/settings-store';
+import { getSettings, type UserSettings } from '@/lib/settings-store';
 
 export default function WorkoutSummaryPage() {
   const router = useRouter();
   const [summary, setSummary] = useState<WorkoutSummaryData | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [settings, setSettings] = useState<UserSettings | null>(null);
 
-  const settings = useMemo(() => getSettings(), []);
-  const unitLabel = settings.unitSystem === 'Metric' ? 'kg' : 'lb';
+  useEffect(() => {
+    setMounted(true);
+    setSettings(getSettings());
+  }, []);
+
+  const unitLabel = settings?.unitSystem === 'Metric' ? 'kg' : 'lb';
 
   useEffect(() => {
     async function load() {
+      if (!mounted) return;
       const data = await getLastWorkoutSummary();
       if (!data) {
         router.push('/');
         return;
       }
       setSummary(data);
-      setMounted(true);
     }
     load();
-  }, [router]);
+  }, [router, mounted]);
 
   const formatDuration = (totalSeconds: number) => {
     const mins = Math.floor(totalSeconds / 60);
@@ -38,7 +43,7 @@ export default function WorkoutSummaryPage() {
     return mins === 0 ? `${secs}s` : `${mins}m ${secs}s`;
   };
 
-  if (!mounted || !summary) return null;
+  if (!mounted || !summary || !settings) return null;
 
   const allRecords = [
     ...summary.globalRecords,

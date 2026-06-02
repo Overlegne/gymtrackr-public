@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from 'react';
@@ -68,7 +67,7 @@ export default function HomePage() {
                   <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{routine.exercises.length} exercises</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Link href={`/workout/${routine.id}`}>
+                  <Link href={`/workout?id=${routine.id}`}>
                     <Button size="icon" className="rounded-full h-12 w-12 shadow-md hover:scale-105 transition-transform" style={{ backgroundColor: routine.color || 'hsl(var(--primary))' }}>
                       <Play className="h-5 w-5 fill-white text-white" />
                     </Button>

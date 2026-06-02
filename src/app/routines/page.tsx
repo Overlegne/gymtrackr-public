@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from 'react';
@@ -77,7 +76,7 @@ export default function RoutinesPage() {
                   </div>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <Link href={`/routines/edit/${routine.id}`}>
+                  <Link href={`/routines/edit?id=${routine.id}`}>
                     <Button variant="ghost" size="icon" className="text-muted-foreground h-10 w-10 bg-muted/50 rounded-full">
                       <Edit2 className="h-4 w-4" />
                     </Button>
@@ -103,7 +102,7 @@ export default function RoutinesPage() {
                     </AlertDialogContent>
                   </AlertDialog>
                   
-                  <Link href={`/workout/${routine.id}`}>
+                  <Link href={`/workout?id=${routine.id}`}>
                     <Button className="rounded-xl h-10 px-4 text-white font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20" style={{ backgroundColor: routine.color || 'hsl(var(--primary))' }}>
                       <Play className="h-3 w-3 mr-2 fill-current" /> Start
                     </Button>
