@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from 'react';
@@ -6,7 +5,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { getRoutines, deleteRoutine, type Routine } from '@/lib/store';
-import { Plus, Dumbbell, Play, Trash2 } from 'lucide-react';
+import { Plus, Dumbbell, Play, Trash2, FileUp } from 'lucide-react';
 import Link from 'next/link';
 import {
   AlertDialog,
@@ -39,11 +38,18 @@ export default function RoutinesPage() {
           <h1 className="text-2xl font-black tracking-tight">My Routines</h1>
           <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Your training templates</p>
         </div>
-        <Link href="/routines/new">
-          <Button size="sm" className="bg-primary rounded-full px-4 font-black uppercase text-[10px] tracking-widest h-9">
-            <Plus className="h-4 w-4 mr-1" /> New
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/routines/import">
+            <Button variant="outline" size="sm" className="rounded-full px-4 font-black uppercase text-[10px] tracking-widest h-9 bg-card">
+              <FileUp className="h-4 w-4 mr-1" /> Import
+            </Button>
+          </Link>
+          <Link href="/routines/new">
+            <Button size="sm" className="bg-primary rounded-full px-4 font-black uppercase text-[10px] tracking-widest h-9">
+              <Plus className="h-4 w-4 mr-1" /> New
+            </Button>
+          </Link>
+        </div>
       </header>
 
       <div className="space-y-4 pb-32">
