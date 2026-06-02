@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -55,7 +54,7 @@ export default function NewRoutinePage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <header className="sticky top-0 z-20 bg-white border-b px-5 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border px-5 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/routines">
             <Button variant="ghost" size="icon" className="rounded-full">
@@ -64,7 +63,7 @@ export default function NewRoutinePage() {
           </Link>
           <h1 className="text-xl font-bold">New Routine</h1>
         </div>
-        <Button onClick={handleSave} className="bg-primary text-white font-bold rounded-xl px-6">
+        <Button onClick={handleSave} className="bg-primary text-primary-foreground font-bold rounded-xl px-6">
           Save
         </Button>
       </header>
@@ -75,7 +74,7 @@ export default function NewRoutinePage() {
             <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Routine Name</label>
             <Input 
               placeholder="e.g. Chest & Back Focus" 
-              className="text-lg font-bold h-14 rounded-2xl bg-white shadow-sm border-none px-5"
+              className="text-lg font-bold h-14 rounded-2xl bg-card shadow-sm border-none px-5"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -83,7 +82,7 @@ export default function NewRoutinePage() {
 
           <div className="space-y-2">
             <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Choose a color</label>
-            <div className="flex flex-wrap gap-3 p-4 bg-white rounded-2xl shadow-sm">
+            <div className="flex flex-wrap gap-3 p-4 bg-card rounded-2xl shadow-sm border border-border">
               {ROUTINE_COLORS.map((color) => (
                 <button
                   key={color.value}
@@ -116,7 +115,7 @@ export default function NewRoutinePage() {
               const stats = getExerciseStats(ex.id);
               const lastSet = stats.sets[0] || null;
               return (
-                <Card key={ex.id} className="border-none shadow-sm card-hover overflow-hidden">
+                <Card key={ex.id} className="border-none shadow-sm card-hover overflow-hidden bg-card">
                   <CardContent className="p-0 flex items-center">
                     <div className="relative h-16 w-20 bg-muted shrink-0">
                       <Image src={ex.imageUrl} alt={ex.name} fill className="object-cover" data-ai-hint="gym exercise" />
@@ -145,7 +144,7 @@ export default function NewRoutinePage() {
             {selectedExercises.length === 0 && (
               <div 
                 onClick={() => setShowPicker(true)}
-                className="py-12 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center text-muted-foreground cursor-pointer hover:bg-primary/5 transition-colors"
+                className="py-12 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center text-muted-foreground cursor-pointer hover:bg-primary/5 transition-colors border-border"
               >
                 <Plus className="h-8 w-8 mb-2 opacity-50" />
                 <p className="font-medium">Click to choose exercises</p>
@@ -167,7 +166,7 @@ export default function NewRoutinePage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
                 placeholder="Search exercises..." 
-                className="pl-10 h-12 rounded-xl bg-muted/50 border-none"
+                className="pl-10 h-12 rounded-xl bg-muted border-none"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -177,7 +176,7 @@ export default function NewRoutinePage() {
               {filteredExercises.map(ex => (
                 <Card 
                   key={ex.id} 
-                  className="border-none shadow-sm active:bg-primary/5 cursor-pointer overflow-hidden"
+                  className="border-none shadow-sm active:bg-primary/5 cursor-pointer overflow-hidden bg-card"
                   onClick={() => {
                     setSelectedExercises(prev => [...prev, ex]);
                   }}

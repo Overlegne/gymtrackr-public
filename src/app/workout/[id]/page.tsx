@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState, use } from 'react';
@@ -86,8 +85,8 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
   if (!routine) return null;
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <header className="sticky top-0 z-20 bg-white border-b px-5 py-4 flex items-center justify-between shadow-sm">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border px-5 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <Link href="/">
             <Button variant="ghost" size="icon" className="rounded-full">
@@ -102,14 +101,14 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
             </div>
           </div>
         </div>
-        <Button onClick={handleFinish} className="hover:opacity-90 text-white font-bold rounded-xl px-6" style={{ backgroundColor: routine.color || '#8b5cf6' }}>
+        <Button onClick={handleFinish} className="hover:opacity-90 text-primary-foreground font-bold rounded-xl px-6" style={{ backgroundColor: routine.color || '#8b5cf6' }}>
           Finish
         </Button>
       </header>
 
       <div className="p-5 space-y-6 pb-20">
         {exercises.map((ex, exIdx) => (
-          <Card key={ex.id} className="border-none shadow-md overflow-hidden">
+          <Card key={ex.id} className="border-none shadow-md overflow-hidden bg-card">
             <CardHeader className="pb-3" style={{ backgroundColor: `${routine.color}10` }}>
               <div className="flex justify-between items-center gap-4">
                 <div className="flex items-center gap-3">
@@ -124,13 +123,13 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
                   </div>
                   <div>
                     <CardTitle className="text-lg">{ex.name}</CardTitle>
-                    <Badge variant="outline" className="text-[10px] uppercase">{ex.muscleGroup}</Badge>
+                    <Badge variant="outline" className="text-[10px] uppercase border-border">{ex.muscleGroup}</Badge>
                   </div>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="grid grid-cols-12 gap-2 p-4 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b">
+              <div className="grid grid-cols-12 gap-2 p-4 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border">
                 <div className="col-span-2 text-center">Set</div>
                 <div className="col-span-4 text-center">Weight (kg)</div>
                 <div className="col-span-4 text-center">Reps</div>
@@ -140,11 +139,11 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
               {ex.sets.map((set, setIdx) => (
                 <div 
                   key={setIdx} 
-                  className={`grid grid-cols-12 gap-2 p-3 items-center border-b last:border-0 transition-colors ${set.completed ? 'bg-green-50' : ''}`}
+                  className={`grid grid-cols-12 gap-2 p-3 items-center border-b border-border last:border-0 transition-colors ${set.completed ? 'bg-primary/5' : ''}`}
                 >
                   <div className="col-span-2 text-center font-bold text-muted-foreground">{setIdx + 1}</div>
                   
-                  <div className="col-span-4 flex items-center bg-muted/50 rounded-lg p-1">
+                  <div className="col-span-4 flex items-center bg-muted/30 rounded-lg p-1">
                     <button 
                       onClick={() => updateSet(exIdx, setIdx, 'weight', set.weight - 2.5)}
                       className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
@@ -170,7 +169,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
                     </button>
                   </div>
 
-                  <div className="col-span-4 flex items-center bg-muted/50 rounded-lg p-1">
+                  <div className="col-span-4 flex items-center bg-muted/30 rounded-lg p-1">
                     <button 
                       onClick={() => updateSet(exIdx, setIdx, 'reps', set.reps - 1)}
                       className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
@@ -201,8 +200,8 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
                       onClick={() => toggleSet(exIdx, setIdx)}
                       className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
                         set.completed 
-                          ? 'bg-green-500 text-white shadow-inner scale-90' 
-                          : 'border'
+                          ? 'bg-primary text-primary-foreground shadow-inner scale-90' 
+                          : 'border border-border'
                       }`}
                       style={!set.completed ? { backgroundColor: `${routine.color}10`, color: routine.color, borderColor: `${routine.color}20` } : {}}
                     >

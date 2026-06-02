@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -143,7 +142,7 @@ export default function ExercisesPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50/50">
+    <div className="flex flex-col min-h-screen bg-background">
       <div className="p-5 space-y-6 pb-24">
         <header className="py-4 flex justify-between items-center">
           <div>
@@ -157,7 +156,7 @@ export default function ExercisesPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 
             placeholder="Search exercises..." 
-            className="pl-10 rounded-2xl h-12 border-none bg-white shadow-sm font-medium"
+            className="pl-10 rounded-2xl h-12 border-none bg-card shadow-sm font-medium"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -169,7 +168,7 @@ export default function ExercisesPage() {
               key={muscle}
               variant={selectedMuscle === muscle ? 'default' : 'outline'}
               className={`cursor-pointer whitespace-nowrap px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
-                selectedMuscle === muscle ? 'bg-primary text-white shadow-md' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                selectedMuscle === muscle ? 'bg-primary text-white shadow-md' : 'bg-card border-border text-muted-foreground hover:bg-muted'
               }`}
               onClick={() => setSelectedMuscle(muscle)}
             >
@@ -182,7 +181,7 @@ export default function ExercisesPage() {
           {filtered.map(ex => (
             <Card 
               key={ex.id} 
-              className="card-hover overflow-hidden cursor-pointer border-none shadow-sm bg-white rounded-3xl group"
+              className="card-hover overflow-hidden cursor-pointer border-none shadow-sm bg-card rounded-3xl group"
               onClick={() => {
                 setSelectedExercise(ex);
                 setIsEditingImage(false);
@@ -190,7 +189,7 @@ export default function ExercisesPage() {
               }}
             >
               <CardContent className="p-0 flex items-center">
-                <div className="relative h-20 w-24 shrink-0 bg-slate-100">
+                <div className="relative h-20 w-24 shrink-0 bg-muted">
                   <Image 
                     src={ex.imageUrl} 
                     alt={ex.name} 
@@ -201,14 +200,14 @@ export default function ExercisesPage() {
                 </div>
                 <div className="flex-1 p-4 flex items-center justify-between overflow-hidden">
                   <div className="min-w-0">
-                    <h3 className="font-black text-sm text-slate-800 truncate">{ex.name}</h3>
+                    <h3 className="font-black text-sm text-foreground truncate">{ex.name}</h3>
                     <div className="flex gap-2 mt-1">
                       <span className="text-[9px] text-primary uppercase font-black tracking-widest">{ex.muscleGroup}</span>
-                      <span className="text-[9px] text-slate-300 uppercase font-black tracking-widest">•</span>
-                      <span className="text-[9px] text-slate-400 uppercase font-black tracking-widest">{ex.equipment}</span>
+                      <span className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">•</span>
+                      <span className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">{ex.equipment}</span>
                     </div>
                   </div>
-                  <ChevronRight className="h-4 w-4 text-slate-300 shrink-0 ml-2" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
                 </div>
               </CardContent>
             </Card>
@@ -217,21 +216,21 @@ export default function ExercisesPage() {
       </div>
 
       <Dialog open={!!selectedExercise} onOpenChange={(open) => !open && setSelectedExercise(null)}>
-        <DialogContent className="sm:max-w-md rounded-t-[2.5rem] sm:rounded-[2.5rem] max-h-[92vh] overflow-y-auto border-none p-0 bg-white">
+        <DialogContent className="sm:max-w-md rounded-t-[2.5rem] sm:rounded-[2.5rem] max-h-[92vh] overflow-y-auto border-none p-0 bg-card">
           {selectedExercise && (
             <div className="flex flex-col">
               <div className="p-6 pb-0">
                 <DialogHeader className="mb-6">
                   <div className="flex justify-between items-start">
                     <div>
-                      <DialogTitle className="text-2xl font-black leading-tight text-slate-900">{selectedExercise.name}</DialogTitle>
+                      <DialogTitle className="text-2xl font-black leading-tight text-foreground">{selectedExercise.name}</DialogTitle>
                       <p className="text-[10px] text-primary uppercase font-black tracking-widest mt-1">Movement Details</p>
                     </div>
                     <div className="flex gap-2">
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="rounded-full bg-slate-50 h-10 w-10 shrink-0"
+                        className="rounded-full bg-muted h-10 w-10 shrink-0"
                         onClick={openDetailsEditor}
                       >
                         <Settings2 className="h-4 w-4" />
@@ -239,7 +238,7 @@ export default function ExercisesPage() {
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="rounded-full bg-slate-50 h-10 w-10 shrink-0"
+                        className="rounded-full bg-muted h-10 w-10 shrink-0"
                         onClick={() => {
                           setIsEditingImage(!isEditingImage);
                           setIsEditingDetails(false);
@@ -252,10 +251,10 @@ export default function ExercisesPage() {
                 </DialogHeader>
 
                 {isEditingImage && (
-                  <div className="mb-6 bg-slate-50 p-5 rounded-3xl border border-dashed border-slate-200 space-y-4 animate-in fade-in slide-in-from-top-2">
+                  <div className="mb-6 bg-muted/30 p-5 rounded-3xl border border-dashed border-border space-y-4 animate-in fade-in slide-in-from-top-2">
                     <div className="flex justify-between items-center">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Update Illustration</h4>
-                      <div className="flex bg-white rounded-xl p-1 shadow-sm border">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Update Illustration</h4>
+                      <div className="flex bg-card rounded-xl p-1 shadow-sm border">
                         <Button 
                           variant={imageInputMode === 'url' ? 'secondary' : 'ghost'} 
                           size="sm" 
@@ -280,12 +279,12 @@ export default function ExercisesPage() {
                         placeholder="Paste image URL here..."
                         value={tempImageUrl}
                         onChange={(e) => setTempImageUrl(e.target.value)}
-                        className="rounded-xl h-12 bg-white border-none shadow-sm text-sm"
+                        className="rounded-xl h-12 bg-card border-none shadow-sm text-sm"
                       />
                     ) : (
                       <div className="space-y-2">
                         <input type="file" className="hidden" ref={fileInputRef} accept="image/*" onChange={handleFileUpload}/>
-                        <Button variant="outline" className="w-full rounded-xl h-12 border-dashed border-slate-300 bg-white" onClick={() => fileInputRef.current?.click()}>
+                        <Button variant="outline" className="w-full rounded-xl h-12 border-dashed border-border bg-card" onClick={() => fileInputRef.current?.click()}>
                           <Upload className="h-4 w-4 mr-2" /> Choose Image File
                         </Button>
                       </div>
@@ -299,17 +298,17 @@ export default function ExercisesPage() {
                 )}
 
                 {isEditingDetails && (
-                  <div className="mb-6 bg-slate-50 p-5 rounded-3xl border border-slate-200 space-y-4 animate-in fade-in slide-in-from-top-2">
+                  <div className="mb-6 bg-muted/30 p-5 rounded-3xl border border-border space-y-4 animate-in fade-in slide-in-from-top-2">
                     <div className="space-y-4">
                       <div className="space-y-1">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Name</Label>
-                        <Input value={editName} onChange={e => setEditName(e.target.value)} className="bg-white rounded-xl" />
+                        <Input value={editName} onChange={e => setEditName(e.target.value)} className="bg-card rounded-xl" />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
                           <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Muscle</Label>
                           <Select value={editMuscle} onValueChange={v => setEditMuscle(v as MuscleGroup)}>
-                            <SelectTrigger className="bg-white rounded-xl">
+                            <SelectTrigger className="bg-card rounded-xl">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -322,7 +321,7 @@ export default function ExercisesPage() {
                         <div className="space-y-1">
                           <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Equipment</Label>
                           <Select value={editEquipment} onValueChange={v => setEditEquipment(v as Equipment)}>
-                            <SelectTrigger className="bg-white rounded-xl">
+                            <SelectTrigger className="bg-card rounded-xl">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -338,7 +337,7 @@ export default function ExercisesPage() {
                         <Textarea 
                           value={editCues} 
                           onChange={e => setEditCues(e.target.value)} 
-                          className="bg-white rounded-xl min-h-[100px] text-sm"
+                          className="bg-card rounded-xl min-h-[100px] text-sm"
                           placeholder="Drive through heels..."
                         />
                       </div>
@@ -352,7 +351,7 @@ export default function ExercisesPage() {
 
                 <div className="pb-6">
                   <Link href={`/exercises/${selectedExercise.id}/progress`} className="block">
-                    <Button className="w-full rounded-2xl h-14 font-black uppercase tracking-widest gap-2 bg-slate-900 text-white shadow-xl hover:bg-slate-800 transition-all active:scale-95 mb-6">
+                    <Button className="w-full rounded-2xl h-14 font-black uppercase tracking-widest gap-2 bg-foreground text-background shadow-xl hover:opacity-90 transition-all active:scale-95 mb-6">
                       <TrendingUp className="h-5 w-5" />
                       Visual Progress
                     </Button>

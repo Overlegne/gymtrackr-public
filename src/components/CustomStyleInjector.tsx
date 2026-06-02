@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from 'react';
@@ -17,7 +16,8 @@ export function CustomStyleInjector() {
         }
         .dark {
           --primary: ${custom.primary} !important;
-          /* We don't override background in dark mode by default unless specified */
+          --background: 0 0% 0% !important;
+          --card: 250 20% 4% !important;
         }
       `);
     } else {

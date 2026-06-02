@@ -48,7 +48,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border/50 px-5 py-6 flex items-center gap-4">
+      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border px-5 py-6 flex items-center gap-4">
         <Link href="/">
           <Button variant="ghost" size="icon" className="rounded-full bg-muted/30 hover:bg-muted/50 transition-colors">
             <ChevronLeft className="h-5 w-5 text-foreground" />
