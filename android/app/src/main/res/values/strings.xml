@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">gymtrackr</string>
+    <string name="title_activity_main">gymtrackr</string>
+    <string name="package_name">com.overlegne.gymtrackr</string>
+    <string name="custom_url_scheme">com.overlegne.gymtrackr</string>
+</resources>
