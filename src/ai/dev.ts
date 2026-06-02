@@ -1,5 +1,6 @@
+
 import { config } from 'dotenv';
 config();
 
 import '@/ai/flows/ai-generated-routine-suggestion.ts';
-import '@/ai/flows/parse-workout-pdf.ts';
+import '@/ai/flows/parse-workout-file.ts';

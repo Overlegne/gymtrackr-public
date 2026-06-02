@@ -1,27 +1,24 @@
+
 "use client"
 
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { parseWorkoutPdf, type ParseWorkoutPdfOutput } from '@/ai/flows/parse-workout-pdf';
+import { parseWorkoutFile, type ParseWorkoutFileOutput } from '@/ai/flows/parse-workout-file';
 import { 
   FileUp, 
-  Loader2, 
   ChevronLeft, 
-  CheckCircle2, 
   AlertCircle, 
   Trash2, 
-  Edit2, 
-  Plus, 
   Search,
-  Check,
-  Save,
   Dumbbell,
-  Type
+  FileText,
+  Table as TableIcon,
+  Image as ImageIcon
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -31,11 +28,17 @@ import Image from 'next/image';
 
 type ImportStep = 'upload' | 'analyzing' | 'review';
 
+const SUPPORTED_EXTENSIONS = [
+  '.pdf', '.xlsx', '.xls', '.csv', '.docx', '.doc', '.ods', '.png', '.jpg', '.jpeg'
+];
+
+const ACCEPT_STR = SUPPORTED_EXTENSIONS.join(',');
+
 export default function RoutineImportPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [step, setStep] = useState<ImportStep>('upload');
-  const [draft, setDraft] = useState<ParseWorkoutPdfOutput | null>(null);
+  const [draft, setDraft] = useState<ParseWorkoutFileOutput | null>(null);
   const [editedTitle, setEditedTitle] = useState('');
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -44,8 +47,13 @@ export default function RoutineImportPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.type !== 'application/pdf') {
-      toast({ variant: 'destructive', title: 'Invalid File', description: 'Please upload a PDF document.' });
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (!SUPPORTED_EXTENSIONS.includes(ext)) {
+      toast({ 
+        variant: 'destructive', 
+        title: 'Unsupported File', 
+        description: `Please upload one of: ${SUPPORTED_EXTENSIONS.join(', ')}` 
+      });
       return;
     }
 
@@ -56,9 +64,10 @@ export default function RoutineImportPage() {
       const reader = new FileReader();
       reader.onload = async () => {
         const base64 = (reader.result as string).split(',')[1];
-        const result = await parseWorkoutPdf({
-          pdfBase64: base64,
-          fileName: file.name
+        const result = await parseWorkoutFile({
+          fileBase64: base64,
+          fileName: file.name,
+          mimeType: file.type || 'application/octet-stream'
         });
 
         // Enhance with DB matching
@@ -81,8 +90,12 @@ export default function RoutineImportPage() {
         setStep('review');
       };
       reader.readAsDataURL(file);
-    } catch (err) {
-      toast({ variant: 'destructive', title: 'Import Failed', description: 'Could not parse the PDF. Please try again.' });
+    } catch (err: any) {
+      toast({ 
+        variant: 'destructive', 
+        title: 'Import Failed', 
+        description: err.message || 'Could not parse the file. Please try again.' 
+      });
       setStep('upload');
     } finally {
       setLoading(false);
@@ -151,21 +164,33 @@ export default function RoutineImportPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-xl font-black text-foreground">PDF Import</h1>
-          <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Digitalize your PDF plan</p>
+          <h1 className="text-xl font-black text-foreground">Import Routine</h1>
+          <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Digitalize from any file</p>
         </div>
       </header>
 
       <main className="p-5 flex-1 pb-32">
         {step === 'upload' && (
           <div className="flex flex-col items-center justify-center h-full py-20 space-y-8 animate-in fade-in duration-500">
-            <div className="h-24 w-24 rounded-[2rem] bg-primary/10 flex items-center justify-center text-primary shadow-inner">
-              <FileUp className="h-10 w-10" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="h-16 w-16 rounded-3xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+                <FileText className="h-7 w-7" />
+              </div>
+              <div className="h-16 w-16 rounded-3xl bg-accent/10 flex items-center justify-center text-accent shadow-inner">
+                <TableIcon className="h-7 w-7" />
+              </div>
+              <div className="h-16 w-16 rounded-3xl bg-purple-500/10 flex items-center justify-center text-purple-500 shadow-inner">
+                <ImageIcon className="h-7 w-7" />
+              </div>
+              <div className="h-16 w-16 rounded-3xl bg-amber-500/10 flex items-center justify-center text-amber-500 shadow-inner">
+                <FileUp className="h-7 w-7" />
+              </div>
             </div>
+            
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-black tracking-tight">Upload Routine</h2>
+              <h2 className="text-2xl font-black tracking-tight">Upload Workout</h2>
               <p className="text-sm text-muted-foreground font-medium max-w-[280px] mx-auto">
-                Upload a PDF schedule from your trainer or a fitness program to import it instantly.
+                Upload a document, spreadsheet, or screenshot of your routine to import it.
               </p>
             </div>
             
@@ -174,7 +199,7 @@ export default function RoutineImportPage() {
                 type="file" 
                 ref={fileInputRef} 
                 onChange={handleFileUpload} 
-                accept=".pdf" 
+                accept={ACCEPT_STR} 
                 className="hidden" 
               />
               <Button 
@@ -182,9 +207,18 @@ export default function RoutineImportPage() {
                 className="w-full h-16 rounded-3xl font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20 gap-3"
               >
                 <FileUp className="h-5 w-5" />
-                Select PDF File
+                Select File
               </Button>
-              <p className="text-[9px] text-center mt-4 text-muted-foreground uppercase font-black tracking-[0.2em]">MAX 10MB • PDF FORMAT ONLY</p>
+              <div className="mt-6 space-y-2">
+                <p className="text-[8px] text-center text-muted-foreground uppercase font-black tracking-[0.2em]">SUPPORTED FORMATS</p>
+                <div className="flex flex-wrap justify-center gap-1">
+                  {SUPPORTED_EXTENSIONS.map(ext => (
+                    <Badge key={ext} variant="outline" className="text-[7px] py-0 px-1 border-muted text-muted-foreground">
+                      {ext.toUpperCase()}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -198,9 +232,9 @@ export default function RoutineImportPage() {
               </div>
             </div>
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-black tracking-tight">Analyzing PDF...</h2>
+              <h2 className="text-2xl font-black tracking-tight">Analyzing File...</h2>
               <p className="text-sm text-muted-foreground font-medium animate-pulse">
-                Extracting exercises and workout days
+                Extracting structured data from your file
               </p>
             </div>
           </div>
@@ -210,7 +244,7 @@ export default function RoutineImportPage() {
           <div className="space-y-6 animate-in slide-in-from-bottom-5 duration-500">
             <div className="flex justify-between items-end gap-4">
               <div className="flex-1 min-w-0">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 mb-1 block">Routine Name</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 mb-1 block">Routine Title</Label>
                 <Input 
                   value={editedTitle}
                   onChange={(e) => setEditedTitle(e.target.value)}
@@ -231,7 +265,7 @@ export default function RoutineImportPage() {
               <div>
                 <p className="text-xs font-bold text-amber-500 uppercase tracking-widest">Review Required</p>
                 <p className="text-[11px] text-amber-700 dark:text-amber-300 font-medium leading-relaxed">
-                  We found {draft.days.reduce((acc, day) => acc + day.exercises.filter(ex => ex.needsReview).length, 0)} items that might need correction. Please verify the details.
+                  Please verify the details below. We flagged {draft.days.reduce((acc, day) => acc + day.exercises.filter(ex => ex.needsReview).length, 0)} items for review.
                 </p>
               </div>
             </div>
@@ -305,7 +339,7 @@ export default function RoutineImportPage() {
                             </div>
                             {ex.matchedExerciseName && (
                               <div className="flex flex-col ml-auto">
-                                <span className="text-[8px] text-primary uppercase font-black tracking-widest text-right">Database Match</span>
+                                <span className="text-[8px] text-primary uppercase font-black tracking-widest text-right">Match</span>
                                 <span className="text-[10px] font-bold text-foreground truncate max-w-[100px] text-right">{ex.matchedExerciseName}</span>
                               </div>
                             )}
