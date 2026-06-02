@@ -2,52 +2,88 @@
 {
   "placeholderImages": [
     {
-      "id": "bench",
-      "description": "Barbell Bench Press",
-      "imageUrl": "https://picsum.photos/seed/bench/600/400",
+      "id": "bench-press",
+      "description": "Barbell Bench Press voor borsttraining",
+      "imageUrl": "https://picsum.photos/seed/bench1/600/400",
       "imageHint": "bench press"
+    },
+    {
+      "id": "dumbbell-press",
+      "description": "Flat Dumbbell Press",
+      "imageUrl": "https://picsum.photos/seed/dbpress/600/400",
+      "imageHint": "dumbbell press"
+    },
+    {
+      "id": "incline-press",
+      "description": "Incline Dumbbell Press",
+      "imageUrl": "https://picsum.photos/seed/incline/600/400",
+      "imageHint": "incline press"
+    },
+    {
+      "id": "chest-fly",
+      "description": "Dumbbell Chest Fly",
+      "imageUrl": "https://picsum.photos/seed/chestfly1/600/400",
+      "imageHint": "chest fly"
     },
     {
       "id": "squat",
       "description": "Barbell Squat",
-      "imageUrl": "https://picsum.photos/seed/squat/600/400",
+      "imageUrl": "https://picsum.photos/seed/squat1/600/400",
       "imageHint": "barbell squat"
+    },
+    {
+      "id": "leg-press",
+      "description": "Seated Leg Press",
+      "imageUrl": "https://picsum.photos/seed/legpress1/600/400",
+      "imageHint": "leg press"
     },
     {
       "id": "deadlift",
       "description": "Conventional Deadlift",
-      "imageUrl": "https://picsum.photos/seed/deadlift/600/400",
+      "imageUrl": "https://picsum.photos/seed/deadlift1/600/400",
       "imageHint": "deadlift exercise"
     },
     {
-      "id": "pushup",
-      "description": "Standard Push-Ups",
-      "imageUrl": "https://picsum.photos/seed/pushup/600/400",
-      "imageHint": "pushup exercise"
-    },
-    {
-      "id": "bicep",
-      "description": "Bicep Curls",
-      "imageUrl": "https://picsum.photos/seed/bicep/600/400",
-      "imageHint": "bicep curl"
-    },
-    {
-      "id": "tricep",
-      "description": "Tricep Pushdown",
-      "imageUrl": "https://picsum.photos/seed/tricep/600/400",
-      "imageHint": "tricep pushdown"
-    },
-    {
-      "id": "lat",
-      "description": "Lat Pulldown",
-      "imageUrl": "https://picsum.photos/seed/lat/600/400",
+      "id": "lat-pulldown",
+      "description": "Wide Grip Lat Pulldown",
+      "imageUrl": "https://picsum.photos/seed/lat1/600/400",
       "imageHint": "lat pulldown"
     },
     {
-      "id": "shoulder",
-      "description": "Overhead Press",
-      "imageUrl": "https://picsum.photos/seed/shoulder/600/400",
-      "imageHint": "shoulder press"
+      "id": "seated-row",
+      "description": "Seated Cable Row",
+      "imageUrl": "https://picsum.photos/seed/row1/600/400",
+      "imageHint": "cable row"
+    },
+    {
+      "id": "overhead-press",
+      "description": "Overhead Barbell Press",
+      "imageUrl": "https://picsum.photos/seed/shoulder1/600/400",
+      "imageHint": "overhead press"
+    },
+    {
+      "id": "lateral-raise",
+      "description": "Dumbbell Lateral Raise",
+      "imageUrl": "https://picsum.photos/seed/lateral/600/400",
+      "imageHint": "lateral raise"
+    },
+    {
+      "id": "bicep-curl",
+      "description": "Dumbbell Bicep Curls",
+      "imageUrl": "https://picsum.photos/seed/bicep1/600/400",
+      "imageHint": "bicep curl"
+    },
+    {
+      "id": "tricep-pushdown",
+      "description": "Cable Tricep Pushdown",
+      "imageUrl": "https://picsum.photos/seed/tricep1/600/400",
+      "imageHint": "tricep pushdown"
+    },
+    {
+      "id": "plank",
+      "description": "Core stability plank",
+      "imageUrl": "https://picsum.photos/seed/plank/600/400",
+      "imageHint": "plank exercise"
     }
   ]
 }
