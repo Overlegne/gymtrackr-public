@@ -1,9 +1,9 @@
 
 "use client"
 
-import { use, useState, useMemo } from 'react';
+import { use, useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { getExercises, getExerciseHistory, type HistoryPoint } from '@/lib/store';
+import { getExercises, getExerciseHistory, type HistoryPoint, type Exercise } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChevronLeft, TrendingUp, Calendar, Info } from 'lucide-react';
@@ -32,16 +32,22 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
   const { id } = use(params);
   const router = useRouter();
   const [timeRange, setTimeRange] = useState<TimeRange>('90d');
-  
-  const exercise = useMemo(() => {
-    return getExercises().find(e => e.id === id);
-  }, [id]);
+  const [isMounted, setIsMounted] = useState(false);
+  const [exercise, setExercise] = useState<Exercise | null>(null);
+  const [history, setHistory] = useState<HistoryPoint[]>([]);
 
-  const history = useMemo(() => {
-    return getExerciseHistory(id).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  useEffect(() => {
+    setIsMounted(true);
+    const foundExercise = getExercises().find(e => e.id === id);
+    if (foundExercise) {
+      setExercise(foundExercise);
+    }
+    const exerciseHistory = getExerciseHistory(id).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    setHistory(exerciseHistory);
   }, [id]);
 
   const filteredHistory = useMemo(() => {
+    if (!isMounted || history.length === 0) return [];
     if (timeRange === 'all') return history;
     
     const now = new Date();
@@ -52,10 +58,10 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
     }[timeRange];
     
     return history.filter(p => (now.getTime() - new Date(p.date).getTime()) <= rangeMs);
-  }, [history, timeRange]);
+  }, [history, timeRange, isMounted]);
 
   const stats = useMemo(() => {
-    if (history.length === 0) return null;
+    if (!isMounted || history.length === 0) return null;
     
     const weights = history.map(p => p.weight);
     const reps = history.map(p => p.reps);
@@ -73,9 +79,24 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
       bestE1RM: e1rms.length > 0 ? Math.max(...e1rms) : 0,
       weightTrend: weightDiff
     };
-  }, [history]);
+  }, [history, isMounted]);
 
-  if (!exercise) return null;
+  if (!isMounted || !exercise) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background">
+        <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border/50 px-5 py-4 flex items-center gap-4">
+          <Link href="/exercises">
+            <Button variant="ghost" size="icon" className="rounded-full bg-muted/30">
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl font-black truncate text-foreground">Loading...</h1>
+          </div>
+        </header>
+      </div>
+    );
+  }
 
   const chartData = filteredHistory.map(p => ({
     ...p,
@@ -132,7 +153,7 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
                         <span className="font-black text-primary text-base">{payload[0].value}</span>
                         <span className="font-black text-muted-foreground text-[10px] uppercase">{unit}</span>
                       </div>
-                      {data.sets && <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest bg-muted/30 px-2 py-0.5 rounded-full inline-block">{data.sets} Sets loggeed</p>}
+                      {data.sets && <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest bg-muted/30 px-2 py-0.5 rounded-full inline-block">{data.sets} Sets logged</p>}
                     </div>
                   );
                 }
