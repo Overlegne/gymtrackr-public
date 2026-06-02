@@ -16,9 +16,12 @@ export function CustomStyleInjector() {
         }
         .dark {
           --primary: ${custom.primary} !important;
-          --background: 0 0% 0% !important;
-          --card: 250 20% 10% !important;
-          --popover: 250 20% 12% !important;
+          --background: 250 20% 6% !important;
+          --card: 250 20% 12% !important;
+          --popover: 250 20% 14% !important;
+          --secondary: 250 20% 18% !important;
+          --muted: 250 20% 18% !important;
+          --border: 250 20% 22% !important;
         }
       `);
     } else {
