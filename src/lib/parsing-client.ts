@@ -1,4 +1,3 @@
-
 /**
  * @fileOverview Client for the remote workout parsing service.
  * Separates AI logic from the mobile app bundle to keep the APK lightweight.
@@ -35,11 +34,12 @@ export interface ParsingRequest {
 
 /**
  * Calls the external parsing service. 
+ * Note: In production, this should point to the absolute URL of your deployed Next.js API.
  */
 export async function callParsingService(request: ParsingRequest): Promise<ParsingResponse> {
-  // Use a configurable URL or default to the internal API route
-  // Note: For bundled Capacitor, this must be an absolute URL pointing to your deployed server.
-  const API_URL = process.env.NEXT_PUBLIC_PARSING_SERVICE_URL || '/api/parse-workout';
+  // We use a relative path here which works in dev and when served from the same origin.
+  // For a standalone Capacitor APK, ensure your API route is deployed and accessible.
+  const API_URL = '/api/parse-workout';
 
   try {
     const response = await fetch(API_URL, {

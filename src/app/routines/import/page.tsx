@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useRef, useEffect } from 'react';
@@ -19,8 +18,9 @@ import {
   FileText,
   Table as TableIcon,
   Image as ImageIcon,
+  CheckCircle2,
   Clock,
-  CheckCircle2
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -75,7 +75,7 @@ export default function RoutineImportPage() {
       reader.onload = async () => {
         const base64 = (reader.result as string).split(',')[1];
         
-        // Call the separate parsing service
+        // Call the separate parsing service via API
         const result = await callParsingService({
           fileBase64: base64,
           fileName: file.name,
@@ -91,7 +91,6 @@ export default function RoutineImportPage() {
               ...ex,
               matchedExerciseId: match.exercise?.id,
               matchedExerciseName: match.exercise?.name,
-              // Flag for review if confidence is low or no match found
               needsReview: ex.needsReview || !match.exercise || match.confidence < 0.8
             };
           })
@@ -144,6 +143,8 @@ export default function RoutineImportPage() {
     setLoading(true);
     try {
       for (const day of draft.days) {
+        if (day.exercises.length === 0) continue;
+
         const mappedExercises = day.exercises.map(ex => {
           const existing = allExercises.find(e => e.id === (ex as any).matchedExerciseId);
           
@@ -161,7 +162,7 @@ export default function RoutineImportPage() {
           }
           
           return {
-            id: `imported-${Date.now()}-${ex.id}`,
+            id: `imported-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             name: ex.displayName,
             muscleGroup: 'Chest',
             equipment: 'Machine',
@@ -242,7 +243,7 @@ export default function RoutineImportPage() {
                 disabled={loading}
                 className="w-full h-16 rounded-3xl font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20 gap-3"
               >
-                <FileUp className="h-5 w-5" />
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <FileUp className="h-5 w-5" />}
                 Select File
               </Button>
             </div>
@@ -283,7 +284,7 @@ export default function RoutineImportPage() {
                 disabled={loading}
                 className="bg-primary text-white rounded-2xl h-12 px-6 font-black uppercase tracking-widest shadow-lg shadow-primary/20 shrink-0"
               >
-                Save Locally
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirm Import'}
               </Button>
             </div>
 
@@ -317,7 +318,7 @@ export default function RoutineImportPage() {
                   {day.exercises.map((ex: any, eIdx) => {
                     const isTimed = ex.durationSeconds && ex.durationSeconds > 0;
                     return (
-                      <Card key={ex.id} className={`border-none shadow-sm overflow-hidden bg-card ${ex.needsReview ? 'ring-2 ring-amber-500/30' : ''}`}>
+                      <Card key={eIdx} className={`border-none shadow-sm overflow-hidden bg-card ${ex.needsReview ? 'ring-2 ring-amber-500/30' : ''}`}>
                         <CardContent className="p-0 flex items-center">
                           <div className="relative h-24 w-24 shrink-0 bg-muted">
                              {ex.matchedExerciseId ? (
