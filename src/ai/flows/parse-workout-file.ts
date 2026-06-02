@@ -91,8 +91,7 @@ const prompt = ai.definePrompt({
     schema: z.object({
       extractedText: z.string().optional(),
       fileName: z.string(),
-      fileBase64: z.string().optional(),
-      mimeType: z.string().optional(),
+      imageDataUri: z.string().optional(),
     }),
   },
   output: { schema: ParseWorkoutFileOutputSchema },
@@ -125,9 +124,9 @@ RAW TEXT CONTENT:
 {{{extractedText}}}
 {{/if}}
 
-{{#if fileBase64}}
+{{#if imageDataUri}}
 The user has provided an image of their workout plan:
-{{media url=(concat "data:" mimeType ";base64," fileBase64)}}
+{{media url=imageDataUri}}
 {{/if}}`,
 });
 
@@ -147,9 +146,18 @@ const parseWorkoutFileFlow = ai.defineFlow(
     const maxAttempts = 3;
     let lastError;
 
+    // Pre-construct the data URI to avoid using 'concat' helper in Handlebars
+    const imageDataUri = input.fileBase64 && input.mimeType 
+      ? `data:${input.mimeType};base64,${input.fileBase64}` 
+      : undefined;
+
     while (attempts < maxAttempts) {
       try {
-        const { output } = await prompt(input);
+        const { output } = await prompt({
+          extractedText: input.extractedText,
+          fileName: input.fileName,
+          imageDataUri,
+        });
         if (!output) {
           throw new Error('Failed to parse workout data.');
         }
