@@ -67,6 +67,32 @@ export interface WorkoutLog {
   routineName: string;
   routineColor: string;
   date: string; // ISO YYYY-MM-DD
+  totalVolume?: number;
+  durationSeconds?: number;
+}
+
+export interface WorkoutSummaryData {
+  routineName: string;
+  routineColor: string;
+  date: string;
+  durationSeconds: number;
+  totalVolume: number;
+  totalSets: number;
+  exerciseCount: number;
+  muscleSplit: { muscle: MuscleGroup; count: number; percentage: number }[];
+  exercises: {
+    id: string;
+    name: string;
+    muscleGroup: MuscleGroup;
+    sets: number;
+    topWeight: number;
+    topReps: number;
+    volume: number;
+    durationSeconds?: number;
+    loggingType: LoggingType;
+    records: string[];
+  }[];
+  globalRecords: string[];
 }
 
 export const ROUTINE_COLORS = [
@@ -310,6 +336,7 @@ const STATS_KEY = 'exercise_stats_v12';
 const ROUTINES_KEY = 'user_routines_v12';
 const LOGS_KEY = 'workout_logs_v6';
 const HISTORY_KEY = 'exercise_history_v2';
+const LAST_SUMMARY_KEY = 'last_workout_summary_v1';
 
 export const getExercises = (): Exercise[] => {
   if (typeof window === 'undefined') return DEFAULT_EXERCISES;
@@ -357,16 +384,31 @@ export const getExerciseStats = (exerciseId: string): ExerciseStats => {
   return allStats[exerciseId] || { sets: {} };
 };
 
-export const saveAllWorkoutStats = (exercises: RoutineExercise[]) => {
-  if (typeof window === 'undefined') return;
+export const saveAllWorkoutStats = (exercises: RoutineExercise[]): WorkoutSummaryData => {
+  if (typeof window === 'undefined') throw new Error("Client side only");
+  
   const allStats = JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
   const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '{}');
   const date = new Date().toLocaleDateString('en-CA');
   
+  const summary: WorkoutSummaryData = {
+    routineName: '',
+    routineColor: '',
+    date,
+    durationSeconds: 0,
+    totalVolume: 0,
+    totalSets: 0,
+    exerciseCount: 0,
+    muscleSplit: [],
+    exercises: [],
+    globalRecords: []
+  };
+
+  const muscleCounts: Record<string, number> = {};
+
   exercises.forEach(ex => {
-    if (!allStats[ex.id]) {
-      allStats[ex.id] = { sets: {} };
-    }
+    const exStats = allStats[ex.id] || { sets: {} };
+    const exHistory = history[ex.id] || [];
     
     let maxWeight = 0;
     let maxReps = 0;
@@ -374,9 +416,16 @@ export const saveAllWorkoutStats = (exercises: RoutineExercise[]) => {
     let totalVolume = 0;
     let bestE1RM = 0;
     let validSets = 0;
+    const exerciseRecords: string[] = [];
+
+    // Check historical PRs
+    const prevBestWeight = Math.max(...exHistory.map((h: HistoryPoint) => h.weight), 0);
+    const prevBestVolume = Math.max(...exHistory.map((h: HistoryPoint) => h.volume), 0);
+    const prevBestE1RM = Math.max(...exHistory.map((h: HistoryPoint) => h.e1RM), 0);
 
     ex.sets.forEach((set, idx) => {
       if (set.completed || set.weight > 0 || set.reps > 0 || (set.durationSeconds && set.durationSeconds > 0)) {
+        if (!allStats[ex.id]) allStats[ex.id] = { sets: {} };
         allStats[ex.id].sets[idx.toString()] = { 
           weight: set.weight, 
           reps: set.reps,
@@ -397,7 +446,30 @@ export const saveAllWorkoutStats = (exercises: RoutineExercise[]) => {
     });
 
     if (validSets > 0) {
-      if (!history[ex.id]) history[ex.id] = [];
+      summary.totalSets += validSets;
+      summary.totalVolume += totalVolume;
+      summary.exerciseCount++;
+      muscleCounts[ex.muscleGroup] = (muscleCounts[ex.muscleGroup] || 0) + validSets;
+
+      // Detect Records
+      if (maxWeight > prevBestWeight && maxWeight > 0) exerciseRecords.push('New Max Weight');
+      if (totalVolume > prevBestVolume && totalVolume > 0) exerciseRecords.push('New Exercise Volume');
+      if (bestE1RM > prevBestE1RM && bestE1RM > 0) exerciseRecords.push('New Best e1RM');
+
+      summary.exercises.push({
+        id: ex.id,
+        name: ex.name,
+        muscleGroup: ex.muscleGroup,
+        sets: validSets,
+        topWeight: maxWeight,
+        topReps: maxReps,
+        volume: totalVolume,
+        durationSeconds: maxDuration,
+        loggingType: ex.loggingType,
+        records: exerciseRecords
+      });
+
+      // Update history
       const historyPoint: HistoryPoint = {
         date,
         weight: maxWeight,
@@ -407,17 +479,36 @@ export const saveAllWorkoutStats = (exercises: RoutineExercise[]) => {
         volume: totalVolume,
         e1RM: bestE1RM
       };
-      const existingIdx = history[ex.id].findIndex((p: HistoryPoint) => p.date === date);
+      const existingIdx = exHistory.findIndex((p: HistoryPoint) => p.date === date);
       if (existingIdx > -1) {
-        history[ex.id][existingIdx] = historyPoint;
+        exHistory[existingIdx] = historyPoint;
       } else {
-        history[ex.id].push(historyPoint);
+        exHistory.push(historyPoint);
       }
+      history[ex.id] = exHistory;
     }
   });
+
+  // Global Record Detection (Total Workout Volume)
+  const allLogs = getWorkoutLogs();
+  const prevMaxTotalVolume = Math.max(...allLogs.map(l => l.totalVolume || 0), 0);
+  if (summary.totalVolume > prevMaxTotalVolume && allLogs.length > 0) {
+    summary.globalRecords.push('New Total Volume PR');
+  }
+
+  // Calculate Muscle Split
+  const totalSetsRecorded = Object.values(muscleCounts).reduce((a, b) => a + b, 0);
+  summary.muscleSplit = Object.entries(muscleCounts).map(([muscle, count]) => ({
+    muscle: muscle as MuscleGroup,
+    count,
+    percentage: Math.round((count / totalSetsRecorded) * 100)
+  })).sort((a, b) => b.count - a.count);
   
   localStorage.setItem(STATS_KEY, JSON.stringify(allStats));
   localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  localStorage.setItem(LAST_SUMMARY_KEY, JSON.stringify(summary));
+
+  return summary;
 };
 
 export const getExerciseHistory = (exerciseId: string): HistoryPoint[] => {
@@ -456,7 +547,7 @@ export const deleteRoutine = (id: string) => {
   localStorage.setItem(ROUTINES_KEY, JSON.stringify(routines));
 };
 
-export const logWorkout = (routine: Routine) => {
+export const logWorkout = (routine: Routine, durationSeconds: number, totalVolume: number) => {
   if (typeof window === 'undefined') return;
   const logs: WorkoutLog[] = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
   const newLog: WorkoutLog = {
@@ -465,6 +556,8 @@ export const logWorkout = (routine: Routine) => {
     routineName: routine.name,
     routineColor: routine.color || '#8b5cf6',
     date: new Date().toLocaleDateString('en-CA'),
+    durationSeconds,
+    totalVolume
   };
   logs.push(newLog);
   localStorage.setItem(LOGS_KEY, JSON.stringify(logs));
@@ -475,9 +568,24 @@ export const logWorkout = (routine: Routine) => {
     routines[index].lastPerformed = newLog.date;
     localStorage.setItem(ROUTINES_KEY, JSON.stringify(routines));
   }
+
+  // Update last summary metadata
+  const lastSummary = JSON.parse(localStorage.getItem(LAST_SUMMARY_KEY) || '{}');
+  if (lastSummary) {
+    lastSummary.routineName = routine.name;
+    lastSummary.routineColor = routine.color || '#8b5cf6';
+    lastSummary.durationSeconds = durationSeconds;
+    localStorage.setItem(LAST_SUMMARY_KEY, JSON.stringify(lastSummary));
+  }
 };
 
 export const getWorkoutLogs = (): WorkoutLog[] => {
   if (typeof window === 'undefined') return [];
   return JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
+};
+
+export const getLastWorkoutSummary = (): WorkoutSummaryData | null => {
+  if (typeof window === 'undefined') return null;
+  const stored = localStorage.getItem(LAST_SUMMARY_KEY);
+  return stored ? JSON.parse(stored) : null;
 };

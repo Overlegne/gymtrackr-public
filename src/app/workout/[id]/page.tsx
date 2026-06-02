@@ -29,6 +29,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
   const { toast } = useToast();
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [exercises, setExercises] = useState<RoutineExercise[]>([]);
+  const [startTime] = useState(Date.now());
   
   // Settings
   const settings = useMemo(() => getSettings(), []);
@@ -115,14 +116,14 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
         }))
       }));
       
-      logWorkout(routine);
-      saveAllWorkoutStats(processedExercises);
+      const summary = saveAllWorkoutStats(processedExercises);
+      const durationSeconds = Math.round((Date.now() - startTime) / 1000);
+      logWorkout(routine, durationSeconds, summary.totalVolume);
+      
+      router.push('/workout/summary');
+    } else {
+      router.push('/');
     }
-    toast({
-      title: "Workout Completed!",
-      description: "Great job. Your progress has been saved to your history.",
-    });
-    router.push('/');
   };
 
   if (!routine) return null;
