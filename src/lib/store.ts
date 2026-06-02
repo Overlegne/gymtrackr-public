@@ -107,6 +107,15 @@ export const addExercise = (exercise: Omit<Exercise, 'id'>) => {
   return newExercise;
 };
 
+export const updateExercise = (updatedEx: Exercise) => {
+  const exercises = getExercises();
+  const index = exercises.findIndex(e => e.id === updatedEx.id);
+  if (index > -1) {
+    exercises[index] = updatedEx;
+    localStorage.setItem(EXERCISES_KEY, JSON.stringify(exercises));
+  }
+};
+
 export const getExerciseStats = (exerciseId: string): ExerciseStats => {
   if (typeof window === 'undefined') return { sets: {} };
   const allStats = JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
@@ -122,7 +131,6 @@ export const saveAllWorkoutStats = (exercises: RoutineExercise[]) => {
       allStats[ex.id] = { sets: {} };
     }
     ex.sets.forEach((set, idx) => {
-      // Save if completed OR if there's actual data entered (weight > 0)
       if (set.completed || set.weight > 0 || set.reps > 0) {
         allStats[ex.id].sets[idx.toString()] = { weight: set.weight, reps: set.reps };
       }

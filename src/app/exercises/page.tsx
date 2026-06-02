@@ -1,12 +1,12 @@
 
 "use client"
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { BottomNav } from '@/components/BottomNav';
-import { getExercises, getExerciseStats, type Exercise, type MuscleGroup } from '@/lib/store';
+import { getExercises, getExerciseStats, updateExercise, type Exercise, type MuscleGroup } from '@/lib/store';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ChevronRight, History, Dumbbell, Target } from 'lucide-react';
+import { Search, ChevronRight, History, Dumbbell, Target, Edit, Upload, Link as LinkIcon, Check } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { AddExerciseDialog } from '@/components/AddExerciseDialog';
 import {
@@ -15,13 +15,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 
 export default function ExercisesPage() {
+  const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'All'>('All');
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  
+  // Image editing state
+  const [isEditingImage, setIsEditingImage] = useState(false);
+  const [imageInputMode, setImageInputMode] = useState<'url' | 'upload'>('url');
+  const [tempImageUrl, setTempImageUrl] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setExercises(getExercises());
@@ -39,7 +49,6 @@ export default function ExercisesPage() {
     setExercises(getExercises());
   };
 
-  // Memoize stats to ensure UI updates when selectedExercise changes
   const loggedSets = useMemo(() => {
     if (!selectedExercise) return [];
     const stats = getExerciseStats(selectedExercise.id);
@@ -53,6 +62,35 @@ export default function ExercisesPage() {
       }))
       .sort((a, b) => a.index - b.index);
   }, [selectedExercise]);
+
+  const handleUpdateImage = () => {
+    if (!selectedExercise || !tempImageUrl) return;
+    
+    const updatedEx = { ...selectedExercise, imageUrl: tempImageUrl };
+    updateExercise(updatedEx);
+    
+    // Refresh local lists
+    setExercises(getExercises());
+    setSelectedExercise(updatedEx);
+    setIsEditingImage(false);
+    setTempImageUrl('');
+    
+    toast({
+      title: "Image updated",
+      description: `New picture saved for ${selectedExercise.name}.`
+    });
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setTempImageUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <div className="p-5 space-y-6">
@@ -92,7 +130,10 @@ export default function ExercisesPage() {
           <Card 
             key={ex.id} 
             className="card-hover overflow-hidden cursor-pointer"
-            onClick={() => setSelectedExercise(ex)}
+            onClick={() => {
+              setSelectedExercise(ex);
+              setIsEditingImage(false);
+            }}
           >
             <CardContent className="p-0 flex items-center">
               <div className="relative h-20 w-24 shrink-0 bg-muted">
@@ -138,64 +179,157 @@ export default function ExercisesPage() {
               </DialogHeader>
               
               <div className="space-y-6 py-4">
-                <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-muted shadow-inner">
+                <div className="relative group aspect-video w-full rounded-2xl overflow-hidden bg-muted shadow-inner">
                   <Image 
-                    src={selectedExercise.imageUrl} 
+                    src={tempImageUrl || selectedExercise.imageUrl} 
                     alt={selectedExercise.name} 
                     fill 
                     className="object-cover"
                     data-ai-hint="gym exercise instruction"
                   />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-muted/30 p-4 rounded-2xl border flex flex-col items-center justify-center text-center gap-2">
-                    <Target className="h-5 w-5 text-primary" />
-                    <div>
-                      <p className="text-[10px] uppercase font-bold text-muted-foreground">Muscle</p>
-                      <p className="font-bold">{selectedExercise.muscleGroup}</p>
-                    </div>
-                  </div>
-                  <div className="bg-muted/30 p-4 rounded-2xl border flex flex-col items-center justify-center text-center gap-2">
-                    <Dumbbell className="h-5 w-5 text-primary" />
-                    <div>
-                      <p className="text-[10px] uppercase font-bold text-muted-foreground">Equipment</p>
-                      <p className="font-bold">{selectedExercise.equipment}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <h4 className="font-bold flex items-center gap-2">
-                    <History className="h-4 w-4 text-primary" />
-                    Performance History
-                  </h4>
-                  {loggedSets.length > 0 ? (
-                    <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 space-y-3">
-                      <p className="text-xs text-muted-foreground font-medium border-b pb-2">Last recorded workout values:</p>
-                      {loggedSets.map((set) => (
-                        <div key={set.index} className="flex justify-between items-center text-sm">
-                          <span className="font-bold text-muted-foreground">Set {set.index + 1}</span>
-                          <div className="flex gap-4">
-                            <span className="font-extrabold text-primary">{set.weight} kg</span>
-                            <span className="text-muted-foreground">×</span>
-                            <span className="font-extrabold text-primary">{set.reps} reps</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="bg-muted/20 border border-dashed rounded-2xl p-8 text-center">
-                      <p className="text-sm text-muted-foreground italic">No history logged yet. Complete a workout to see your progress here!</p>
-                    </div>
+                  {!isEditingImage && (
+                    <Button 
+                      variant="secondary" 
+                      size="icon" 
+                      className="absolute bottom-4 right-4 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => {
+                        setIsEditingImage(true);
+                        setTempImageUrl(selectedExercise.imageUrl);
+                      }}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
                   )}
                 </div>
 
-                <div className="pt-2">
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Tip: Focus on progressive overload. Try to slightly increase the weight or reps compared to your previous session to see constant improvement.
-                  </p>
-                </div>
+                {isEditingImage && (
+                  <div className="bg-muted/30 p-4 rounded-2xl border space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Change Picture</h4>
+                      <div className="flex bg-muted rounded-lg p-1">
+                        <Button 
+                          variant={imageInputMode === 'url' ? 'secondary' : 'ghost'} 
+                          size="sm" 
+                          className="h-7 px-3 text-[10px] font-bold"
+                          onClick={() => setImageInputMode('url')}
+                        >
+                          <LinkIcon className="h-3 w-3 mr-1" /> URL
+                        </Button>
+                        <Button 
+                          variant={imageInputMode === 'upload' ? 'secondary' : 'ghost'} 
+                          size="sm" 
+                          className="h-7 px-3 text-[10px] font-bold"
+                          onClick={() => setImageInputMode('upload')}
+                        >
+                          <Upload className="h-3 w-3 mr-1" /> UPLOAD
+                        </Button>
+                      </div>
+                    </div>
+
+                    {imageInputMode === 'url' ? (
+                      <div className="space-y-2">
+                        <Label className="text-xs">Image URL</Label>
+                        <Input 
+                          placeholder="https://example.com/image.jpg"
+                          value={tempImageUrl}
+                          onChange={(e) => setTempImageUrl(e.target.value)}
+                          className="rounded-xl h-10 bg-white"
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label className="text-xs">Select File</Label>
+                        <input 
+                          type="file" 
+                          className="hidden" 
+                          ref={fileInputRef} 
+                          accept="image/*"
+                          onChange={handleFileUpload}
+                        />
+                        <Button 
+                          variant="outline" 
+                          className="w-full rounded-xl h-10 border-dashed bg-white"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <Upload className="h-4 w-4 mr-2" /> Choose Image
+                        </Button>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 pt-2">
+                      <Button 
+                        className="flex-1 rounded-xl font-bold" 
+                        onClick={handleUpdateImage}
+                        disabled={!tempImageUrl || tempImageUrl === selectedExercise.imageUrl}
+                      >
+                        <Check className="h-4 w-4 mr-2" /> Save Changes
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        className="flex-1 rounded-xl" 
+                        onClick={() => {
+                          setIsEditingImage(false);
+                          setTempImageUrl('');
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {!isEditingImage && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-muted/30 p-4 rounded-2xl border flex flex-col items-center justify-center text-center gap-2">
+                        <Target className="h-5 w-5 text-primary" />
+                        <div>
+                          <p className="text-[10px] uppercase font-bold text-muted-foreground">Muscle</p>
+                          <p className="font-bold">{selectedExercise.muscleGroup}</p>
+                        </div>
+                      </div>
+                      <div className="bg-muted/30 p-4 rounded-2xl border flex flex-col items-center justify-center text-center gap-2">
+                        <Dumbbell className="h-5 w-5 text-primary" />
+                        <div>
+                          <p className="text-[10px] uppercase font-bold text-muted-foreground">Equipment</p>
+                          <p className="font-bold">{selectedExercise.equipment}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="font-bold flex items-center gap-2">
+                        <History className="h-4 w-4 text-primary" />
+                        Performance History
+                      </h4>
+                      {loggedSets.length > 0 ? (
+                        <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 space-y-3">
+                          <p className="text-xs text-muted-foreground font-medium border-b pb-2">Last recorded workout values:</p>
+                          {loggedSets.map((set) => (
+                            <div key={set.index} className="flex justify-between items-center text-sm">
+                              <span className="font-bold text-muted-foreground">Set {set.index + 1}</span>
+                              <div className="flex gap-4">
+                                <span className="font-extrabold text-primary">{set.weight} kg</span>
+                                <span className="text-muted-foreground">×</span>
+                                <span className="font-extrabold text-primary">{set.reps} reps</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="bg-muted/20 border border-dashed rounded-2xl p-8 text-center">
+                          <p className="text-sm text-muted-foreground italic">No history logged yet. Complete a workout to see your progress here!</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="pt-2">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Tip: Focus on progressive overload. Try to slightly increase the weight or reps compared to your previous session to see constant improvement.
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             </>
           )}
