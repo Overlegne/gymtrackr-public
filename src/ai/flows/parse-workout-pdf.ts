@@ -7,8 +7,6 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import pdf from 'pdf-parse';
 
-export const maxDuration = 60; // Increase timeout for this specific server action file
-
 const ImportedExerciseSchema = z.object({
   id: z.string(),
   originalText: z.string().describe('The raw text for the exercise as it appeared in the PDF.'),

@@ -10,8 +10,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-export const maxDuration = 60; // Increase timeout for this specific server action file
-
 const AiGeneratedRoutineSuggestionInputSchema = z.object({
   muscleGroupFocus: z
     .array(z.string())
