@@ -18,12 +18,13 @@ import {
   Dumbbell,
   FileText,
   Table as TableIcon,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Clock
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { matchExerciseToDatabase } from '@/lib/exercise-matcher';
-import { saveRoutine, getExercises, type Exercise } from '@/lib/store';
+import { saveRoutine, getExercises, type Exercise, type LoggingType } from '@/lib/store';
 import Image from 'next/image';
 
 type ImportStep = 'upload' | 'analyzing' | 'review';
@@ -130,7 +131,20 @@ export default function RoutineImportPage() {
       const allExercises = getExercises();
       const mappedExercises = day.exercises.map(ex => {
         const existing = allExercises.find(e => e.id === ex.matchedExerciseId);
-        if (existing) return existing;
+        
+        // Determine if it should be duration based
+        const isDuration = ex.durationSeconds && ex.durationSeconds > 0;
+        const loggingType: LoggingType = isDuration ? 'duration' : (existing?.loggingType || 'weight_reps');
+
+        if (existing) {
+          return {
+            ...existing,
+            defaultSets: ex.sets || existing.defaultSets,
+            defaultReps: ex.reps || existing.defaultReps,
+            defaultDurationSeconds: ex.durationSeconds || existing.defaultDurationSeconds,
+            loggingType
+          } as Exercise;
+        }
         
         return {
           id: `imported-${Date.now()}-${ex.id}`,
@@ -139,6 +153,8 @@ export default function RoutineImportPage() {
           equipment: 'Machine',
           defaultSets: ex.sets || 3,
           defaultReps: ex.reps || 12,
+          defaultDurationSeconds: ex.durationSeconds,
+          loggingType,
           imageUrl: `https://picsum.photos/seed/${ex.id}/600/400`
         } as Exercise;
       });
@@ -287,78 +303,98 @@ export default function RoutineImportPage() {
                 </div>
 
                 <div className="space-y-3">
-                  {day.exercises.map((ex, eIdx) => (
-                    <Card key={ex.id} className={`border-none shadow-sm overflow-hidden bg-card ${ex.needsReview ? 'ring-2 ring-amber-500/30' : ''}`}>
-                      <CardContent className="p-0 flex items-center">
-                        <div className="relative h-24 w-24 shrink-0 bg-muted">
-                           {ex.matchedExerciseId ? (
-                             <Image 
-                               src={`https://picsum.photos/seed/${ex.matchedExerciseId}/200/200`}
-                               alt={ex.displayName}
-                               fill
-                               className="object-cover"
-                             />
-                           ) : (
-                             <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
-                               <Search className="h-8 w-8" />
-                             </div>
-                           )}
-                        </div>
-                        <div className="flex-1 p-4 flex flex-col justify-center min-w-0">
-                          <div className="flex justify-between items-start mb-2">
-                            <Input 
-                              value={ex.displayName}
-                              onChange={(e) => updateExerciseField(dIdx, eIdx, 'displayName', e.target.value)}
-                              className="font-black text-sm p-0 h-auto bg-transparent border-none focus-visible:ring-0 truncate pr-2"
-                            />
-                            {ex.needsReview && (
-                              <Badge variant="destructive" className="text-[8px] h-4 font-black uppercase tracking-tighter bg-amber-500 hover:bg-amber-600 border-none shrink-0">
-                                Review
-                              </Badge>
-                            )}
+                  {day.exercises.map((ex, eIdx) => {
+                    const isTimed = ex.durationSeconds && ex.durationSeconds > 0;
+                    return (
+                      <Card key={ex.id} className={`border-none shadow-sm overflow-hidden bg-card ${ex.needsReview ? 'ring-2 ring-amber-500/30' : ''}`}>
+                        <CardContent className="p-0 flex items-center">
+                          <div className="relative h-24 w-24 shrink-0 bg-muted">
+                             {ex.matchedExerciseId ? (
+                               <Image 
+                                 src={`https://picsum.photos/seed/${ex.matchedExerciseId}/200/200`}
+                                 alt={ex.displayName}
+                                 fill
+                                 className="object-cover"
+                               />
+                             ) : (
+                               <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
+                                 <Search className="h-8 w-8" />
+                               </div>
+                             )}
+                          </div>
+                          <div className="flex-1 p-4 flex flex-col justify-center min-w-0">
+                            <div className="flex justify-between items-start mb-2">
+                              <Input 
+                                value={ex.displayName}
+                                onChange={(e) => updateExerciseField(dIdx, eIdx, 'displayName', e.target.value)}
+                                className="font-black text-sm p-0 h-auto bg-transparent border-none focus-visible:ring-0 truncate pr-2"
+                              />
+                              <div className="flex gap-1">
+                                {isTimed && <Clock className="h-3 w-3 text-primary/60" />}
+                                {ex.needsReview && (
+                                  <Badge variant="destructive" className="text-[8px] h-4 font-black uppercase tracking-tighter bg-amber-500 hover:bg-amber-600 border-none shrink-0">
+                                    Review
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="flex gap-4 items-center">
+                              <div className="flex flex-col">
+                                <span className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Sets</span>
+                                <input 
+                                  type="number"
+                                  value={ex.sets || ''}
+                                  onChange={(e) => updateExerciseField(dIdx, eIdx, 'sets', parseInt(e.target.value) || 0)}
+                                  className="w-10 bg-muted/30 rounded px-1 text-xs font-black focus:outline-none"
+                                />
+                              </div>
+                              
+                              {isTimed ? (
+                                <div className="flex flex-col">
+                                  <span className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Duration (s)</span>
+                                  <input 
+                                    type="number"
+                                    value={ex.durationSeconds || ''}
+                                    onChange={(e) => updateExerciseField(dIdx, eIdx, 'durationSeconds', parseInt(e.target.value) || 0)}
+                                    className="w-14 bg-muted/30 rounded px-1 text-xs font-black focus:outline-none"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="flex flex-col">
+                                  <span className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Reps</span>
+                                  <input 
+                                    type="number"
+                                    value={ex.reps || ''}
+                                    onChange={(e) => updateExerciseField(dIdx, eIdx, 'reps', parseInt(e.target.value) || 0)}
+                                    className="w-10 bg-muted/30 rounded px-1 text-xs font-black focus:outline-none"
+                                  />
+                                </div>
+                              )}
+
+                              {ex.matchedExerciseName && (
+                                <div className="flex flex-col ml-auto">
+                                  <span className="text-[8px] text-primary uppercase font-black tracking-widest text-right">Match</span>
+                                  <span className="text-[10px] font-bold text-foreground truncate max-w-[100px] text-right">{ex.matchedExerciseName}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                           
-                          <div className="flex gap-4 items-center">
-                            <div className="flex flex-col">
-                              <span className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Sets</span>
-                              <input 
-                                type="number"
-                                value={ex.sets || ''}
-                                onChange={(e) => updateExerciseField(dIdx, eIdx, 'sets', parseInt(e.target.value) || 0)}
-                                className="w-10 bg-muted/30 rounded px-1 text-xs font-black focus:outline-none"
-                              />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">Reps</span>
-                              <input 
-                                type="number"
-                                value={ex.reps || ''}
-                                onChange={(e) => updateExerciseField(dIdx, eIdx, 'reps', parseInt(e.target.value) || 0)}
-                                className="w-10 bg-muted/30 rounded px-1 text-xs font-black focus:outline-none"
-                              />
-                            </div>
-                            {ex.matchedExerciseName && (
-                              <div className="flex flex-col ml-auto">
-                                <span className="text-[8px] text-primary uppercase font-black tracking-widest text-right">Match</span>
-                                <span className="text-[10px] font-bold text-foreground truncate max-w-[100px] text-right">{ex.matchedExerciseName}</span>
-                              </div>
-                            )}
+                          <div className="p-2 flex flex-col gap-1 border-l border-border/40">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 rounded-lg text-destructive/60 hover:bg-destructive/10"
+                              onClick={() => removeExercise(dIdx, eIdx)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
                           </div>
-                        </div>
-                        
-                        <div className="p-2 flex flex-col gap-1 border-l border-border/40">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 rounded-lg text-destructive/60 hover:bg-destructive/10"
-                            onClick={() => removeExercise(dIdx, eIdx)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               </div>
             ))}

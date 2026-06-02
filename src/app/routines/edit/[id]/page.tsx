@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useMemo, use } from 'react';
@@ -5,11 +6,12 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { getExercises, saveRoutine, getRoutines, ROUTINE_COLORS, type Exercise, type Routine } from '@/lib/store';
-import { ChevronLeft, Plus, Search, Trash2, Check } from 'lucide-react';
+import { getExercises, saveRoutine, getRoutines, ROUTINE_COLORS, type Exercise, type LoggingType } from '@/lib/store';
+import { ChevronLeft, Plus, Search, Trash2, Check, Clock, Dumbbell } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
 
 export default function EditRoutinePage({ params }: { params: Promise<{ id: string }> }) {
@@ -55,6 +57,23 @@ export default function EditRoutinePage({ params }: { params: Promise<{ id: stri
 
     toast({ title: "Routine updated!" });
     router.push('/routines');
+  };
+
+  const updateExerciseMode = (idx: number, type: LoggingType) => {
+    const updated = [...selectedExercises];
+    updated[idx] = { 
+      ...updated[idx], 
+      loggingType: type,
+      defaultDurationSeconds: type === 'duration' ? 60 : undefined,
+      defaultReps: type === 'weight_reps' ? 12 : 0
+    };
+    setSelectedExercises(updated);
+  };
+
+  const updateExerciseValue = (idx: number, field: 'defaultSets' | 'defaultReps' | 'defaultDurationSeconds', value: number) => {
+    const updated = [...selectedExercises];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setSelectedExercises(updated);
   };
 
   const filteredExercises = allExercises.filter(ex => 
@@ -123,25 +142,87 @@ export default function EditRoutinePage({ params }: { params: Promise<{ id: stri
           </div>
 
           <div className="space-y-3">
-            {selectedExercises.map((ex) => (
-              <Card key={ex.id} className="border-none shadow-sm overflow-hidden bg-card">
-                <CardContent className="p-0 flex items-center">
-                  <div className="relative h-16 w-20 bg-muted shrink-0">
-                    <Image src={ex.imageUrl} alt={ex.name} fill className="object-cover" />
-                  </div>
-                  <div className="flex-1 p-4 flex items-center justify-between">
-                    <div>
-                      <h3 className="font-bold">{ex.name}</h3>
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">{ex.muscleGroup} • {ex.equipment}</p>
+            {selectedExercises.map((ex, idx) => (
+              <Card key={`${ex.id}-${idx}`} className="border-none shadow-sm overflow-hidden bg-card">
+                <CardContent className="p-0 flex flex-col">
+                  <div className="flex items-center p-3 border-b">
+                    <div className="relative h-12 w-16 bg-muted shrink-0 rounded-lg overflow-hidden">
+                      <Image src={ex.imageUrl} alt={ex.name} fill className="object-cover" />
+                    </div>
+                    <div className="flex-1 px-4 min-w-0">
+                      <h3 className="font-bold truncate text-sm">{ex.name}</h3>
+                      <div className="flex gap-2 items-center">
+                        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">{ex.muscleGroup}</span>
+                        <Badge variant="outline" className="text-[8px] h-4 py-0 uppercase border-primary/20 text-primary/60">
+                           {ex.loggingType === 'duration' ? 'Timed' : 'Weight'}
+                        </Badge>
+                      </div>
                     </div>
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="text-destructive hover:bg-destructive/10"
-                      onClick={() => setSelectedExercises(prev => prev.filter(e => e.id !== ex.id))}
+                      className="text-destructive hover:bg-destructive/10 h-9 w-9"
+                      onClick={() => setSelectedExercises(prev => prev.filter((_, i) => i !== idx))}
                     >
-                      <Trash2 className="h-5 w-5" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
+                  </div>
+                  
+                  <div className="p-3 bg-muted/5 grid grid-cols-12 gap-3 items-end">
+                    <div className="col-span-4 space-y-1">
+                      <label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Type</label>
+                      <Select value={ex.loggingType} onValueChange={(v) => updateExerciseMode(idx, v as LoggingType)}>
+                        <SelectTrigger className="h-9 rounded-xl text-xs font-bold">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="weight_reps" className="text-xs">
+                            <div className="flex items-center gap-2">
+                              <Dumbbell className="h-3 w-3" /> Weight
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="duration" className="text-xs">
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-3 w-3" /> Duration
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="col-span-3 space-y-1">
+                      <label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Sets</label>
+                      <Input 
+                        type="number" 
+                        value={ex.defaultSets} 
+                        onChange={(e) => updateExerciseValue(idx, 'defaultSets', parseInt(e.target.value) || 1)}
+                        className="h-9 rounded-xl text-center font-bold"
+                      />
+                    </div>
+
+                    <div className="col-span-5 space-y-1">
+                      {ex.loggingType === 'duration' ? (
+                        <>
+                          <label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Time (sec)</label>
+                          <Input 
+                            type="number" 
+                            value={ex.defaultDurationSeconds} 
+                            onChange={(e) => updateExerciseValue(idx, 'defaultDurationSeconds', parseInt(e.target.value) || 0)}
+                            className="h-9 rounded-xl text-center font-bold"
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Reps</label>
+                          <Input 
+                            type="number" 
+                            value={ex.defaultReps} 
+                            onChange={(e) => updateExerciseValue(idx, 'defaultReps', parseInt(e.target.value) || 1)}
+                            className="h-9 rounded-xl text-center font-bold"
+                          />
+                        </>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

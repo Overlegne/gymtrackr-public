@@ -3,6 +3,7 @@ import exercisesData from './exercises.json';
 
 export type MuscleGroup = 'Chest' | 'Back' | 'Legs' | 'Shoulders' | 'Arms' | 'Abs' | 'Cardio';
 export type Equipment = 'Dumbbell' | 'Barbell' | 'Machine' | 'Cable' | 'Bodyweight';
+export type LoggingType = 'weight_reps' | 'duration';
 
 export interface Exercise {
   id: string;
@@ -11,6 +12,8 @@ export interface Exercise {
   equipment: Equipment;
   defaultSets: number;
   defaultReps: number;
+  defaultDurationSeconds?: number;
+  loggingType: LoggingType;
   imageUrl: string;
   imageNeedsReview?: boolean;
   // Extended Metadata
@@ -24,6 +27,7 @@ export interface Exercise {
 export interface SetStats {
   weight: number;
   reps: number;
+  durationSeconds?: number;
 }
 
 export interface ExerciseStats {
@@ -34,6 +38,7 @@ export interface HistoryPoint {
   date: string;
   weight: number;
   reps: number;
+  durationSeconds?: number;
   sets: number;
   volume: number;
   e1RM: number;
@@ -43,6 +48,7 @@ export interface RoutineExercise extends Exercise {
   sets: {
     reps: number;
     weight: number;
+    durationSeconds?: number;
     completed: boolean;
   }[];
 }
@@ -265,11 +271,24 @@ const determineEquipment = (name: string): Equipment => {
   return 'Bodyweight';
 };
 
+const determineLoggingType = (name: string): LoggingType => {
+  const n = name.toLowerCase();
+  if (
+    n.includes('plank') || 
+    n.includes('hold') || 
+    n.includes('sit') || 
+    n.includes('hang') || 
+    n.includes('stretch')
+  ) return 'duration';
+  return 'weight_reps';
+};
+
 export const DEFAULT_EXERCISES: Exercise[] = (exercisesData.exercises as any[]).map(ex => {
   const muscleGroup = mapBodyPart(ex.body_part);
   const equipment = determineEquipment(ex.canonical_name);
   const imageData = getExerciseImage(ex.canonical_name, ex.id, muscleGroup, equipment);
   const coaching = getCoachingData(ex.canonical_name, equipment, muscleGroup);
+  const loggingType = determineLoggingType(ex.canonical_name);
 
   return {
     id: ex.id,
@@ -277,18 +296,20 @@ export const DEFAULT_EXERCISES: Exercise[] = (exercisesData.exercises as any[]).
     muscleGroup,
     equipment,
     defaultSets: 3,
-    defaultReps: 12,
+    defaultReps: loggingType === 'duration' ? 0 : 12,
+    defaultDurationSeconds: loggingType === 'duration' ? 60 : undefined,
+    loggingType,
     imageUrl: imageData.url,
     imageNeedsReview: imageData.needsReview,
     ...coaching
   };
 });
 
-const EXERCISES_KEY = 'user_exercises_v15';
-const STATS_KEY = 'exercise_stats_v11';
-const ROUTINES_KEY = 'user_routines_v11';
-const LOGS_KEY = 'workout_logs_v5';
-const HISTORY_KEY = 'exercise_history_v1';
+const EXERCISES_KEY = 'user_exercises_v16';
+const STATS_KEY = 'exercise_stats_v12';
+const ROUTINES_KEY = 'user_routines_v12';
+const LOGS_KEY = 'workout_logs_v6';
+const HISTORY_KEY = 'exercise_history_v2';
 
 export const getExercises = (): Exercise[] => {
   if (typeof window === 'undefined') return DEFAULT_EXERCISES;
@@ -349,16 +370,22 @@ export const saveAllWorkoutStats = (exercises: RoutineExercise[]) => {
     
     let maxWeight = 0;
     let maxReps = 0;
+    let maxDuration = 0;
     let totalVolume = 0;
     let bestE1RM = 0;
     let validSets = 0;
 
     ex.sets.forEach((set, idx) => {
-      if (set.completed || set.weight > 0 || set.reps > 0) {
-        allStats[ex.id].sets[idx.toString()] = { weight: set.weight, reps: set.reps };
+      if (set.completed || set.weight > 0 || set.reps > 0 || (set.durationSeconds && set.durationSeconds > 0)) {
+        allStats[ex.id].sets[idx.toString()] = { 
+          weight: set.weight, 
+          reps: set.reps,
+          durationSeconds: set.durationSeconds 
+        };
         
         maxWeight = Math.max(maxWeight, set.weight);
         maxReps = Math.max(maxReps, set.reps);
+        maxDuration = Math.max(maxDuration, set.durationSeconds || 0);
         totalVolume += (set.weight * set.reps);
         validSets++;
 
@@ -375,6 +402,7 @@ export const saveAllWorkoutStats = (exercises: RoutineExercise[]) => {
         date,
         weight: maxWeight,
         reps: maxReps,
+        durationSeconds: maxDuration,
         sets: validSets,
         volume: totalVolume,
         e1RM: bestE1RM
