@@ -22,8 +22,10 @@ import {
 export default function RoutinesPage() {
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     async function load() {
       setRoutines(await getRoutines());
       setLoading(false);
@@ -35,6 +37,9 @@ export default function RoutinesPage() {
     await deleteRoutine(id);
     setRoutines(await getRoutines());
   };
+
+  // Prevent hydration mismatch for dates and local data
+  if (!mounted) return null;
 
   return (
     <div className="p-5 space-y-6 bg-background min-h-screen pt-[calc(1rem+var(--safe-top))]">

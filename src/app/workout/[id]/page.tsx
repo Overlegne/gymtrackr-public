@@ -1,2 +1,9 @@
-// This file is moved to src/app/workout/page.tsx to support static export.
-export default function LegacyWorkoutPage() { return null; }
+export const dynamic = 'force-static';
+
+export function generateStaticParams() {
+  return [];
+}
+
+export default function LegacyWorkoutPage() {
+  return null;
+}

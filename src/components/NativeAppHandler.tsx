@@ -1,9 +1,7 @@
-
 "use client"
 
 import { useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { App } from '@capacitor/app'
 import { Capacitor } from '@capacitor/core'
 import { useToast } from '@/hooks/use-toast'
 
@@ -23,52 +21,62 @@ export function NativeAppHandler() {
   }, [pathname])
 
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return
+    // Ensure we are in a browser environment and on a native platform
+    if (typeof window === 'undefined' || !Capacitor.isNativePlatform()) return
 
-    const handleBackButton = async () => {
-      // 1. Check for open overlays (Dialogs, Menus, Drawers)
-      // Radix UI components (used by Shadcn) typically use [role="dialog"] and Portals
-      const overlays = document.querySelectorAll('[role="dialog"], [role="menu"], [role="listbox"], [data-radix-portal]')
-      
-      if (overlays.length > 0) {
-        // Most accessible overlays close on Escape. Simulate it.
-        window.dispatchEvent(new KeyboardEvent('keydown', { 
-          key: 'Escape', 
-          code: 'Escape', 
-          bubbles: true, 
-          cancelable: true 
-        }))
-        return
-      }
+    const initCapacitor = async () => {
+      try {
+        const { App } = await import('@capacitor/app')
+        
+        const handleBackButton = async () => {
+          // 1. Check for open overlays (Dialogs, Menus, Drawers)
+          const overlays = document.querySelectorAll('[role="dialog"], [role="menu"], [role="listbox"], [data-radix-portal]')
+          
+          if (overlays.length > 0) {
+            window.dispatchEvent(new KeyboardEvent('keydown', { 
+              key: 'Escape', 
+              code: 'Escape', 
+              bubbles: true, 
+              cancelable: true 
+            }))
+            return
+          }
 
-      // 2. Navigation logic
-      const currentPath = pathnameRef.current
+          // 2. Navigation logic
+          const currentPath = pathnameRef.current
 
-      if (currentPath === '/') {
-        // We are at the root, implement "Double Tap to Exit"
-        const now = Date.now()
-        if (now - lastBackPress.current < 2000) {
-          App.exitApp()
-        } else {
-          lastBackPress.current = now
-          toast({
-            description: "Press back again to exit Gymtrackr",
-            duration: 2000,
-          })
+          if (currentPath === '/') {
+            const now = Date.now()
+            if (now - lastBackPress.current < 2000) {
+              App.exitApp()
+            } else {
+              lastBackPress.current = now
+              toast({
+                description: "Press back again to exit Gymtrackr",
+                duration: 2000,
+              })
+            }
+          } else {
+            router.back()
+          }
         }
-      } else {
-        // We are on a sub-page, navigate back in the app history
-        router.back()
+
+        const listener = await App.addListener('backButton', () => {
+          handleBackButton()
+        })
+
+        return () => {
+          listener.remove()
+        }
+      } catch (err) {
+        console.error('Failed to initialize Capacitor App listener:', err)
       }
     }
 
-    // Register the Capacitor back button listener
-    const listenerPromise = App.addListener('backButton', () => {
-      handleBackButton()
-    })
+    const cleanupPromise = initCapacitor()
 
     return () => {
-      listenerPromise.then(l => l.remove())
+      cleanupPromise.then(cleanup => cleanup?.())
     }
   }, [router, toast])
 
