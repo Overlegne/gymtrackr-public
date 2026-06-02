@@ -35,8 +35,8 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
         return {
           ...ex,
           sets: Array.from({ length: ex.defaultSets }, (_, i) => {
-            // Check specifically for this set index (0, 1, 2...) in the history
-            const prevSetStats = stats.sets && stats.sets[i] ? stats.sets[i] : (stats.sets && stats.sets[0] ? stats.sets[0] : null);
+            // Memory per SPECIFIC set index
+            const prevSetStats = (stats.sets && stats.sets[i]) ? stats.sets[i] : (stats.sets && stats.sets[0] ? stats.sets[0] : null);
             return {
               reps: prevSetStats?.reps || ex.defaultReps,
               weight: prevSetStats?.weight || 0,
@@ -208,7 +208,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
                     const stats = getExerciseStats(ex.id);
                     const newExs = [...exercises];
                     const nextSetIdx = newExs[exIdx].sets.length;
-                    const prevSetStats = stats.sets && stats.sets[nextSetIdx] ? stats.sets[nextSetIdx] : (stats.sets && stats.sets[0] ? stats.sets[0] : null);
+                    const prevSetStats = (stats.sets && stats.sets[nextSetIdx]) ? stats.sets[nextSetIdx] : (stats.sets && stats.sets[0] ? stats.sets[0] : null);
                     newExs[exIdx].sets.push({
                       reps: prevSetStats?.reps || ex.defaultReps,
                       weight: prevSetStats?.weight || 0,
