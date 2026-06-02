@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { getRoutines, getExercises, type Routine } from '@/lib/store';
 import { Play, Calendar as CalendarIcon, Trophy, ArrowRight, Dumbbell } from 'lucide-react';
 import Link from 'next/link';
-import { WorkoutCalendar } from '@/components/WorkoutCalendar';
 
 export default function HomePage() {
   const [routines, setRoutines] = useState<Routine[]>([]);
@@ -24,8 +23,8 @@ export default function HomePage() {
   return (
     <div className="p-5 space-y-6">
       <header className="py-4">
-        <h1 className="text-3xl font-extrabold text-primary">Welkom terug!</h1>
-        <p className="text-muted-foreground">Klaar voor je volgende workout?</p>
+        <h1 className="text-3xl font-extrabold text-primary">Welcome back!</h1>
+        <p className="text-muted-foreground">Ready for your next workout?</p>
       </header>
 
       {/* Stats Quick View */}
@@ -34,26 +33,23 @@ export default function HomePage() {
           <CardContent className="p-4 flex flex-col gap-1">
             <CalendarIcon className="h-5 w-5 mb-1 opacity-80" />
             <span className="text-2xl font-bold">{routines.filter(r => r.lastPerformed).length}</span>
-            <span className="text-xs opacity-80 font-medium">Actieve routines</span>
+            <span className="text-xs opacity-80 font-medium">Active Routines</span>
           </CardContent>
         </Card>
         <Card className="bg-accent text-white border-none shadow-lg">
           <CardContent className="p-4 flex flex-col gap-1">
             <Trophy className="h-5 w-5 mb-1 opacity-80" />
             <span className="text-2xl font-bold">{getExercises().length}</span>
-            <span className="text-xs opacity-80 font-medium">Oefeningen</span>
+            <span className="text-xs opacity-80 font-medium">Exercises</span>
           </CardContent>
         </Card>
       </div>
 
-      {/* Workout Calendar */}
-      <WorkoutCalendar />
-
       <section className="space-y-4">
         <div className="flex justify-between items-end">
-          <h2 className="text-xl font-bold">Recente Routines</h2>
+          <h2 className="text-xl font-bold">Recent Routines</h2>
           <Link href="/routines" className="text-sm text-primary font-medium flex items-center gap-1">
-            Alles tonen <ArrowRight className="h-4 w-4" />
+            Show all <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
         
@@ -63,7 +59,7 @@ export default function HomePage() {
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
                   <h3 className="font-bold text-lg">{routine.name}</h3>
-                  <p className="text-xs text-muted-foreground">{routine.exercises.length} oefeningen</p>
+                  <p className="text-xs text-muted-foreground">{routine.exercises.length} exercises</p>
                 </div>
                 <Link href={`/workout/${routine.id}`}>
                   <Button size="icon" className="rounded-full h-12 w-12 shadow-lg" style={{ backgroundColor: routine.color || '#8b5cf6' }}>
@@ -75,9 +71,9 @@ export default function HomePage() {
           ))}
           {routines.length === 0 && (
             <div className="text-center py-8 border-2 border-dashed rounded-2xl">
-              <p className="text-muted-foreground italic">Geen routines gevonden.</p>
+              <p className="text-muted-foreground italic">No routines found.</p>
               <Link href="/routines/new">
-                <Button variant="link" className="text-primary font-bold">Maak je eerste routine</Button>
+                <Button variant="link" className="text-primary font-bold">Create your first routine</Button>
               </Link>
             </div>
           )}
@@ -90,12 +86,12 @@ export default function HomePage() {
             <Dumbbell className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-bold">Ontdek oefeningen</h3>
-            <p className="text-xs text-muted-foreground">Bekijk onze database met {getExercises().length}+ oefeningen.</p>
+            <h3 className="font-bold">Discover Exercises</h3>
+            <p className="text-xs text-muted-foreground">Browse our database with {getExercises().length}+ exercises.</p>
           </div>
         </div>
         <Link href="/exercises" className="block">
-          <Button variant="outline" className="w-full rounded-xl">Oefeningen bekijken</Button>
+          <Button variant="outline" className="w-full rounded-xl">View Exercises</Button>
         </Link>
       </section>
 

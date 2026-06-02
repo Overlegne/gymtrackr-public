@@ -32,21 +32,20 @@ export function AddExerciseDialog({ onExerciseAdded }: AddExerciseDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const [name, setName] = useState('');
-  const [muscleGroup, setMuscleGroup] = useState<MuscleGroup>('Borst');
+  const [muscleGroup, setMuscleGroup] = useState<MuscleGroup>('Chest');
   const [equipment, setEquipment] = useState<Equipment>('Barbell');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name) return;
 
-    // Use a relevant placeholder based on muscle group
     const seedMap: Record<string, string> = {
-      'Borst': 'bench',
-      'Benen': 'squat',
-      'Rug': 'deadlift',
-      'Schouders': 'shoulder',
-      'Armen': 'bicep',
-      'Buik': 'abs',
+      'Chest': 'bench',
+      'Legs': 'squat',
+      'Back': 'deadlift',
+      'Shoulders': 'shoulder',
+      'Arms': 'bicep',
+      'Abs': 'abs',
       'Cardio': 'cardio'
     };
 
@@ -60,8 +59,8 @@ export function AddExerciseDialog({ onExerciseAdded }: AddExerciseDialogProps) {
     });
 
     toast({
-      title: "Oefening toegevoegd",
-      description: `"${name}" is succesvol aangemaakt.`
+      title: "Exercise added",
+      description: `"${name}" has been successfully created.`
     });
 
     setOpen(false);
@@ -78,14 +77,14 @@ export function AddExerciseDialog({ onExerciseAdded }: AddExerciseDialogProps) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Nieuwe Oefening</DialogTitle>
+          <DialogTitle>New Exercise</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Naam</Label>
+            <Label htmlFor="name">Name</Label>
             <Input 
               id="name" 
-              placeholder="bijv. Incline Dumbbell Press" 
+              placeholder="e.g. Incline Dumbbell Press" 
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -93,40 +92,40 @@ export function AddExerciseDialog({ onExerciseAdded }: AddExerciseDialogProps) {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Spiergroep</Label>
+              <Label>Muscle Group</Label>
               <Select value={muscleGroup} onValueChange={(v) => setMuscleGroup(v as MuscleGroup)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Kies..." />
+                  <SelectValue placeholder="Choose..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Borst">Borst</SelectItem>
-                  <SelectItem value="Rug">Rug</SelectItem>
-                  <SelectItem value="Benen">Benen</SelectItem>
-                  <SelectItem value="Schouders">Schouders</SelectItem>
-                  <SelectItem value="Armen">Armen</SelectItem>
-                  <SelectItem value="Buik">Buik</SelectItem>
+                  <SelectItem value="Chest">Chest</SelectItem>
+                  <SelectItem value="Back">Back</SelectItem>
+                  <SelectItem value="Legs">Legs</SelectItem>
+                  <SelectItem value="Shoulders">Shoulders</SelectItem>
+                  <SelectItem value="Arms">Arms</SelectItem>
+                  <SelectItem value="Abs">Abs</SelectItem>
                   <SelectItem value="Cardio">Cardio</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Materiaal</Label>
+              <Label>Equipment</Label>
               <Select value={equipment} onValueChange={(v) => setEquipment(v as Equipment)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Kies..." />
+                  <SelectValue placeholder="Choose..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Halter">Halter</SelectItem>
+                  <SelectItem value="Dumbbell">Dumbbell</SelectItem>
                   <SelectItem value="Barbell">Barbell</SelectItem>
                   <SelectItem value="Machine">Machine</SelectItem>
-                  <SelectItem value="Kabel">Kabel</SelectItem>
+                  <SelectItem value="Cable">Cable</SelectItem>
                   <SelectItem value="Bodyweight">Bodyweight</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter className="pt-4">
-            <Button type="submit" className="w-full">Toevoegen</Button>
+            <Button type="submit" className="w-full">Add Exercise</Button>
           </DialogFooter>
         </form>
       </DialogContent>

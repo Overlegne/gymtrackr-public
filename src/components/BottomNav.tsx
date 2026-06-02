@@ -1,8 +1,9 @@
+
 "use client"
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Dumbbell, ListPlus, Search } from 'lucide-react';
+import { LayoutDashboard, Dumbbell, ListPlus, Search, Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function BottomNav() {
@@ -10,8 +11,9 @@ export function BottomNav() {
 
   const navItems = [
     { label: 'Home', icon: LayoutDashboard, href: '/' },
+    { label: 'Activity', icon: CalendarIcon, href: '/activity' },
     { label: 'Routines', icon: ListPlus, href: '/routines' },
-    { label: 'Oefeningen', icon: Search, href: '/exercises' },
+    { label: 'Exercises', icon: Search, href: '/exercises' },
   ];
 
   return (

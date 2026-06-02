@@ -29,11 +29,11 @@ export default function NewRoutinePage() {
 
   const handleSave = () => {
     if (!name) {
-      toast({ variant: "destructive", title: "Naam vereist", description: "Geef je routine een naam." });
+      toast({ variant: "destructive", title: "Name required", description: "Please give your routine a name." });
       return;
     }
     if (selectedExercises.length === 0) {
-      toast({ variant: "destructive", title: "Oefeningen vereist", description: "Voeg minimaal één oefening toe." });
+      toast({ variant: "destructive", title: "Exercises required", description: "Add at least one exercise." });
       return;
     }
 
@@ -44,7 +44,7 @@ export default function NewRoutinePage() {
       color: selectedColor
     });
 
-    toast({ title: "Routine opgeslagen!", description: `"${name}" is nu beschikbaar.` });
+    toast({ title: "Routine saved!", description: `"${name}" is now available.` });
     router.push('/routines');
   };
 
@@ -62,19 +62,19 @@ export default function NewRoutinePage() {
               <ChevronLeft className="h-6 w-6" />
             </Button>
           </Link>
-          <h1 className="text-xl font-bold">Nieuwe Routine</h1>
+          <h1 className="text-xl font-bold">New Routine</h1>
         </div>
         <Button onClick={handleSave} className="bg-primary text-white font-bold rounded-xl px-6">
-          Opslaan
+          Save
         </Button>
       </header>
 
       <div className="p-5 space-y-6 pb-20">
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Naam van routine</label>
+            <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Routine Name</label>
             <Input 
-              placeholder="bijv. Borst & Rug Focus" 
+              placeholder="e.g. Chest & Back Focus" 
               className="text-lg font-bold h-14 rounded-2xl bg-white shadow-sm border-none px-5"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -82,7 +82,7 @@ export default function NewRoutinePage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Kies een kleur</label>
+            <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Choose a color</label>
             <div className="flex flex-wrap gap-3 p-4 bg-white rounded-2xl shadow-sm">
               {ROUTINE_COLORS.map((color) => (
                 <button
@@ -100,14 +100,14 @@ export default function NewRoutinePage() {
 
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Oefeningen ({selectedExercises.length})</h2>
+            <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Exercises ({selectedExercises.length})</h2>
             <Button 
               variant="outline" 
               size="sm" 
               onClick={() => setShowPicker(true)}
               className="text-primary border-primary rounded-full px-4"
             >
-              <Plus className="h-4 w-4 mr-1" /> Toevoegen
+              <Plus className="h-4 w-4 mr-1" /> Add
             </Button>
           </div>
 
@@ -148,7 +148,7 @@ export default function NewRoutinePage() {
                 className="py-12 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center text-muted-foreground cursor-pointer hover:bg-primary/5 transition-colors"
               >
                 <Plus className="h-8 w-8 mb-2 opacity-50" />
-                <p className="font-medium">Klik om oefeningen te kiezen</p>
+                <p className="font-medium">Click to choose exercises</p>
               </div>
             )}
           </div>
@@ -159,14 +159,14 @@ export default function NewRoutinePage() {
         <div className="fixed inset-0 z-50 bg-black/50 animate-in fade-in duration-200">
           <div className="absolute inset-x-0 bottom-0 h-[80vh] bg-background rounded-t-[2.5rem] flex flex-col p-6 shadow-2xl animate-in slide-in-from-bottom duration-300">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Kies Oefening</h2>
-              <Button variant="ghost" className="font-bold text-primary" onClick={() => setShowPicker(false)}>Klaar</Button>
+              <h2 className="text-2xl font-bold">Choose Exercise</h2>
+              <Button variant="ghost" className="font-bold text-primary" onClick={() => setShowPicker(false)}>Done</Button>
             </div>
 
             <div className="relative mb-6">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Zoek oefening..." 
+                placeholder="Search exercises..." 
                 className="pl-10 h-12 rounded-xl bg-muted/50 border-none"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

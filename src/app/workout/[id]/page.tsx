@@ -36,7 +36,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
         return {
           ...ex,
           sets: Array.from({ length: ex.defaultSets }, (_, i) => {
-            const prevSetStats = (stats.sets && stats.sets[i]) ? stats.sets[i] : (stats.sets && stats.sets[0] ? stats.sets[0] : null);
+            const prevSetStats = stats.sets[i] || stats.sets[0] || null;
             return {
               reps: prevSetStats?.reps || ex.defaultReps,
               weight: prevSetStats?.weight || 0,
@@ -72,8 +72,8 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
       logWorkout(routine);
     }
     toast({
-      title: "Workout Voltooid!",
-      description: "Lekker gewerkt. Je voortgang is opgeslagen in de kalender.",
+      title: "Workout Completed!",
+      description: "Great job. Your progress has been saved to the activity log.",
     });
     router.push('/');
   };
@@ -93,12 +93,12 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
             <h1 className="text-lg font-bold truncate max-w-[150px]">{routine.name}</h1>
             <div className="flex items-center text-xs text-muted-foreground gap-1">
               <Timer className="h-3 w-3" />
-              <span>Nu bezig...</span>
+              <span>Training now...</span>
             </div>
           </div>
         </div>
         <Button onClick={handleFinish} className="hover:opacity-90 text-white font-bold rounded-xl px-6" style={{ backgroundColor: routine.color || '#8b5cf6' }}>
-          Klaar
+          Finish
         </Button>
       </header>
 
@@ -127,7 +127,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
             <CardContent className="p-0">
               <div className="grid grid-cols-12 gap-2 p-4 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b">
                 <div className="col-span-2 text-center">Set</div>
-                <div className="col-span-4 text-center">Gewicht (kg)</div>
+                <div className="col-span-4 text-center">Weight (kg)</div>
                 <div className="col-span-4 text-center">Reps</div>
                 <div className="col-span-2"></div>
               </div>
@@ -217,7 +217,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
                     const stats = getExerciseStats(ex.id);
                     const newExs = [...exercises];
                     const nextSetIdx = newExs[exIdx].sets.length;
-                    const prevSetStats = (stats.sets && stats.sets[nextSetIdx]) ? stats.sets[nextSetIdx] : (stats.sets && stats.sets[0] ? stats.sets[0] : null);
+                    const prevSetStats = stats.sets[nextSetIdx] || stats.sets[0] || null;
                     newExs[exIdx].sets.push({
                       reps: prevSetStats?.reps || ex.defaultReps,
                       weight: prevSetStats?.weight || 0,
@@ -226,7 +226,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
                     setExercises(newExs);
                   }}
                 >
-                  <Plus className="h-4 w-4" /> Set Toevoegen
+                  <Plus className="h-4 w-4" /> Add Set
                 </Button>
               </div>
             </CardContent>

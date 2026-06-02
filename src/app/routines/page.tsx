@@ -35,10 +35,10 @@ export default function RoutinesPage() {
   return (
     <div className="p-5 space-y-6">
       <header className="flex justify-between items-center py-4">
-        <h1 className="text-2xl font-bold">Mijn Routines</h1>
+        <h1 className="text-2xl font-bold">My Routines</h1>
         <Link href="/routines/new">
           <Button size="sm" className="bg-primary rounded-full">
-            <Plus className="h-4 w-4 mr-1" /> Nieuw
+            <Plus className="h-4 w-4 mr-1" /> New
           </Button>
         </Link>
       </header>
@@ -52,11 +52,11 @@ export default function RoutinesPage() {
                   <h3 className="font-bold text-xl mb-1">{routine.name}</h3>
                   <div className="flex gap-2">
                     <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: `${routine.color}20`, color: routine.color }}>
-                      {routine.exercises.length} Oefeningen
+                      {routine.exercises.length} Exercises
                     </span>
                     {routine.lastPerformed && (
                       <span className="text-xs px-2 py-0.5 bg-muted text-muted-foreground rounded-full font-medium">
-                        Laatst: {new Date(routine.lastPerformed).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
+                        Last: {new Date(routine.lastPerformed).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
                       </span>
                     )}
                   </div>
@@ -70,14 +70,14 @@ export default function RoutinesPage() {
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Routine verwijderen?</AlertDialogTitle>
+                        <AlertDialogTitle>Delete Routine?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Weet je zeker dat je "{routine.name}" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
+                          Are you sure you want to delete "{routine.name}"? This action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Annuleren</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(routine.id)} className="bg-destructive text-destructive-foreground">Verwijderen</AlertDialogAction>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(routine.id)} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -98,7 +98,7 @@ export default function RoutinesPage() {
                   </div>
                 ))}
                 {routine.exercises.length > 3 && (
-                  <p className="text-xs text-muted-foreground italic pl-5">En {routine.exercises.length - 3} meer...</p>
+                  <p className="text-xs text-muted-foreground italic pl-5">And {routine.exercises.length - 3} more...</p>
                 )}
               </div>
             </CardContent>
@@ -110,9 +110,9 @@ export default function RoutinesPage() {
             <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center">
               <Dumbbell className="h-8 w-8 text-muted-foreground" />
             </div>
-            <p className="text-muted-foreground">Je hebt nog geen routines aangemaakt.</p>
+            <p className="text-muted-foreground">You haven't created any routines yet.</p>
             <Link href="/routines/new">
-              <Button className="bg-primary">Begin Nu</Button>
+              <Button className="bg-primary">Get Started</Button>
             </Link>
           </div>
         )}
