@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { getExercises, saveRoutine, type Exercise, getExerciseStats } from '@/lib/store';
-import { ChevronLeft, Plus, Search, Trash2 } from 'lucide-react';
+import { getExercises, saveRoutine, type Exercise, getExerciseStats, ROUTINE_COLORS } from '@/lib/store';
+import { ChevronLeft, Plus, Search, Trash2, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,7 @@ export default function NewRoutinePage() {
   const router = useRouter();
   const { toast } = useToast();
   const [name, setName] = useState('');
+  const [selectedColor, setSelectedColor] = useState(ROUTINE_COLORS[0].value);
   const [selectedExercises, setSelectedExercises] = useState<Exercise[]>([]);
   const [search, setSearch] = useState('');
   const [showPicker, setShowPicker] = useState(false);
@@ -39,7 +40,8 @@ export default function NewRoutinePage() {
     saveRoutine({
       id: Date.now().toString(),
       name,
-      exercises: selectedExercises
+      exercises: selectedExercises,
+      color: selectedColor
     });
 
     toast({ title: "Routine opgeslagen!", description: `"${name}" is nu beschikbaar.` });
@@ -67,15 +69,33 @@ export default function NewRoutinePage() {
         </Button>
       </header>
 
-      <div className="p-5 space-y-6">
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Naam van routine</label>
-          <Input 
-            placeholder="bijv. Borst & Rug Focus" 
-            className="text-lg font-bold h-14 rounded-2xl bg-white shadow-sm border-none px-5"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+      <div className="p-5 space-y-6 pb-20">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Naam van routine</label>
+            <Input 
+              placeholder="bijv. Borst & Rug Focus" 
+              className="text-lg font-bold h-14 rounded-2xl bg-white shadow-sm border-none px-5"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Kies een kleur</label>
+            <div className="flex flex-wrap gap-3 p-4 bg-white rounded-2xl shadow-sm">
+              {ROUTINE_COLORS.map((color) => (
+                <button
+                  key={color.value}
+                  onClick={() => setSelectedColor(color.value)}
+                  className="w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-90"
+                  style={{ backgroundColor: color.value }}
+                >
+                  {selectedColor === color.value && <Check className="text-white h-6 w-6 stroke-[3px]" />}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="space-y-4">

@@ -1,12 +1,24 @@
+
 "use client"
 
 import { useEffect, useState } from 'react';
 import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { getRoutines, type Routine } from '@/lib/store';
+import { getRoutines, deleteRoutine, type Routine } from '@/lib/store';
 import { Plus, Dumbbell, Play, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function RoutinesPage() {
   const [routines, setRoutines] = useState<Routine[]>([]);
@@ -14,6 +26,11 @@ export default function RoutinesPage() {
   useEffect(() => {
     setRoutines(getRoutines());
   }, []);
+
+  const handleDelete = (id: string) => {
+    deleteRoutine(id);
+    setRoutines(getRoutines());
+  };
 
   return (
     <div className="p-5 space-y-6">
@@ -26,24 +43,51 @@ export default function RoutinesPage() {
         </Link>
       </header>
 
-      <div className="space-y-4">
+      <div className="space-y-4 pb-20">
         {routines.map((routine) => (
-          <Card key={routine.id} className="relative overflow-hidden card-hover">
+          <Card key={routine.id} className="relative overflow-hidden card-hover border-l-4" style={{ borderLeftColor: routine.color || '#8b5cf6' }}>
             <CardContent className="p-5">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="font-bold text-xl mb-1">{routine.name}</h3>
                   <div className="flex gap-2">
-                    <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full font-medium">
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: `${routine.color}20`, color: routine.color }}>
                       {routine.exercises.length} Oefeningen
                     </span>
+                    {routine.lastPerformed && (
+                      <span className="text-xs px-2 py-0.5 bg-muted text-muted-foreground rounded-full font-medium">
+                        Laatst: {new Date(routine.lastPerformed).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
+                      </span>
+                    )}
                   </div>
                 </div>
-                <Link href={`/workout/${routine.id}`}>
-                  <Button className="bg-primary rounded-xl h-10 px-4">
-                    <Play className="h-4 w-4 mr-2 fill-current" /> Start
-                  </Button>
-                </Link>
+                <div className="flex gap-2">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive h-10 w-10">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Routine verwijderen?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Weet je zeker dat je "{routine.name}" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Annuleren</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(routine.id)} className="bg-destructive text-destructive-foreground">Verwijderen</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  
+                  <Link href={`/workout/${routine.id}`}>
+                    <Button className="rounded-xl h-10 px-4 text-white" style={{ backgroundColor: routine.color || '#8b5cf6' }}>
+                      <Play className="h-4 w-4 mr-2 fill-current" /> Start
+                    </Button>
+                  </Link>
+                </div>
               </div>
 
               <div className="space-y-2">

@@ -7,6 +7,7 @@ import {
   getRoutines, 
   getExerciseStats, 
   saveExerciseSetStats, 
+  logWorkout,
   type Routine, 
   type RoutineExercise 
 } from '@/lib/store';
@@ -35,7 +36,6 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
         return {
           ...ex,
           sets: Array.from({ length: ex.defaultSets }, (_, i) => {
-            // Memory per SPECIFIC set index
             const prevSetStats = (stats.sets && stats.sets[i]) ? stats.sets[i] : (stats.sets && stats.sets[0] ? stats.sets[0] : null);
             return {
               reps: prevSetStats?.reps || ex.defaultReps,
@@ -68,9 +68,12 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
   };
 
   const handleFinish = () => {
+    if (routine) {
+      logWorkout(routine);
+    }
     toast({
       title: "Workout Voltooid!",
-      description: "Lekker gewerkt. Je voortgang is opgeslagen.",
+      description: "Lekker gewerkt. Je voortgang is opgeslagen in de kalender.",
     });
     router.push('/');
   };
@@ -94,7 +97,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
             </div>
           </div>
         </div>
-        <Button onClick={handleFinish} className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl px-6">
+        <Button onClick={handleFinish} className="hover:opacity-90 text-white font-bold rounded-xl px-6" style={{ backgroundColor: routine.color || '#8b5cf6' }}>
           Klaar
         </Button>
       </header>
@@ -102,7 +105,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
       <div className="p-5 space-y-6 pb-20">
         {exercises.map((ex, exIdx) => (
           <Card key={ex.id} className="border-none shadow-md overflow-hidden">
-            <CardHeader className="bg-primary/5 pb-3">
+            <CardHeader className="pb-3" style={{ backgroundColor: `${routine.color}10` }}>
               <div className="flex justify-between items-center gap-4">
                 <div className="flex items-center gap-3">
                   <div className="relative w-12 h-12 rounded-lg overflow-hidden border bg-muted shrink-0">
@@ -139,8 +142,9 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
                   <div className="col-span-4 flex items-center bg-muted/50 rounded-lg p-1">
                     <button 
                       onClick={() => updateSet(exIdx, setIdx, 'weight', set.weight - 2.5)}
-                      className="h-8 w-8 flex items-center justify-center text-primary disabled:opacity-30"
+                      className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
                       disabled={set.completed}
+                      style={{ color: routine.color }}
                     >
                       <Minus className="h-3 w-3" />
                     </button>
@@ -153,8 +157,9 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
                     />
                     <button 
                       onClick={() => updateSet(exIdx, setIdx, 'weight', set.weight + 2.5)}
-                      className="h-8 w-8 flex items-center justify-center text-primary disabled:opacity-30"
+                      className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
                       disabled={set.completed}
+                      style={{ color: routine.color }}
                     >
                       <Plus className="h-3 w-3" />
                     </button>
@@ -163,8 +168,9 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
                   <div className="col-span-4 flex items-center bg-muted/50 rounded-lg p-1">
                     <button 
                       onClick={() => updateSet(exIdx, setIdx, 'reps', set.reps - 1)}
-                      className="h-8 w-8 flex items-center justify-center text-primary disabled:opacity-30"
+                      className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
                       disabled={set.completed}
+                      style={{ color: routine.color }}
                     >
                       <Minus className="h-3 w-3" />
                     </button>
@@ -177,8 +183,9 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
                     />
                     <button 
                       onClick={() => updateSet(exIdx, setIdx, 'reps', set.reps + 1)}
-                      className="h-8 w-8 flex items-center justify-center text-primary disabled:opacity-30"
+                      className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
                       disabled={set.completed}
+                      style={{ color: routine.color }}
                     >
                       <Plus className="h-3 w-3" />
                     </button>
@@ -190,8 +197,9 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
                       className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
                         set.completed 
                           ? 'bg-green-500 text-white shadow-inner scale-90' 
-                          : 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20'
+                          : 'border'
                       }`}
+                      style={!set.completed ? { backgroundColor: `${routine.color}10`, color: routine.color, borderColor: `${routine.color}20` } : {}}
                     >
                       <Check className={`h-5 w-5 ${set.completed ? 'stroke-[3px]' : 'stroke-1'}`} />
                     </button>
@@ -203,7 +211,8 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="w-full text-primary font-bold gap-2 bg-primary/5 hover:bg-primary/10 h-10 rounded-xl"
+                  className="w-full font-bold gap-2 h-10 rounded-xl"
+                  style={{ backgroundColor: `${routine.color}05`, color: routine.color }}
                   onClick={() => {
                     const stats = getExerciseStats(ex.id);
                     const newExs = [...exercises];

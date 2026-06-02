@@ -33,8 +33,29 @@ export interface Routine {
   id: string;
   name: string;
   exercises: Exercise[];
-  lastPerformed?: Date;
+  color?: string;
+  lastPerformed?: string;
 }
+
+export interface WorkoutLog {
+  id: string;
+  routineId: string;
+  routineName: string;
+  routineColor: string;
+  date: string; // ISO YYYY-MM-DD
+}
+
+export const ROUTINE_COLORS = [
+  { name: 'Violet', value: '#8b5cf6' },
+  { name: 'Blue', value: '#3b82f6' },
+  { name: 'Emerald', value: '#10b981' },
+  { name: 'Rose', value: '#f43f5e' },
+  { name: 'Amber', value: '#f59e0b' },
+  { name: 'Indigo', value: '#6366f1' },
+  { name: 'Cyan', value: '#06b6d4' },
+  { name: 'Orange', value: '#f97316' },
+  { name: 'Slate', value: '#64748b' },
+];
 
 export const DEFAULT_EXERCISES: Exercise[] = [
   // BORST (15)
@@ -206,14 +227,14 @@ export const saveExerciseSetStats = (exerciseId: string, setIndex: number, weigh
 
 export const getRoutines = (): Routine[] => {
   if (typeof window === 'undefined') return [];
-  const stored = localStorage.getItem('user_routines_v5');
+  const stored = localStorage.getItem('user_routines_v6');
   if (!stored) {
     const exercises = getExercises();
-    const initial = [
-      { id: 'r1', name: 'Full Body Kracht', exercises: [exercises[0], exercises[14], exercises[7], exercises[20]] },
-      { id: 'r2', name: 'Bovenlichaam Focus', exercises: [exercises[0], exercises[7], exercises[21], exercises[25]] },
+    const initial: Routine[] = [
+      { id: 'r1', name: 'Full Body Kracht', exercises: [exercises[0], exercises[14], exercises[7], exercises[20]], color: '#8b5cf6' },
+      { id: 'r2', name: 'Bovenlichaam Focus', exercises: [exercises[0], exercises[7], exercises[21], exercises[25]], color: '#3b82f6' },
     ];
-    localStorage.setItem('user_routines_v5', JSON.stringify(initial));
+    localStorage.setItem('user_routines_v6', JSON.stringify(initial));
     return initial;
   }
   return JSON.parse(stored);
@@ -227,5 +248,37 @@ export const saveRoutine = (routine: Routine) => {
   } else {
     routines.push(routine);
   }
-  localStorage.setItem('user_routines_v5', JSON.stringify(routines));
+  localStorage.setItem('user_routines_v6', JSON.stringify(routines));
+};
+
+export const deleteRoutine = (id: string) => {
+  const routines = getRoutines().filter(r => r.id !== id);
+  localStorage.setItem('user_routines_v6', JSON.stringify(routines));
+};
+
+export const logWorkout = (routine: Routine) => {
+  if (typeof window === 'undefined') return;
+  const logs: WorkoutLog[] = JSON.parse(localStorage.getItem('workout_logs_v1') || '[]');
+  const newLog: WorkoutLog = {
+    id: Date.now().toString(),
+    routineId: routine.id,
+    routineName: routine.name,
+    routineColor: routine.color || '#8b5cf6',
+    date: new Date().toISOString().split('T')[0],
+  };
+  logs.push(newLog);
+  localStorage.setItem('workout_logs_v1', JSON.stringify(logs));
+  
+  // Update last performed on routine
+  const routines = getRoutines();
+  const index = routines.findIndex(r => r.id === routine.id);
+  if (index > -1) {
+    routines[index].lastPerformed = newLog.date;
+    localStorage.setItem('user_routines_v6', JSON.stringify(routines));
+  }
+};
+
+export const getWorkoutLogs = (): WorkoutLog[] => {
+  if (typeof window === 'undefined') return [];
+  return JSON.parse(localStorage.getItem('workout_logs_v1') || '[]');
 };

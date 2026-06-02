@@ -6,8 +6,9 @@ import { BottomNav } from '@/components/BottomNav';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getRoutines, getExercises, type Routine } from '@/lib/store';
-import { Play, Calendar, Trophy, ArrowRight, Dumbbell } from 'lucide-react';
+import { Play, Calendar as CalendarIcon, Trophy, ArrowRight, Dumbbell } from 'lucide-react';
 import Link from 'next/link';
+import { WorkoutCalendar } from '@/components/WorkoutCalendar';
 
 export default function HomePage() {
   const [routines, setRoutines] = useState<Routine[]>([]);
@@ -29,21 +30,24 @@ export default function HomePage() {
 
       {/* Stats Quick View */}
       <div className="grid grid-cols-2 gap-4">
-        <Card className="bg-primary text-white border-none">
+        <Card className="bg-primary text-white border-none shadow-lg">
           <CardContent className="p-4 flex flex-col gap-1">
-            <Calendar className="h-5 w-5 mb-1 opacity-80" />
-            <span className="text-2xl font-bold">12</span>
-            <span className="text-xs opacity-80 font-medium">Workouts deze maand</span>
+            <CalendarIcon className="h-5 w-5 mb-1 opacity-80" />
+            <span className="text-2xl font-bold">{routines.filter(r => r.lastPerformed).length}</span>
+            <span className="text-xs opacity-80 font-medium">Actieve routines</span>
           </CardContent>
         </Card>
-        <Card className="bg-accent text-white border-none">
+        <Card className="bg-accent text-white border-none shadow-lg">
           <CardContent className="p-4 flex flex-col gap-1">
             <Trophy className="h-5 w-5 mb-1 opacity-80" />
-            <span className="text-2xl font-bold">420kg</span>
-            <span className="text-xs opacity-80 font-medium">Totaal volume vandaag</span>
+            <span className="text-2xl font-bold">{getExercises().length}</span>
+            <span className="text-xs opacity-80 font-medium">Oefeningen beschikbaar</span>
           </CardContent>
         </Card>
       </div>
+
+      {/* Workout Calendar */}
+      <WorkoutCalendar />
 
       <section className="space-y-4">
         <div className="flex justify-between items-end">
@@ -55,14 +59,14 @@ export default function HomePage() {
         
         <div className="space-y-3">
           {routines.slice(0, 3).map((routine) => (
-            <Card key={routine.id} className="card-hover">
+            <Card key={routine.id} className="card-hover border-l-4" style={{ borderLeftColor: routine.color || '#8b5cf6' }}>
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
                   <h3 className="font-bold text-lg">{routine.name}</h3>
                   <p className="text-xs text-muted-foreground">{routine.exercises.length} oefeningen</p>
                 </div>
                 <Link href={`/workout/${routine.id}`}>
-                  <Button size="icon" className="rounded-full bg-primary h-12 w-12 shadow-lg">
+                  <Button size="icon" className="rounded-full h-12 w-12 shadow-lg" style={{ backgroundColor: routine.color || '#8b5cf6' }}>
                     <Play className="h-6 w-6 fill-current" />
                   </Button>
                 </Link>
