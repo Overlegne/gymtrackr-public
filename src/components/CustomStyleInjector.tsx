@@ -17,7 +17,8 @@ export function CustomStyleInjector() {
         .dark {
           --primary: ${custom.primary} !important;
           --background: 0 0% 0% !important;
-          --card: 250 20% 4% !important;
+          --card: 250 20% 10% !important;
+          --popover: 250 20% 12% !important;
         }
       `);
     } else {

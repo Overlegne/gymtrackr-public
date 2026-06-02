@@ -34,22 +34,22 @@
   .dark {
     --background: 0 0% 0%;
     --foreground: 250 20% 98%;
-    --card: 250 20% 4%;
+    --card: 250 20% 10%;
     --card-foreground: 250 20% 98%;
-    --popover: 250 20% 4%;
+    --popover: 250 20% 12%;
     --popover-foreground: 250 20% 98%;
     --primary: 250 69% 60%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 250 20% 12%;
+    --secondary: 250 20% 15%;
     --secondary-foreground: 250 20% 98%;
-    --muted: 250 20% 12%;
+    --muted: 250 20% 15%;
     --muted-foreground: 250 10% 85%;
     --accent: 217 100% 70%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 40%;
     --destructive-foreground: 0 0% 98%;
-    --border: 250 20% 15%;
-    --input: 250 20% 15%;
+    --border: 250 20% 20%;
+    --input: 250 20% 20%;
     --ring: 250 69% 60%;
   }
 }
