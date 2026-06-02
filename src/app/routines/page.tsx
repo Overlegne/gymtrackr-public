@@ -32,7 +32,7 @@ export default function RoutinesPage() {
   };
 
   return (
-    <div className="p-5 space-y-6 bg-background min-h-screen">
+    <div className="p-5 space-y-6 bg-background min-h-screen pt-[calc(1rem+var(--safe-top))]">
       <header className="flex justify-between items-center py-4">
         <div>
           <h1 className="text-2xl font-black tracking-tight">My Routines</h1>

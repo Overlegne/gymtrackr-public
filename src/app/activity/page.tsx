@@ -1,4 +1,3 @@
-
 "use client"
 
 import { BottomNav } from '@/components/BottomNav';
@@ -10,7 +9,7 @@ import { Button } from '@/components/ui/button';
 export default function ActivityPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border/50 px-5 py-6 flex items-center gap-4">
+      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border/50 px-5 pt-[calc(1rem+var(--safe-top))] pb-6 flex items-center gap-4">
         <Link href="/">
           <Button variant="ghost" size="icon" className="rounded-full bg-muted/30 hover:bg-muted/50">
             <ChevronLeft className="h-5 w-5" />

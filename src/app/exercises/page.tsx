@@ -143,7 +143,7 @@ export default function ExercisesPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <div className="p-5 space-y-6 pb-24">
+      <div className="p-5 space-y-6 pb-24 pt-[calc(1rem+var(--safe-top))]">
         <header className="py-4 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-black tracking-tight">Library</h1>

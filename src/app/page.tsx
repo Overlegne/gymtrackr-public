@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from 'react';
@@ -23,7 +22,7 @@ export default function HomePage() {
   if (!mounted) return null;
 
   return (
-    <div className="p-5 space-y-6">
+    <div className="p-5 space-y-6 pt-[calc(1.5rem+var(--safe-top))]">
       <header className="py-4">
         <h1 className="text-3xl font-extrabold text-primary">Welcome back!</h1>
         <p className="text-muted-foreground font-medium">Ready for your next workout?</p>

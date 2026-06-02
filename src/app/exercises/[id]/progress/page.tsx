@@ -1,4 +1,3 @@
-
 "use client"
 
 import { use, useState, useEffect, useMemo } from 'react';
@@ -106,7 +105,7 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
   if (!isMounted || !exercise) {
     return (
       <div className="flex flex-col min-h-screen bg-background">
-        <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border/50 px-5 py-4 flex items-center gap-4">
+        <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border/50 px-5 pt-[calc(1rem+var(--safe-top))] pb-4 flex items-center gap-4">
           <Link href="/exercises">
             <Button variant="ghost" size="icon" className="rounded-full bg-muted/30">
               <ChevronLeft className="h-5 w-5" />
@@ -144,7 +143,7 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData}>
             <defs>
-              <linearGradient id="colorMetric" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="colorMetric" x1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
                 <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
               </linearGradient>
@@ -200,7 +199,7 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border/50 px-5 py-4 flex items-center gap-4">
+      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border/50 px-5 pt-[calc(1rem+var(--safe-top))] pb-4 flex items-center gap-4">
         <Link href="/exercises">
           <Button variant="ghost" size="icon" className="rounded-full bg-muted/30">
             <ChevronLeft className="h-5 w-5" />

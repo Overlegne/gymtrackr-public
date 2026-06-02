@@ -137,7 +137,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border px-5 py-4 flex items-center justify-between shadow-sm">
+      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border px-5 pt-[calc(1rem+var(--safe-top))] pb-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <Link href="/">
             <Button variant="ghost" size="icon" className="rounded-full">

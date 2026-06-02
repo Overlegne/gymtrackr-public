@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useMemo, use } from 'react';
@@ -85,7 +84,7 @@ export default function EditRoutinePage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border px-5 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border px-5 pt-[calc(1rem+var(--safe-top))] pb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/routines">
             <Button variant="ghost" size="icon" className="rounded-full">

@@ -17,7 +17,7 @@ export function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-card/95 backdrop-blur-xl border-t border-border/60 flex justify-around items-center py-4 px-4 z-50 mobile-nav-shadow rounded-t-[2.5rem]">
+    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-card/95 backdrop-blur-xl border-t border-border/60 flex justify-around items-center pt-4 pb-[calc(1rem+var(--safe-bottom))] px-4 z-50 mobile-nav-shadow rounded-t-[2.5rem]">
       {navItems.map((item) => {
         const isActive = pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href));
         return (
