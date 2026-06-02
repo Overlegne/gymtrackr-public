@@ -36,7 +36,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
         return {
           ...ex,
           sets: Array.from({ length: ex.defaultSets }, (_, i) => {
-            const prevSetStats = stats.sets[i] || stats.sets[0] || null;
+            const prevSetStats = stats.sets[i.toString()] || stats.sets["0"] || null;
             return {
               reps: prevSetStats?.reps || ex.defaultReps,
               weight: prevSetStats?.weight || 0,
@@ -64,8 +64,17 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
 
   const handleFinish = () => {
     if (routine) {
+      // Mark all non-zero sets as completed for saving logic
+      const processedExercises = exercises.map(ex => ({
+        ...ex,
+        sets: ex.sets.map(s => ({
+          ...s,
+          completed: s.completed || s.weight > 0 || s.reps > 0
+        }))
+      }));
+      
       logWorkout(routine);
-      saveAllWorkoutStats(exercises);
+      saveAllWorkoutStats(processedExercises);
     }
     toast({
       title: "Workout Completed!",
@@ -213,7 +222,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
                     const stats = getExerciseStats(ex.id);
                     const newExs = [...exercises];
                     const nextSetIdx = newExs[exIdx].sets.length;
-                    const prevSetStats = stats.sets[nextSetIdx] || stats.sets[0] || null;
+                    const prevSetStats = stats.sets[nextSetIdx.toString()] || stats.sets["0"] || null;
                     newExs[exIdx].sets.push({
                       reps: prevSetStats?.reps || ex.defaultReps,
                       weight: prevSetStats?.weight || 0,

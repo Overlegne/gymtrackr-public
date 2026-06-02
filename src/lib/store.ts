@@ -20,7 +20,7 @@ export interface SetStats {
 }
 
 export interface ExerciseStats {
-  sets: { [setIndex: number]: SetStats };
+  sets: { [setIndex: string]: SetStats };
 }
 
 export interface RoutineExercise extends Exercise {
@@ -81,11 +81,16 @@ export const DEFAULT_EXERCISES: Exercise[] = (exercisesData.exercises as any[]).
   imageUrl: `https://picsum.photos/seed/${ex.id}/600/400`
 }));
 
+const EXERCISES_KEY = 'user_exercises_v14';
+const STATS_KEY = 'exercise_stats_v11';
+const ROUTINES_KEY = 'user_routines_v11';
+const LOGS_KEY = 'workout_logs_v5';
+
 export const getExercises = (): Exercise[] => {
   if (typeof window === 'undefined') return DEFAULT_EXERCISES;
-  const stored = localStorage.getItem('user_exercises_v13');
+  const stored = localStorage.getItem(EXERCISES_KEY);
   if (!stored) {
-    localStorage.setItem('user_exercises_v13', JSON.stringify(DEFAULT_EXERCISES));
+    localStorage.setItem(EXERCISES_KEY, JSON.stringify(DEFAULT_EXERCISES));
     return DEFAULT_EXERCISES;
   }
   return JSON.parse(stored);
@@ -98,53 +103,44 @@ export const addExercise = (exercise: Omit<Exercise, 'id'>) => {
     id: Date.now().toString(),
   };
   exercises.push(newExercise);
-  localStorage.setItem('user_exercises_v13', JSON.stringify(exercises));
+  localStorage.setItem(EXERCISES_KEY, JSON.stringify(exercises));
   return newExercise;
 };
 
 export const getExerciseStats = (exerciseId: string): ExerciseStats => {
   if (typeof window === 'undefined') return { sets: {} };
-  const allStats = JSON.parse(localStorage.getItem('exercise_stats_v10') || '{}');
+  const allStats = JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
   return allStats[exerciseId] || { sets: {} };
-};
-
-export const saveExerciseSetStats = (exerciseId: string, setIndex: number, weight: number, reps: number) => {
-  if (typeof window === 'undefined') return;
-  const allStats = JSON.parse(localStorage.getItem('exercise_stats_v10') || '{}');
-  if (!allStats[exerciseId]) {
-    allStats[exerciseId] = { sets: {} };
-  }
-  allStats[exerciseId].sets[setIndex] = { weight, reps };
-  localStorage.setItem('exercise_stats_v10', JSON.stringify(allStats));
 };
 
 export const saveAllWorkoutStats = (exercises: RoutineExercise[]) => {
   if (typeof window === 'undefined') return;
-  const allStats = JSON.parse(localStorage.getItem('exercise_stats_v10') || '{}');
+  const allStats = JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
   
   exercises.forEach(ex => {
     if (!allStats[ex.id]) {
       allStats[ex.id] = { sets: {} };
     }
     ex.sets.forEach((set, idx) => {
-      if (set.completed) {
-        allStats[ex.id].sets[idx] = { weight: set.weight, reps: set.reps };
+      // Save if completed OR if there's actual data entered (weight > 0)
+      if (set.completed || set.weight > 0 || set.reps > 0) {
+        allStats[ex.id].sets[idx.toString()] = { weight: set.weight, reps: set.reps };
       }
     });
   });
   
-  localStorage.setItem('exercise_stats_v10', JSON.stringify(allStats));
+  localStorage.setItem(STATS_KEY, JSON.stringify(allStats));
 };
 
 export const getRoutines = (): Routine[] => {
   if (typeof window === 'undefined') return [];
-  const stored = localStorage.getItem('user_routines_v10');
+  const stored = localStorage.getItem(ROUTINES_KEY);
   if (!stored) {
     const exercises = getExercises();
     const initial: Routine[] = [
       { id: 'r1', name: 'Full Body Strength', exercises: [exercises[0], exercises[5] || exercises[0]], color: '#8b5cf6' },
     ];
-    localStorage.setItem('user_routines_v10', JSON.stringify(initial));
+    localStorage.setItem(ROUTINES_KEY, JSON.stringify(initial));
     return initial;
   }
   return JSON.parse(stored);
@@ -158,17 +154,17 @@ export const saveRoutine = (routine: Routine) => {
   } else {
     routines.push(routine);
   }
-  localStorage.setItem('user_routines_v10', JSON.stringify(routines));
+  localStorage.setItem(ROUTINES_KEY, JSON.stringify(routines));
 };
 
 export const deleteRoutine = (id: string) => {
   const routines = getRoutines().filter(r => r.id !== id);
-  localStorage.setItem('user_routines_v10', JSON.stringify(routines));
+  localStorage.setItem(ROUTINES_KEY, JSON.stringify(routines));
 };
 
 export const logWorkout = (routine: Routine) => {
   if (typeof window === 'undefined') return;
-  const logs: WorkoutLog[] = JSON.parse(localStorage.getItem('workout_logs_v4') || '[]');
+  const logs: WorkoutLog[] = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
   const newLog: WorkoutLog = {
     id: Date.now().toString(),
     routineId: routine.id,
@@ -177,17 +173,17 @@ export const logWorkout = (routine: Routine) => {
     date: new Date().toLocaleDateString('en-CA'),
   };
   logs.push(newLog);
-  localStorage.setItem('workout_logs_v4', JSON.stringify(logs));
+  localStorage.setItem(LOGS_KEY, JSON.stringify(logs));
   
   const routines = getRoutines();
   const index = routines.findIndex(r => r.id === routine.id);
   if (index > -1) {
     routines[index].lastPerformed = newLog.date;
-    localStorage.setItem('user_routines_v10', JSON.stringify(routines));
+    localStorage.setItem(ROUTINES_KEY, JSON.stringify(routines));
   }
 };
 
 export const getWorkoutLogs = (): WorkoutLog[] => {
   if (typeof window === 'undefined') return [];
-  return JSON.parse(localStorage.getItem('workout_logs_v4') || '[]');
+  return JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
 };

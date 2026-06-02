@@ -1,12 +1,12 @@
 
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { BottomNav } from '@/components/BottomNav';
 import { getExercises, getExerciseStats, type Exercise, type MuscleGroup } from '@/lib/store';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ChevronRight, Info, Dumbbell, Target, History } from 'lucide-react';
+import { Search, ChevronRight, History, Dumbbell, Target } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { AddExerciseDialog } from '@/components/AddExerciseDialog';
 import {
@@ -14,7 +14,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import Image from 'next/image';
 
@@ -40,11 +39,20 @@ export default function ExercisesPage() {
     setExercises(getExercises());
   };
 
-  const selectedStats = selectedExercise ? getExerciseStats(selectedExercise.id) : null;
-  const loggedSets = selectedStats ? Object.entries(selectedStats.sets).map(([idx, stats]) => ({
-    index: parseInt(idx),
-    ...stats
-  })).sort((a, b) => a.index - b.index) : [];
+  // Memoize stats to ensure UI updates when selectedExercise changes
+  const loggedSets = useMemo(() => {
+    if (!selectedExercise) return [];
+    const stats = getExerciseStats(selectedExercise.id);
+    if (!stats.sets) return [];
+    
+    return Object.entries(stats.sets)
+      .map(([idx, values]) => ({
+        index: parseInt(idx),
+        weight: values.weight,
+        reps: values.reps
+      }))
+      .sort((a, b) => a.index - b.index);
+  }, [selectedExercise]);
 
   return (
     <div className="p-5 space-y-6">
