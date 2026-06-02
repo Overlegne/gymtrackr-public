@@ -6,15 +6,17 @@ import { BottomNav } from '@/components/BottomNav';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getRoutines, getExercises, type Routine } from '@/lib/store';
-import { Play, Calendar as CalendarIcon, Trophy, ArrowRight, Dumbbell } from 'lucide-react';
+import { Play, Trophy, ArrowRight, Dumbbell, Calendar as CalendarIcon } from 'lucide-react';
 import Link from 'next/link';
 
 export default function HomePage() {
   const [routines, setRoutines] = useState<Routine[]>([]);
+  const [exercisesCount, setExercisesCount] = useState(0);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setRoutines(getRoutines());
+    setExercisesCount(getExercises().length);
     setMounted(true);
   }, []);
 
@@ -39,7 +41,7 @@ export default function HomePage() {
         <Card className="bg-accent text-white border-none shadow-lg">
           <CardContent className="p-4 flex flex-col gap-1">
             <Trophy className="h-5 w-5 mb-1 opacity-80" />
-            <span className="text-2xl font-bold">{getExercises().length}</span>
+            <span className="text-2xl font-bold">{exercisesCount}</span>
             <span className="text-xs opacity-80 font-medium">Exercises</span>
           </CardContent>
         </Card>
@@ -47,7 +49,7 @@ export default function HomePage() {
 
       <section className="space-y-4">
         <div className="flex justify-between items-end">
-          <h2 className="text-xl font-bold">My Routines</h2>
+          <h2 className="text-xl font-bold">Recent Routines</h2>
           <Link href="/routines" className="text-sm text-primary font-medium flex items-center gap-1">
             Manage <ArrowRight className="h-4 w-4" />
           </Link>
@@ -87,7 +89,7 @@ export default function HomePage() {
           </div>
           <div>
             <h3 className="font-bold">Discover Exercises</h3>
-            <p className="text-xs text-muted-foreground">Browse our database with {getExercises().length}+ exercises.</p>
+            <p className="text-xs text-muted-foreground">Browse our database with {exercisesCount}+ exercises.</p>
           </div>
         </div>
         <Link href="/exercises" className="block">
