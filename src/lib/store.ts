@@ -104,6 +104,15 @@ export interface PlateauAnalysis {
   suggestions: string[];
 }
 
+export interface ProgressionSuggestion {
+  type: 'increase_weight' | 'increase_reps' | 'increase_duration' | 'repeat' | 'deload';
+  suggestedWeight?: number;
+  suggestedReps?: number;
+  suggestedDuration?: number;
+  reason: string;
+  lastStatsText: string;
+}
+
 export const ROUTINE_COLORS = [
   { name: 'Strength Violet', value: '#8b5cf6' },
   { name: 'Energetic Blue', value: '#3b82f6' },
@@ -584,6 +593,65 @@ export const detectPlateau = (exerciseId: string): PlateauAnalysis => {
     status: 'Plateau', 
     reason: `Your performance on this exercise has been stagnant for ${recent.length} sessions.`, 
     suggestions: suggestions.sort(() => 0.5 - Math.random()).slice(0, 2)
+  };
+};
+
+export const getProgressionSuggestion = (exerciseId: string): ProgressionSuggestion | null => {
+  const history = getExerciseHistory(exerciseId);
+  if (history.length === 0) return null;
+
+  const last = history[history.length - 1];
+  const settings = getSettings();
+  const unitLabel = settings.unitSystem === 'Metric' ? 'kg' : 'lb';
+  const weightStep = settings.unitSystem === 'Metric' ? 2.5 : 5;
+
+  const ex = getExercises().find(e => e.id === exerciseId);
+  if (!ex) return null;
+
+  const lastStatsText = ex.loggingType === 'duration' 
+    ? `${last.durationSeconds}s`
+    : `${last.weight > 0 ? kgToDisplay(last.weight, settings.unitSystem) + unitLabel + ' x ' : ''}${last.reps} reps`;
+
+  if (ex.loggingType === 'duration') {
+    return {
+      type: 'increase_duration',
+      suggestedDuration: (last.durationSeconds || 0) + 10,
+      reason: "You completed your last hold successfully. Let's push for 10 more seconds to improve endurance.",
+      lastStatsText
+    };
+  }
+
+  // Weight/Reps logic
+  const plateau = detectPlateau(exerciseId);
+  
+  if (plateau.status === 'Plateau') {
+    return {
+      type: 'deload',
+      suggestedWeight: Math.max(0, last.weight * 0.9),
+      suggestedReps: last.reps + 2,
+      reason: "You've hit a plateau. Let's reduce the load by 10% and focus on explosive power and extra volume to break through.",
+      lastStatsText
+    };
+  }
+
+  // If reps are high, increase weight
+  if (last.reps >= 12) {
+    return {
+      type: 'increase_weight',
+      suggestedWeight: last.weight + displayToKg(weightStep, settings.unitSystem),
+      suggestedReps: 8,
+      reason: "You hit 12 reps easily. Time to increase the weight and work in a lower rep range to build strength.",
+      lastStatsText
+    };
+  }
+
+  // Otherwise, aim for more reps
+  return {
+    type: 'increase_reps',
+    suggestedWeight: last.weight,
+    suggestedReps: last.reps + 2,
+    reason: "Great job on the weight. Now let's try to squeeze out 2 more reps per set with the same load.",
+    lastStatsText
   };
 };
 

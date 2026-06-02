@@ -3,7 +3,7 @@
 
 import React, { useMemo } from 'react';
 import Image from 'next/image';
-import { Exercise, kgToDisplay, type SetStats } from '@/lib/store';
+import { Exercise, kgToDisplay, getProgressionSuggestion, type SetStats } from '@/lib/store';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -13,10 +13,18 @@ import {
   AlertTriangle, 
   RefreshCcw, 
   ChevronRight,
-  ClipboardList
+  ClipboardList,
+  Sparkles,
+  ArrowUpRight
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { getSettings } from '@/lib/settings-store';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ExerciseDetailCardProps {
   exercise: Exercise;
@@ -26,6 +34,7 @@ interface ExerciseDetailCardProps {
 export function ExerciseDetailCard({ exercise, lastPerformance }: ExerciseDetailCardProps) {
   const settings = useMemo(() => getSettings(), []);
   const unitLabel = settings.unitSystem === 'Metric' ? 'KG' : 'LB';
+  const suggestion = useMemo(() => getProgressionSuggestion(exercise.id), [exercise.id]);
 
   return (
     <div className="space-y-6">
@@ -60,6 +69,52 @@ export function ExerciseDetailCard({ exercise, lastPerformance }: ExerciseDetail
           ))}
         </div>
       </div>
+
+      {suggestion && (
+        <Card className="border-none shadow-lg rounded-[2.5rem] overflow-hidden bg-primary/5 ring-1 ring-primary/20 animate-in fade-in slide-in-from-top-4 duration-500">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-foreground">Next Session Goal</h4>
+                  <p className="text-[10px] text-primary uppercase font-black tracking-widest">Smart Progression</p>
+                </div>
+              </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-muted-foreground hover:bg-primary/10">
+                      <Info className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[200px] text-[10px] font-bold leading-relaxed">
+                    {suggestion.reason}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            
+            <div className="bg-card rounded-2xl p-4 border border-border/50 shadow-sm flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">Target</p>
+                <p className="text-xl font-black text-foreground">
+                   {suggestion.type === 'increase_duration' ? (
+                    `${suggestion.suggestedDuration}s Hold`
+                  ) : (
+                    `${suggestion.suggestedWeight ? kgToDisplay(suggestion.suggestedWeight, settings.unitSystem) + unitLabel : ''} ${suggestion.suggestedWeight && suggestion.suggestedReps ? 'x' : ''} ${suggestion.suggestedReps ? suggestion.suggestedReps + ' Reps' : ''}`
+                  )}
+                </p>
+              </div>
+              <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground">
+                <ArrowUpRight className="h-5 w-5" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="space-y-4">
         <div className="flex items-center gap-3">
