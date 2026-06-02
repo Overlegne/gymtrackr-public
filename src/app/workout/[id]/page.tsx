@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { 
   getRoutines, 
   getExerciseStats, 
-  saveExerciseStats, 
+  saveExerciseSetStats, 
   type Routine, 
   type RoutineExercise 
 } from '@/lib/store';
@@ -34,11 +34,14 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
         const stats = getExerciseStats(ex.id);
         return {
           ...ex,
-          sets: Array.from({ length: ex.defaultSets }, () => ({
-            reps: stats.reps || ex.defaultReps,
-            weight: stats.weight || 0,
-            completed: false
-          }))
+          sets: Array.from({ length: ex.defaultSets }, (_, i) => {
+            const prevSetStats = stats.sets[i] || stats.sets[0] || null;
+            return {
+              reps: prevSetStats?.reps || ex.defaultReps,
+              weight: prevSetStats?.weight || 0,
+              completed: false
+            };
+          })
         };
       });
       setExercises(initialized);
@@ -51,14 +54,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
     set.completed = !set.completed;
     
     if (set.completed) {
-      saveExerciseStats(newExs[exIndex].id, set.weight, set.reps);
-      
-      newExs[exIndex].sets.forEach((s, i) => {
-        if (!s.completed) {
-          s.weight = set.weight;
-          s.reps = set.reps;
-        }
-      });
+      saveExerciseSetStats(newExs[exIndex].id, setIndex, set.weight, set.reps);
     }
     
     setExercises(newExs);
@@ -210,9 +206,11 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
                   onClick={() => {
                     const stats = getExerciseStats(ex.id);
                     const newExs = [...exercises];
+                    const nextSetIdx = newExs[exIdx].sets.length;
+                    const prevSetStats = stats.sets[nextSetIdx] || stats.sets[0] || null;
                     newExs[exIdx].sets.push({
-                      reps: stats.reps || ex.defaultReps,
-                      weight: stats.weight || 0,
+                      reps: prevSetStats?.reps || ex.defaultReps,
+                      weight: prevSetStats?.weight || 0,
                       completed: false
                     });
                     setExercises(newExs);

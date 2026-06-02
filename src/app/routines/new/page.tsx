@@ -1,13 +1,13 @@
 
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { EXERCISES, saveRoutine, type Exercise, getExerciseStats } from '@/lib/store';
-import { ChevronLeft, Plus, Search, Trash2, Dumbbell } from 'lucide-react';
+import { getExercises, saveRoutine, type Exercise, getExerciseStats } from '@/lib/store';
+import { ChevronLeft, Plus, Search, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +20,11 @@ export default function NewRoutinePage() {
   const [selectedExercises, setSelectedExercises] = useState<Exercise[]>([]);
   const [search, setSearch] = useState('');
   const [showPicker, setShowPicker] = useState(false);
+  const [allExercises, setAllExercises] = useState<Exercise[]>([]);
+
+  useEffect(() => {
+    setAllExercises(getExercises());
+  }, []);
 
   const handleSave = () => {
     if (!name) {
@@ -41,7 +46,7 @@ export default function NewRoutinePage() {
     router.push('/routines');
   };
 
-  const filteredExercises = EXERCISES.filter(ex => 
+  const filteredExercises = allExercises.filter(ex => 
     ex.name.toLowerCase().includes(search.toLowerCase()) &&
     !selectedExercises.find(s => s.id === ex.id)
   );
@@ -89,6 +94,7 @@ export default function NewRoutinePage() {
           <div className="space-y-3">
             {selectedExercises.map((ex) => {
               const stats = getExerciseStats(ex.id);
+              const lastSet = stats.sets[0] || null;
               return (
                 <Card key={ex.id} className="border-none shadow-sm card-hover overflow-hidden">
                   <CardContent className="p-0 flex items-center">
@@ -99,7 +105,7 @@ export default function NewRoutinePage() {
                       <div>
                         <h3 className="font-bold">{ex.name}</h3>
                         <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
-                          {ex.defaultSets} sets • {stats.reps || ex.defaultReps} reps {stats.weight ? `• ${stats.weight}kg` : ''}
+                          {ex.defaultSets} sets • {lastSet?.reps || ex.defaultReps} reps {lastSet?.weight ? `• ${lastSet.weight}kg` : ''}
                         </p>
                       </div>
                       <Button 

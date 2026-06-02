@@ -12,9 +12,13 @@ export interface Exercise {
   imageUrl: string;
 }
 
-export interface ExerciseStats {
+export interface SetStats {
   weight: number;
   reps: number;
+}
+
+export interface ExerciseStats {
+  sets: SetStats[];
 }
 
 export interface RoutineExercise extends Exercise {
@@ -32,7 +36,7 @@ export interface Routine {
   lastPerformed?: Date;
 }
 
-export const EXERCISES: Exercise[] = [
+const DEFAULT_EXERCISES: Exercise[] = [
   { id: '1', name: 'Bench Press', muscleGroup: 'Borst', equipment: 'Barbell', defaultSets: 3, defaultReps: 10, imageUrl: 'https://picsum.photos/seed/bench/600/400' },
   { id: '2', name: 'Squat', muscleGroup: 'Benen', equipment: 'Barbell', defaultSets: 3, defaultReps: 12, imageUrl: 'https://picsum.photos/seed/squat/600/400' },
   { id: '3', name: 'Deadlift', muscleGroup: 'Rug', equipment: 'Barbell', defaultSets: 3, defaultReps: 5, imageUrl: 'https://picsum.photos/seed/deadlift/600/400' },
@@ -45,26 +49,51 @@ export const EXERCISES: Exercise[] = [
   { id: '10', name: 'Seated Row', muscleGroup: 'Rug', equipment: 'Kabel', defaultSets: 3, defaultReps: 12, imageUrl: 'https://picsum.photos/seed/row/600/400' },
 ];
 
-export const getExerciseStats = (exerciseId: string): ExerciseStats => {
-  if (typeof window === 'undefined') return { weight: 0, reps: 0 };
-  const allStats = JSON.parse(localStorage.getItem('exercise_stats') || '{}');
-  return allStats[exerciseId] || { weight: 0, reps: 0 };
+export const getExercises = (): Exercise[] => {
+  if (typeof window === 'undefined') return DEFAULT_EXERCISES;
+  const stored = localStorage.getItem('user_exercises');
+  if (!stored) {
+    localStorage.setItem('user_exercises', JSON.stringify(DEFAULT_EXERCISES));
+    return DEFAULT_EXERCISES;
+  }
+  return JSON.parse(stored);
 };
 
-export const saveExerciseStats = (exerciseId: string, weight: number, reps: number) => {
+export const addExercise = (exercise: Omit<Exercise, 'id'>) => {
+  const exercises = getExercises();
+  const newExercise = {
+    ...exercise,
+    id: Date.now().toString(),
+  };
+  exercises.push(newExercise);
+  localStorage.setItem('user_exercises', JSON.stringify(exercises));
+  return newExercise;
+};
+
+export const getExerciseStats = (exerciseId: string): ExerciseStats => {
+  if (typeof window === 'undefined') return { sets: [] };
+  const allStats = JSON.parse(localStorage.getItem('exercise_stats_per_set') || '{}');
+  return allStats[exerciseId] || { sets: [] };
+};
+
+export const saveExerciseSetStats = (exerciseId: string, setIndex: number, weight: number, reps: number) => {
   if (typeof window === 'undefined') return;
-  const allStats = JSON.parse(localStorage.getItem('exercise_stats') || '{}');
-  allStats[exerciseId] = { weight, reps };
-  localStorage.setItem('exercise_stats', JSON.stringify(allStats));
+  const allStats = JSON.parse(localStorage.getItem('exercise_stats_per_set') || '{}');
+  if (!allStats[exerciseId]) {
+    allStats[exerciseId] = { sets: [] };
+  }
+  allStats[exerciseId].sets[setIndex] = { weight, reps };
+  localStorage.setItem('exercise_stats_per_set', JSON.stringify(allStats));
 };
 
 export const getRoutines = (): Routine[] => {
   if (typeof window === 'undefined') return [];
   const stored = localStorage.getItem('user_routines');
   if (!stored) {
+    const exercises = getExercises();
     const initial = [
-      { id: 'r1', name: 'Full Body A', exercises: [EXERCISES[0], EXERCISES[1], EXERCISES[3]] },
-      { id: 'r2', name: 'Push Day', exercises: [EXERCISES[0], EXERCISES[4], EXERCISES[6], EXERCISES[8]] },
+      { id: 'r1', name: 'Full Body A', exercises: [exercises[0], exercises[1], exercises[3]] },
+      { id: 'r2', name: 'Push Day', exercises: [exercises[0], exercises[4], exercises[6], exercises[8]] },
     ];
     localStorage.setItem('user_routines', JSON.stringify(initial));
     return initial;

@@ -1,13 +1,14 @@
+
 "use client"
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Sparkles, Loader2, Plus, Info } from 'lucide-react';
+import { Sparkles, Loader2, Plus } from 'lucide-react';
 import { getAiGeneratedRoutineSuggestion, type AiGeneratedRoutineSuggestionOutput } from '@/ai/flows/ai-generated-routine-suggestion';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { saveRoutine, EXERCISES } from '@/lib/store';
+import { saveRoutine, getExercises } from '@/lib/store';
 
 export function AiRoutineGenerator() {
   const [loading, setLoading] = useState(false);
@@ -17,9 +18,10 @@ export function AiRoutineGenerator() {
   const handleGenerate = async () => {
     setLoading(true);
     try {
+      // We pass some dummy preferences for now, but in a real app these could come from user input
       const result = await getAiGeneratedRoutineSuggestion({
         muscleGroupFocus: ['Borst', 'Rug'],
-        equipmentAvailable: ['Halter', 'Barbell']
+        equipmentAvailable: ['Halter', 'Barbell', 'Machine']
       });
       setSuggestion(result);
     } catch (error) {
@@ -36,16 +38,20 @@ export function AiRoutineGenerator() {
   const handleAddRoutine = () => {
     if (!suggestion) return;
     
+    // Get all current exercises to check for matches
+    const allExercises = getExercises();
+    
     // Map AI exercises to our database IDs where possible, otherwise use new ones
     const mappedExercises = suggestion.exercises.map((ex, i) => {
-      const existing = EXERCISES.find(e => e.name.toLowerCase() === ex.name.toLowerCase());
+      const existing = allExercises.find(e => e.name.toLowerCase() === ex.name.toLowerCase());
       return existing || {
         id: `ai-${Date.now()}-${i}`,
         name: ex.name,
-        muscleGroup: ex.muscleGroup as any,
+        muscleGroup: (ex.muscleGroup.charAt(0).toUpperCase() + ex.muscleGroup.slice(1)) as any,
         equipment: (ex.equipment[0] || 'Machine') as any,
         defaultSets: 3,
-        defaultReps: 12
+        defaultReps: 12,
+        imageUrl: `https://picsum.photos/seed/gym-${i}/600/400`
       };
     });
 
@@ -70,7 +76,7 @@ export function AiRoutineGenerator() {
           AI Routine Voorstel
         </CardTitle>
         <CardDescription>
-          Geen zin om te plannen? Laat onze AI een routine voor je samenstellen.
+          Laat onze AI een routine voor je samenstellen op basis van je doelen.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -1,32 +1,46 @@
 
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BottomNav } from '@/components/BottomNav';
-import { EXERCISES, type MuscleGroup } from '@/lib/store';
+import { getExercises, type Exercise, type MuscleGroup } from '@/lib/store';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ChevronRight } from 'lucide-react';
+import { Search, ChevronRight, Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { AddExerciseDialog } from '@/components/AddExerciseDialog';
 import Image from 'next/image';
 
 export default function ExercisesPage() {
   const [search, setSearch] = useState('');
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'Alle'>('Alle');
+  const [exercises, setExercises] = useState<Exercise[]>([]);
 
-  const muscleGroups: (MuscleGroup | 'Alle')[] = ['Alle', 'Borst', 'Rug', 'Benen', 'Schouders', 'Armen', 'Buik'];
+  useEffect(() => {
+    setExercises(getExercises());
+  }, []);
 
-  const filtered = EXERCISES.filter(ex => {
+  const muscleGroups: (MuscleGroup | 'Alle')[] = ['Alle', 'Borst', 'Rug', 'Benen', 'Schouders', 'Armen', 'Buik', 'Cardio'];
+
+  const filtered = exercises.filter(ex => {
     const matchesSearch = ex.name.toLowerCase().includes(search.toLowerCase());
     const matchesMuscle = selectedMuscle === 'Alle' || ex.muscleGroup === selectedMuscle;
     return matchesSearch && matchesMuscle;
   });
 
+  const handleExerciseAdded = () => {
+    setExercises(getExercises());
+  };
+
   return (
     <div className="p-5 space-y-6">
-      <header className="py-4">
-        <h1 className="text-2xl font-bold">Oefeningen</h1>
-        <p className="text-muted-foreground text-sm">Vind de juiste oefening voor je training.</p>
+      <header className="py-4 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold">Oefeningen</h1>
+          <p className="text-muted-foreground text-sm">Vind de juiste oefening voor je training.</p>
+        </div>
+        <AddExerciseDialog onExerciseAdded={handleExerciseAdded} />
       </header>
 
       <div className="relative">
