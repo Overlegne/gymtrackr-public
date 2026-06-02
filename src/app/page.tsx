@@ -41,7 +41,7 @@ export default function HomePage() {
           <CardContent className="p-4 flex flex-col gap-1">
             <Trophy className="h-5 w-5 mb-1 opacity-80" />
             <span className="text-2xl font-bold">{getExercises().length}</span>
-            <span className="text-xs opacity-80 font-medium">Oefeningen beschikbaar</span>
+            <span className="text-xs opacity-80 font-medium">Oefeningen</span>
           </CardContent>
         </Card>
       </div>

@@ -46,15 +46,15 @@ export interface WorkoutLog {
 }
 
 export const ROUTINE_COLORS = [
-  { name: 'Violet', value: '#8b5cf6' },
-  { name: 'Blue', value: '#3b82f6' },
-  { name: 'Emerald', value: '#10b981' },
-  { name: 'Rose', value: '#f43f5e' },
-  { name: 'Amber', value: '#f59e0b' },
-  { name: 'Indigo', value: '#6366f1' },
-  { name: 'Cyan', value: '#06b6d4' },
-  { name: 'Orange', value: '#f97316' },
-  { name: 'Slate', value: '#64748b' },
+  { name: 'Krachtviolet', value: '#8b5cf6' },
+  { name: 'Energetisch Blauw', value: '#3b82f6' },
+  { name: 'Fit Groen', value: '#10b981' },
+  { name: 'Actief Rood', value: '#f43f5e' },
+  { name: 'Focus Amber', value: '#f59e0b' },
+  { name: 'Indigo Kracht', value: '#6366f1' },
+  { name: 'Cyan Helderheid', value: '#06b6d4' },
+  { name: 'Oranje Energie', value: '#f97316' },
+  { name: 'Grijze Vastberadenheid', value: '#64748b' },
 ];
 
 export const DEFAULT_EXERCISES: Exercise[] = [
@@ -175,7 +175,7 @@ export const DEFAULT_EXERCISES: Exercise[] = [
   { id: '107', name: 'Heel Touches', muscleGroup: 'Buik', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 30, imageUrl: 'https://picsum.photos/seed/heeltouch/600/400' },
   { id: '108', name: 'Leg Tucks', muscleGroup: 'Buik', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 15, imageUrl: 'https://picsum.photos/seed/legtuck/600/400' },
 
-  // CARDIO (10)
+  // CARDIO (15)
   { id: '36', name: 'Treadmill Running', muscleGroup: 'Cardio', equipment: 'Machine', defaultSets: 1, defaultReps: 20, imageUrl: 'https://picsum.photos/seed/run/600/400' },
   { id: '37', name: 'Rowing Machine', muscleGroup: 'Cardio', equipment: 'Machine', defaultSets: 3, defaultReps: 500, imageUrl: 'https://picsum.photos/seed/rower/600/400' },
   { id: '38', name: 'Stationary Bike', muscleGroup: 'Cardio', equipment: 'Machine', defaultSets: 1, defaultReps: 15, imageUrl: 'https://picsum.photos/seed/bike/600/400' },
@@ -186,13 +186,18 @@ export const DEFAULT_EXERCISES: Exercise[] = [
   { id: '113', name: 'Swimming Laps', muscleGroup: 'Cardio', equipment: 'Bodyweight', defaultSets: 1, defaultReps: 10, imageUrl: 'https://picsum.photos/seed/swim/600/400' },
   { id: '114', name: 'Assault Bike', muscleGroup: 'Cardio', equipment: 'Machine', defaultSets: 3, defaultReps: 10, imageUrl: 'https://picsum.photos/seed/assault/600/400' },
   { id: '115', name: 'Shadow Boxing', muscleGroup: 'Cardio', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 180, imageUrl: 'https://picsum.photos/seed/boxing/600/400' },
+  { id: '116', name: 'High Knees', muscleGroup: 'Cardio', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 40, imageUrl: 'https://picsum.photos/seed/highknees/600/400' },
+  { id: '117', name: 'Jumping Jacks', muscleGroup: 'Cardio', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 50, imageUrl: 'https://picsum.photos/seed/jacks/600/400' },
+  { id: '118', name: 'Mountain Climbers Fast', muscleGroup: 'Cardio', equipment: 'Bodyweight', defaultSets: 3, defaultReps: 60, imageUrl: 'https://picsum.photos/seed/mount/600/400' },
+  { id: '119', name: 'Boxing (Heavy Bag)', muscleGroup: 'Cardio', equipment: 'Bodyweight', defaultSets: 1, defaultReps: 180, imageUrl: 'https://picsum.photos/seed/bag/600/400' },
+  { id: '120', name: 'Sprints', muscleGroup: 'Cardio', equipment: 'Bodyweight', defaultSets: 5, defaultReps: 100, imageUrl: 'https://picsum.photos/seed/sprints/600/400' },
 ];
 
 export const getExercises = (): Exercise[] => {
   if (typeof window === 'undefined') return DEFAULT_EXERCISES;
-  const stored = localStorage.getItem('user_exercises_v8');
+  const stored = localStorage.getItem('user_exercises_v10');
   if (!stored) {
-    localStorage.setItem('user_exercises_v8', JSON.stringify(DEFAULT_EXERCISES));
+    localStorage.setItem('user_exercises_v10', JSON.stringify(DEFAULT_EXERCISES));
     return DEFAULT_EXERCISES;
   }
   return JSON.parse(stored);
@@ -205,36 +210,36 @@ export const addExercise = (exercise: Omit<Exercise, 'id'>) => {
     id: Date.now().toString(),
   };
   exercises.push(newExercise);
-  localStorage.setItem('user_exercises_v8', JSON.stringify(exercises));
+  localStorage.setItem('user_exercises_v10', JSON.stringify(exercises));
   return newExercise;
 };
 
 export const getExerciseStats = (exerciseId: string): ExerciseStats => {
   if (typeof window === 'undefined') return { sets: {} };
-  const allStats = JSON.parse(localStorage.getItem('exercise_stats_per_set_v5') || '{}');
+  const allStats = JSON.parse(localStorage.getItem('exercise_stats_per_set_v7') || '{}');
   return allStats[exerciseId] || { sets: {} };
 };
 
 export const saveExerciseSetStats = (exerciseId: string, setIndex: number, weight: number, reps: number) => {
   if (typeof window === 'undefined') return;
-  const allStats = JSON.parse(localStorage.getItem('exercise_stats_per_set_v5') || '{}');
+  const allStats = JSON.parse(localStorage.getItem('exercise_stats_per_set_v7') || '{}');
   if (!allStats[exerciseId]) {
     allStats[exerciseId] = { sets: {} };
   }
   allStats[exerciseId].sets[setIndex] = { weight, reps };
-  localStorage.setItem('exercise_stats_per_set_v5', JSON.stringify(allStats));
+  localStorage.setItem('exercise_stats_per_set_v7', JSON.stringify(allStats));
 };
 
 export const getRoutines = (): Routine[] => {
   if (typeof window === 'undefined') return [];
-  const stored = localStorage.getItem('user_routines_v6');
+  const stored = localStorage.getItem('user_routines_v8');
   if (!stored) {
     const exercises = getExercises();
     const initial: Routine[] = [
       { id: 'r1', name: 'Full Body Kracht', exercises: [exercises[0], exercises[14], exercises[7], exercises[20]], color: '#8b5cf6' },
       { id: 'r2', name: 'Bovenlichaam Focus', exercises: [exercises[0], exercises[7], exercises[21], exercises[25]], color: '#3b82f6' },
     ];
-    localStorage.setItem('user_routines_v6', JSON.stringify(initial));
+    localStorage.setItem('user_routines_v8', JSON.stringify(initial));
     return initial;
   }
   return JSON.parse(stored);
@@ -248,37 +253,37 @@ export const saveRoutine = (routine: Routine) => {
   } else {
     routines.push(routine);
   }
-  localStorage.setItem('user_routines_v6', JSON.stringify(routines));
+  localStorage.setItem('user_routines_v8', JSON.stringify(routines));
 };
 
 export const deleteRoutine = (id: string) => {
   const routines = getRoutines().filter(r => r.id !== id);
-  localStorage.setItem('user_routines_v6', JSON.stringify(routines));
+  localStorage.setItem('user_routines_v8', JSON.stringify(routines));
 };
 
 export const logWorkout = (routine: Routine) => {
   if (typeof window === 'undefined') return;
-  const logs: WorkoutLog[] = JSON.parse(localStorage.getItem('workout_logs_v1') || '[]');
+  const logs: WorkoutLog[] = JSON.parse(localStorage.getItem('workout_logs_v2') || '[]');
   const newLog: WorkoutLog = {
     id: Date.now().toString(),
     routineId: routine.id,
     routineName: routine.name,
     routineColor: routine.color || '#8b5cf6',
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toLocaleDateString('en-CA'), // Correct YYYY-MM-DD format
   };
   logs.push(newLog);
-  localStorage.setItem('workout_logs_v1', JSON.stringify(logs));
+  localStorage.setItem('workout_logs_v2', JSON.stringify(logs));
   
   // Update last performed on routine
   const routines = getRoutines();
   const index = routines.findIndex(r => r.id === routine.id);
   if (index > -1) {
     routines[index].lastPerformed = newLog.date;
-    localStorage.setItem('user_routines_v6', JSON.stringify(routines));
+    localStorage.setItem('user_routines_v8', JSON.stringify(routines));
   }
 };
 
 export const getWorkoutLogs = (): WorkoutLog[] => {
   if (typeof window === 'undefined') return [];
-  return JSON.parse(localStorage.getItem('workout_logs_v1') || '[]');
+  return JSON.parse(localStorage.getItem('workout_logs_v2') || '[]');
 };
