@@ -1,0 +1,53 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "bench",
+      "description": "Barbell Bench Press",
+      "imageUrl": "https://picsum.photos/seed/bench/600/400",
+      "imageHint": "bench press"
+    },
+    {
+      "id": "squat",
+      "description": "Barbell Squat",
+      "imageUrl": "https://picsum.photos/seed/squat/600/400",
+      "imageHint": "barbell squat"
+    },
+    {
+      "id": "deadlift",
+      "description": "Conventional Deadlift",
+      "imageUrl": "https://picsum.photos/seed/deadlift/600/400",
+      "imageHint": "deadlift exercise"
+    },
+    {
+      "id": "pushup",
+      "description": "Standard Push-Ups",
+      "imageUrl": "https://picsum.photos/seed/pushup/600/400",
+      "imageHint": "pushup exercise"
+    },
+    {
+      "id": "bicep",
+      "description": "Bicep Curls",
+      "imageUrl": "https://picsum.photos/seed/bicep/600/400",
+      "imageHint": "bicep curl"
+    },
+    {
+      "id": "tricep",
+      "description": "Tricep Pushdown",
+      "imageUrl": "https://picsum.photos/seed/tricep/600/400",
+      "imageHint": "tricep pushdown"
+    },
+    {
+      "id": "lat",
+      "description": "Lat Pulldown",
+      "imageUrl": "https://picsum.photos/seed/lat/600/400",
+      "imageHint": "lat pulldown"
+    },
+    {
+      "id": "shoulder",
+      "description": "Overhead Press",
+      "imageUrl": "https://picsum.photos/seed/shoulder/600/400",
+      "imageHint": "shoulder press"
+    }
+  ]
+}
