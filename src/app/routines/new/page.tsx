@@ -1,17 +1,18 @@
+
 "use client"
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { getExercises, saveRoutine, getExerciseStats, kgToDisplay, ROUTINE_COLORS, type Exercise } from '@/lib/store';
+import { getExercises, saveRoutine, ROUTINE_COLORS, type Exercise } from '@/lib/store';
 import { ChevronLeft, Plus, Search, Trash2, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
-import { getSettings } from '@/lib/settings-store';
+import { getSettings, type UserSettings, DEFAULT_SETTINGS } from '@/lib/settings-store';
 
 export default function NewRoutinePage() {
   const router = useRouter();
@@ -22,16 +23,19 @@ export default function NewRoutinePage() {
   const [search, setSearch] = useState('');
   const [showPicker, setShowPicker] = useState(false);
   const [allExercises, setAllExercises] = useState<Exercise[]>([]);
-
-  const settings = useMemo(() => getSettings(), []);
-  const unitLabel = settings.unitSystem === 'Metric' ? 'kg' : 'lb';
+  const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     async function load() {
       setAllExercises(await getExercises());
+      setSettings(getSettings());
+      setMounted(true);
     }
     load();
   }, []);
+
+  const unitLabel = settings.unitSystem === 'Metric' ? 'kg' : 'lb';
 
   const handleSave = async () => {
     if (!name) {
@@ -58,6 +62,8 @@ export default function NewRoutinePage() {
     ex.name.toLowerCase().includes(search.toLowerCase()) &&
     !selectedExercises.find(s => s.id === ex.id)
   );
+
+  if (!mounted) return null;
 
   return (
     <div className="flex flex-col min-h-screen bg-background">

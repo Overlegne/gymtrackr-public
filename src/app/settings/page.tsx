@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -8,7 +9,7 @@ import { useTheme } from 'next-themes';
 import { ChevronLeft, Palette, Moon, Sun, Monitor, RotateCcw, Check, Timer, Ruler } from 'lucide-react';
 import Link from 'next/link';
 import { getCustomTheme, saveCustomTheme, resetCustomTheme } from '@/lib/theme-store';
-import { getSettings, saveSettings, type UserSettings } from '@/lib/settings-store';
+import { getSettings, saveSettings, type UserSettings, DEFAULT_SETTINGS } from '@/lib/settings-store';
 
 const PRESET_COLORS = [
   { name: 'Strength Violet', value: '250 69% 51%' },
@@ -26,10 +27,11 @@ export default function SettingsPage() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [activePrimary, setActivePrimary] = useState('250 69% 51%');
-  const [userSettings, setUserSettings] = useState<UserSettings>(getSettings());
+  const [userSettings, setUserSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
     setMounted(true);
+    setUserSettings(getSettings());
     const custom = getCustomTheme();
     if (custom) {
       setActivePrimary(custom.primary);
@@ -59,7 +61,13 @@ export default function SettingsPage() {
     saveSettings({ unitSystem: unit });
   };
 
-  if (!mounted) return null;
+  if (!mounted) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background items-center justify-center">
+        <p className="text-muted-foreground animate-pulse">Loading settings...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">

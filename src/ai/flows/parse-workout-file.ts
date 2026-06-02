@@ -1,24 +1,16 @@
 
 /**
- * @fileOverview A flow for parsing workout data from various file types.
- * Note: Node-specific libraries like pdf-parse/mammoth are guarded for browser compatibility.
+ * @fileOverview SERVER-SIDE ONLY flow for parsing workout data.
+ * This file is part of the remote parsing service and is NOT bundled with the mobile app.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-// Conditional imports to prevent crashes in browser environments
-const getParsers = async () => {
-  if (typeof window !== 'undefined') return null;
-  try {
-    const pdf = (await import('pdf-parse')).default;
-    const XLSX = await import('xlsx');
-    const mammoth = (await import('mammoth')).default;
-    return { pdf, XLSX, mammoth };
-  } catch (e) {
-    return null;
-  }
-};
+// These imports are safe because this file is only executed in a Node environment (Model 2 Parsing Service)
+import pdf from 'pdf-parse';
+import * as XLSX from 'xlsx';
+import mammoth from 'mammoth';
 
 const ImportedExerciseSchema = z.object({
   id: z.string(),
@@ -56,40 +48,32 @@ const ParseWorkoutFileInputSchema = z.object({
 
 export type ParseWorkoutFileInput = z.infer<typeof ParseWorkoutFileInputSchema>;
 
+/**
+ * Main entry point for the parsing logic (to be called by an API endpoint).
+ */
 export async function parseWorkoutFile(input: ParseWorkoutFileInput): Promise<ParseWorkoutFileOutput> {
   const { fileBase64, fileName, mimeType } = input;
-  const parsers = await getParsers();
 
   let extractedText = '';
   let isImage = false;
 
-  if (parsers && mimeType === 'application/pdf') {
-    const buffer = typeof window === 'undefined' ? Buffer.from(fileBase64, 'base64') : null;
-    if (buffer) {
-      const pdfData = await parsers.pdf(buffer);
-      extractedText = pdfData.text;
-    }
-  } else if (parsers && (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv' || fileName.endsWith('.ods'))) {
-    const buffer = typeof window === 'undefined' ? Buffer.from(fileBase64, 'base64') : null;
-    if (buffer) {
-      const workbook = parsers.XLSX.read(buffer, { type: 'buffer' });
-      const firstSheetName = workbook.SheetNames[0];
-      extractedText = parsers.XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheetName]);
-    }
-  } else if (parsers && (mimeType.includes('word') || mimeType.includes('officedocument.wordprocessingml.document'))) {
-    const buffer = typeof window === 'undefined' ? Buffer.from(fileBase64, 'base64') : null;
-    if (buffer) {
-      const docResult = await parsers.mammoth.extractRawText({ buffer });
-      extractedText = docResult.value;
-    }
+  const buffer = Buffer.from(fileBase64, 'base64');
+
+  if (mimeType === 'application/pdf') {
+    const pdfData = await pdf(buffer);
+    extractedText = pdfData.text;
+  } else if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv' || fileName.endsWith('.ods')) {
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    const firstSheetName = workbook.SheetNames[0];
+    extractedText = XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheetName]);
+  } else if (mimeType.includes('word') || mimeType.includes('officedocument.wordprocessingml.document')) {
+    const docResult = await mammoth.extractRawText({ buffer });
+    extractedText = docResult.value;
   } else if (mimeType.startsWith('image/')) {
     isImage = true;
   } else {
-    // Basic text fallback for browser or unknown types
     try {
-      extractedText = typeof window === 'undefined' 
-        ? Buffer.from(fileBase64, 'base64').toString('utf-8') 
-        : atob(fileBase64);
+      extractedText = buffer.toString('utf-8');
     } catch (e) {
       extractedText = '';
     }
@@ -113,7 +97,7 @@ const prompt = ai.definePrompt({
     }),
   },
   output: { schema: ParseWorkoutFileOutputSchema },
-  prompt: `You are an expert fitness coach and data analyst. Extract a structured workout routine.
+  prompt: `You are an expert fitness coach and data analyst. Extract a structured workout routine from the provided file content.
 SOURCE FILENAME: {{{fileName}}}
 
 {{#if extractedText}}
@@ -124,7 +108,14 @@ RAW TEXT CONTENT:
 {{#if imageDataUri}}
 The user has provided an image of their workout plan:
 {{media url=imageDataUri}}
-{{/if}}`,
+{{/if}}
+
+Rules:
+1. Identify the workout name/title.
+2. Group exercises into logical 'days' or 'sessions' if present.
+3. For each exercise, identify: name, sets, and reps (or duration for timed holds).
+4. Set 'needsReview' to true if the data is ambiguous.
+5. Provide a confidence score for each item.`,
 });
 
 const parseWorkoutFileFlow = ai.defineFlow(

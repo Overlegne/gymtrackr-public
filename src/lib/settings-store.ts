@@ -8,11 +8,15 @@ export interface UserSettings {
 
 const SETTINGS_KEY = 'my_strength_path_user_settings';
 
-const DEFAULT_SETTINGS: UserSettings = {
+export const DEFAULT_SETTINGS: UserSettings = {
   defaultRestDuration: 60,
   unitSystem: 'Metric',
 };
 
+/**
+ * Returns settings if in browser, otherwise returns defaults.
+ * Components should ideally call this in useEffect to avoid hydration mismatches.
+ */
 export const getSettings = (): UserSettings => {
   if (typeof window === 'undefined') return DEFAULT_SETTINGS;
   const stored = localStorage.getItem(SETTINGS_KEY);
