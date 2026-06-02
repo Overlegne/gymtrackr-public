@@ -228,7 +228,7 @@ export default function SettingsPage() {
 
         {/* Footer Text */}
         <div className="text-center space-y-2 pb-10">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-foreground">My Strength Path v2.0</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-foreground">Gymtrackr v0.1.0 Alpha</p>
           <p className="text-[10px] font-bold leading-relaxed max-w-[240px] mx-auto text-muted-foreground">Design and colors are optimized for contrast and readability in all lighting conditions.</p>
         </div>
       </main>

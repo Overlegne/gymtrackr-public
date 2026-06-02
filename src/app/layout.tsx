@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { CustomStyleInjector } from "@/components/CustomStyleInjector"
 
 export const metadata: Metadata = {
-  title: 'My Strength Path',
+  title: 'Gymtrackr',
   description: 'Your personal gym log and routine tracker',
 };
 
