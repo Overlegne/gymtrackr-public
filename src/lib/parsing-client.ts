@@ -71,7 +71,12 @@ export async function callParsingService(request: ParsingRequest): Promise<Parsi
       }
 
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Parsing service returned ${response.status}`);
+      
+      // Attempt to build a descriptive error message from the response
+      const errorMessage = errorData.message || `Parsing service returned ${response.status}`;
+      const detailedMessage = errorData.details ? `${errorMessage}: ${errorData.details}` : errorMessage;
+      
+      throw new Error(detailedMessage);
     }
 
     return await response.json();
