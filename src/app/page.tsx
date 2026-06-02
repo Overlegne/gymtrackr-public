@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from 'react';
@@ -14,9 +15,14 @@ export default function HomePage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setRoutines(getRoutines());
-    setExercisesCount(getExercises().length);
-    setMounted(true);
+    async function load() {
+      const r = await getRoutines();
+      const ex = await getExercises();
+      setRoutines(r);
+      setExercisesCount(ex.length);
+      setMounted(true);
+    }
+    load();
   }, []);
 
   if (!mounted) return null;

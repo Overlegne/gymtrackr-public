@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState, use, useMemo } from 'react';
@@ -40,6 +41,7 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
   const [exercises, setExercises] = useState<RoutineExercise[]>([]);
   const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [suggestions, setSuggestions] = useState<Record<string, ProgressionSuggestion | null>>({});
   
   // Settings
   const settings = useMemo(() => getSettings(), []);
@@ -52,50 +54,53 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
   const [restDuration, setRestDuration] = useState(60);
 
   useEffect(() => {
-    setRestDuration(settings.defaultRestDuration);
+    async function load() {
+      setRestDuration(settings.defaultRestDuration);
 
-    // Session Management: Check if we already have an active session for this routine
-    const existingSession = getActiveWorkoutSession();
-    if (existingSession && existingSession.routineId === id) {
-      setSessionStartTime(existingSession.startTime);
-    } else {
-      const newStartTime = Date.now();
-      setSessionStartTime(newStartTime);
-      startActiveWorkoutSession(id);
-    }
+      const existingSession = await getActiveWorkoutSession();
+      if (existingSession && existingSession.routineId === id) {
+        setSessionStartTime(existingSession.startTime);
+      } else {
+        const newStartTime = Date.now();
+        setSessionStartTime(newStartTime);
+        await startActiveWorkoutSession(id);
+      }
 
-    const routines = getRoutines();
-    const found = routines.find(r => r.id === id);
-    if (found) {
-      setRoutine(found);
-      const initialized = found.exercises.map(ex => {
-        const stats = getExerciseStats(ex.id);
-        return {
-          ...ex,
-          sets: Array.from({ length: ex.defaultSets }, (_, i) => {
-            const prevSetStats = stats.sets[i.toString()] || stats.sets["0"] || null;
-            return {
-              reps: prevSetStats?.reps || ex.defaultReps,
-              weight: prevSetStats?.weight || 0, // internally stored in kg
-              durationSeconds: prevSetStats?.durationSeconds || ex.defaultDurationSeconds || 0,
-              completed: false
-            };
-          })
-        };
-      });
-      setExercises(initialized);
+      const routines = await getRoutines();
+      const found = routines.find(r => r.id === id);
+      if (found) {
+        setRoutine(found);
+        const initialized: RoutineExercise[] = [];
+        const suggMap: Record<string, ProgressionSuggestion | null> = {};
+        
+        for (const ex of found.exercises) {
+          const stats = await getExerciseStats(ex.id);
+          suggMap[ex.id] = await getProgressionSuggestion(ex.id);
+          initialized.push({
+            ...ex,
+            sets: Array.from({ length: ex.defaultSets }, (_, i) => {
+              const prevSetStats = stats.sets[i.toString()] || stats.sets["0"] || null;
+              return {
+                reps: prevSetStats?.reps || ex.defaultReps,
+                weight: prevSetStats?.weight || 0,
+                durationSeconds: prevSetStats?.durationSeconds || ex.defaultDurationSeconds || 0,
+                completed: false
+              };
+            })
+          });
+        }
+        setExercises(initialized);
+        setSuggestions(suggMap);
+      }
     }
+    load();
   }, [id, settings]);
 
-  // Live Timer Update
   useEffect(() => {
     if (!sessionStartTime) return;
-
     const interval = setInterval(() => {
-      const seconds = Math.floor((Date.now() - sessionStartTime) / 1000);
-      setElapsedTime(seconds);
+      setElapsedTime(Math.floor((Date.now() - sessionStartTime) / 1000));
     }, 1000);
-
     return () => clearInterval(interval);
   }, [sessionStartTime]);
 
@@ -104,19 +109,16 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
     const set = newExs[exIndex].sets[setIndex];
     const wasCompleted = set.completed;
     set.completed = !set.completed;
-    
     if (!wasCompleted) {
       setTimerTrigger(Date.now());
       setShowTimer(true);
     }
-    
     setExercises(newExs);
   };
 
   const updateSetWeight = (exIdx: number, setIdx: number, displayValue: number) => {
     const newExs = [...exercises];
-    const kgValue = displayToKg(Math.max(0, displayValue), settings.unitSystem);
-    newExs[exIdx].sets[setIdx].weight = kgValue;
+    newExs[exIdx].sets[setIdx].weight = displayToKg(Math.max(0, displayValue), settings.unitSystem);
     setExercises(newExs);
   };
 
@@ -132,37 +134,24 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
     setExercises(newExs);
   };
 
-  const formatSeconds = (totalSeconds: number) => {
+  const formatElapsedTime = (totalSeconds: number) => {
     const mins = Math.floor(totalSeconds / 60);
     const secs = totalSeconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const formatElapsedTime = (totalSeconds: number) => {
-    const hours = Math.floor(totalSeconds / 3600);
-    const mins = Math.floor((totalSeconds % 3600) / 60);
-    const secs = totalSeconds % 60;
-    
-    if (hours > 0) {
-      return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const handleFinish = () => {
+  const handleFinish = async () => {
     if (routine && sessionStartTime) {
-      const processedExercises = exercises.map(ex => ({
+      const processed = exercises.map(ex => ({
         ...ex,
         sets: ex.sets.map(s => ({
           ...s,
           completed: s.completed || s.weight > 0 || s.reps > 0 || (s.durationSeconds && s.durationSeconds > 0)
         }))
       }));
-      
-      const summary = saveAllWorkoutStats(processedExercises);
-      const finalDurationSeconds = Math.round((Date.now() - sessionStartTime) / 1000);
-      logWorkout(routine, finalDurationSeconds, summary.totalVolume);
-      
+      await saveAllWorkoutStats(processed);
+      const finalDur = Math.round((Date.now() - sessionStartTime) / 1000);
+      await logWorkout(routine, finalDur, processed.reduce((acc, ex) => acc + ex.sets.reduce((v, s) => v + (s.weight * s.reps), 0), 0));
       router.push('/workout/summary');
     } else {
       router.push('/');
@@ -189,7 +178,6 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
                   {formatElapsedTime(elapsedTime)}
                 </span>
               </div>
-              <span className="text-[9px] text-muted-foreground uppercase font-black tracking-widest opacity-60">Live Session</span>
             </div>
           </div>
         </div>
@@ -200,27 +188,17 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
 
       <div className="p-5 space-y-6 pb-40">
         {exercises.map((ex, exIdx) => {
-          const suggestion = getProgressionSuggestion(ex.id);
-          
+          const suggestion = suggestions[ex.id];
           return (
             <Card key={ex.id} className="border-none shadow-md overflow-hidden bg-card">
               <CardHeader className="pb-3" style={{ backgroundColor: `${routine.color}10` }}>
                 <div className="flex justify-between items-center gap-4">
                   <div className="flex items-center gap-3">
                     <div className="relative w-12 h-12 rounded-lg overflow-hidden border bg-muted shrink-0">
-                      <Image 
-                        src={ex.imageUrl} 
-                        alt={ex.name} 
-                        fill 
-                        className="object-cover"
-                        data-ai-hint="gym exercise"
-                      />
+                      <Image src={ex.imageUrl} alt={ex.name} fill className="object-cover" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        {ex.name}
-                        {ex.loggingType === 'duration' && <Clock className="h-3.5 w-3.5 text-primary opacity-60" />}
-                      </CardTitle>
+                      <CardTitle className="text-lg flex items-center gap-2">{ex.name}</CardTitle>
                       <Badge variant="outline" className="text-[10px] uppercase border-border">{ex.muscleGroup}</Badge>
                     </div>
                   </div>
@@ -229,199 +207,61 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
               
               {suggestion && (
                 <div className="mx-4 mt-2 mb-0">
-                  <div className="bg-primary/5 border border-primary/10 rounded-2xl p-3 flex gap-3 items-start relative group">
+                  <div className="bg-primary/5 border border-primary/10 rounded-2xl p-3 flex gap-3 items-start">
                     <div className="h-7 w-7 rounded-xl bg-primary/20 flex items-center justify-center text-primary shrink-0">
                       <Sparkles className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex justify-between items-center mb-1">
-                        <p className="text-[10px] font-black uppercase text-primary tracking-widest">Coach's Suggestion</p>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full text-muted-foreground">
-                                <Info className="h-3 w-3" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-[200px] text-[10px] font-bold leading-relaxed">
-                              {suggestion.reason}
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                      <div className="flex items-baseline gap-2 overflow-hidden">
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase shrink-0">Target:</span>
-                        <span className="text-xs font-black text-foreground truncate">
-                          {suggestion.type === 'increase_duration' ? (
-                            `Hold for ${suggestion.suggestedDuration}s`
-                          ) : (
-                            `${suggestion.suggestedWeight ? kgToDisplay(suggestion.suggestedWeight, settings.unitSystem) + unitLabel : ''} ${suggestion.suggestedWeight && suggestion.suggestedReps ? 'x' : ''} ${suggestion.suggestedReps ? suggestion.suggestedReps + ' reps' : ''}`
-                          )}
-                        </span>
-                        <span className="text-[8px] font-bold text-muted-foreground uppercase italic shrink-0">
-                          (Last: {suggestion.lastStatsText})
-                        </span>
-                      </div>
+                      <p className="text-[10px] font-black uppercase text-primary tracking-widest">Coach's Suggestion</p>
+                      <span className="text-xs font-black text-foreground truncate">
+                        {suggestion.type === 'increase_duration' ? `Hold for ${suggestion.suggestedDuration}s` : `${suggestion.suggestedWeight ? kgToDisplay(suggestion.suggestedWeight, settings.unitSystem) + unitLabel : ''} x ${suggestion.suggestedReps} reps`}
+                      </span>
                     </div>
                   </div>
                 </div>
               )}
 
               <CardContent className="p-0">
-                <div className="grid grid-cols-12 gap-2 p-4 text-[10px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border">
-                  <div className="col-span-2 text-center">Set</div>
-                  {ex.loggingType === 'duration' ? (
-                     <div className="col-span-8 text-center">Duration (MM:SS)</div>
-                  ) : (
-                    <>
-                      <div className="col-span-4 text-center">Weight ({unitLabel})</div>
-                      <div className="col-span-4 text-center">Reps</div>
-                    </>
-                  )}
-                  <div className="col-span-2"></div>
-                </div>
-                
                 {ex.sets.map((set, setIdx) => {
                   const displayWeight = kgToDisplay(set.weight, settings.unitSystem);
                   return (
-                    <div 
-                      key={setIdx} 
-                      className={`grid grid-cols-12 gap-2 p-3 items-center border-b border-border last:border-0 transition-colors ${set.completed ? 'bg-primary/5' : ''}`}
-                    >
+                    <div key={setIdx} className={`grid grid-cols-12 gap-2 p-3 items-center border-b border-border last:border-0 ${set.completed ? 'bg-primary/5' : ''}`}>
                       <div className="col-span-2 text-center font-bold text-muted-foreground">{setIdx + 1}</div>
-                      
                       {ex.loggingType === 'duration' ? (
                         <div className="col-span-8 flex items-center bg-muted/30 rounded-lg p-1">
-                          <button 
-                            onClick={() => updateSetDuration(exIdx, setIdx, (set.durationSeconds || 0) - 5)}
-                            className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
-                            disabled={set.completed}
-                            style={{ color: routine.color }}
-                          >
-                            <Minus className="h-3 w-3" />
-                          </button>
-                          <div className="flex-1 text-center font-bold text-sm">
-                            {formatSeconds(set.durationSeconds || 0)}
-                          </div>
-                          <button 
-                            onClick={() => updateSetDuration(exIdx, setIdx, (set.durationSeconds || 0) + 5)}
-                            className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
-                            disabled={set.completed}
-                            style={{ color: routine.color }}
-                          >
-                            <Plus className="h-3 w-3" />
-                          </button>
+                          <button onClick={() => updateSetDuration(exIdx, setIdx, (set.durationSeconds || 0) - 5)} className="h-8 w-8 flex items-center justify-center" disabled={set.completed}><Minus className="h-3 w-3" /></button>
+                          <div className="flex-1 text-center font-bold text-sm">{(set.durationSeconds || 0)}s</div>
+                          <button onClick={() => updateSetDuration(exIdx, setIdx, (set.durationSeconds || 0) + 5)} className="h-8 w-8 flex items-center justify-center" disabled={set.completed}><Plus className="h-3 w-3" /></button>
                         </div>
                       ) : (
                         <>
                           <div className="col-span-4 flex items-center bg-muted/30 rounded-lg p-1">
-                            <button 
-                              onClick={() => updateSetWeight(exIdx, setIdx, displayWeight - weightStep)}
-                              className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
-                              disabled={set.completed}
-                              style={{ color: routine.color }}
-                            >
-                              <Minus className="h-3 w-3" />
-                            </button>
-                            <input
-                              type="number"
-                              step={weightStep}
-                              value={displayWeight}
-                              onChange={(e) => updateSetWeight(exIdx, setIdx, parseFloat(e.target.value) || 0)}
-                              disabled={set.completed}
-                              className="w-full bg-transparent text-center font-bold text-sm focus:outline-none"
-                            />
-                            <button 
-                              onClick={() => updateSetWeight(exIdx, setIdx, displayWeight + weightStep)}
-                              className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
-                              disabled={set.completed}
-                              style={{ color: routine.color }}
-                            >
-                              <Plus className="h-3 w-3" />
-                            </button>
+                            <button onClick={() => updateSetWeight(exIdx, setIdx, displayWeight - weightStep)} className="h-8 w-8 flex items-center justify-center" disabled={set.completed}><Minus className="h-3 w-3" /></button>
+                            <input type="number" step={weightStep} value={displayWeight} onChange={(e) => updateSetWeight(exIdx, setIdx, parseFloat(e.target.value) || 0)} disabled={set.completed} className="w-full bg-transparent text-center font-bold text-sm focus:outline-none" />
+                            <button onClick={() => updateSetWeight(exIdx, setIdx, displayWeight + weightStep)} className="h-8 w-8 flex items-center justify-center" disabled={set.completed}><Plus className="h-3 w-3" /></button>
                           </div>
-
                           <div className="col-span-4 flex items-center bg-muted/30 rounded-lg p-1">
-                            <button 
-                              onClick={() => updateSetReps(exIdx, setIdx, set.reps - 1)}
-                              className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
-                              disabled={set.completed}
-                              style={{ color: routine.color }}
-                            >
-                              <Minus className="h-3 w-3" />
-                            </button>
-                            <input
-                              type="number"
-                              value={set.reps}
-                              onChange={(e) => updateSetReps(exIdx, setIdx, parseInt(e.target.value) || 0)}
-                              disabled={set.completed}
-                              className="w-full bg-transparent text-center font-bold text-sm focus:outline-none"
-                            />
-                            <button 
-                              onClick={() => updateSetReps(exIdx, setIdx, set.reps + 1)}
-                              className="h-8 w-8 flex items-center justify-center disabled:opacity-30"
-                              disabled={set.completed}
-                              style={{ color: routine.color }}
-                            >
-                              <Plus className="h-3 w-3" />
-                            </button>
+                            <button onClick={() => updateSetReps(exIdx, setIdx, set.reps - 1)} className="h-8 w-8 flex items-center justify-center" disabled={set.completed}><Minus className="h-3 w-3" /></button>
+                            <input type="number" value={set.reps} onChange={(e) => updateSetReps(exIdx, setIdx, parseInt(e.target.value) || 0)} disabled={set.completed} className="w-full bg-transparent text-center font-bold text-sm focus:outline-none" />
+                            <button onClick={() => updateSetReps(exIdx, setIdx, set.reps + 1)} className="h-8 w-8 flex items-center justify-center" disabled={set.completed}><Plus className="h-3 w-3" /></button>
                           </div>
                         </>
                       )}
-
                       <div className="col-span-2 flex justify-end">
-                        <button
-                          onClick={() => toggleSet(exIdx, setIdx)}
-                          className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
-                            set.completed 
-                              ? 'bg-primary text-primary-foreground shadow-inner scale-90' 
-                              : 'border border-border'
-                          }`}
-                          style={!set.completed ? { backgroundColor: `${routine.color}10`, color: routine.color, borderColor: `${routine.color}20` } : {}}
-                        >
+                        <button onClick={() => toggleSet(exIdx, setIdx)} className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${set.completed ? 'bg-primary text-primary-foreground' : 'border border-border'}`}>
                           <Check className={`h-5 w-5 ${set.completed ? 'stroke-[3px]' : 'stroke-1'}`} />
                         </button>
                       </div>
                     </div>
                   );
                 })}
-                
-                <div className="p-3">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="w-full font-bold gap-2 h-10 rounded-xl"
-                    style={{ backgroundColor: `${routine.color}05`, color: routine.color }}
-                    onClick={() => {
-                      const stats = getExerciseStats(ex.id);
-                      const newExs = [...exercises];
-                      const nextSetIdx = newExs[exIdx].sets.length;
-                      const prevSetStats = stats.sets[nextSetIdx.toString()] || stats.sets["0"] || null;
-                      newExs[exIdx].sets.push({
-                        reps: prevSetStats?.reps || ex.defaultReps,
-                        weight: prevSetStats?.weight || 0,
-                        durationSeconds: prevSetStats?.durationSeconds || ex.defaultDurationSeconds || 0,
-                        completed: false
-                      });
-                      setExercises(newExs);
-                    }}
-                  >
-                    <Plus className="h-4 w-4" /> Add Set
-                  </Button>
-                </div>
               </CardContent>
             </Card>
           );
         })}
       </div>
 
-      {showTimer && (
-        <RestTimer 
-          duration={restDuration} 
-          trigger={timerTrigger} 
-          onClose={() => setShowTimer(false)} 
-        />
-      )}
+      {showTimer && <RestTimer duration={restDuration} trigger={timerTrigger} onClose={() => setShowTimer(false)} />}
     </div>
   );
 }

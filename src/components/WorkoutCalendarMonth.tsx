@@ -25,7 +25,10 @@ export function WorkoutCalendarMonth() {
   const [logs, setLogs] = React.useState<WorkoutLog[]>([])
 
   React.useEffect(() => {
-    setLogs(getWorkoutLogs())
+    async function load() {
+      setLogs(await getWorkoutLogs());
+    }
+    load();
   }, [])
 
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1))
@@ -162,9 +165,6 @@ export function WorkoutCalendarMonth() {
                               style={{ backgroundColor: log.routineColor }}
                             />
                           ))}
-                          {dayLogs.length > 2 && (
-                            <span className="text-[7px] font-black text-muted-foreground">+{dayLogs.length - 2}</span>
-                          )}
                         </div>
                         <div className="text-[7px] font-black text-muted-foreground leading-tight truncate uppercase tracking-tighter opacity-80">
                           {dayLogs[0].routineName}
@@ -177,13 +177,6 @@ export function WorkoutCalendarMonth() {
             })}
           </div>
         </div>
-      </div>
-
-      <div className="bg-muted/30 p-6 rounded-[2rem] border border-dashed border-border/60">
-        <h4 className="text-[10px] font-black uppercase tracking-widest text-primary/60 mb-2">Trainer Tip</h4>
-        <p className="text-xs text-muted-foreground leading-relaxed font-medium">
-          Consistency is better than intensity. A short workout is always better than no workout. Keep those dots coming!
-        </p>
       </div>
     </div>
   )

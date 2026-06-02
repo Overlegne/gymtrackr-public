@@ -1,6 +1,14 @@
+
 import exercisesData from './exercises.json';
 import { getSettings } from './settings-store';
 
+/**
+ * GYMTRACKR LOCAL-FIRST DATA LAYER
+ * This file implements a durable asynchronous storage engine using IndexedDB.
+ * Each device maintains its own isolated database. No cloud authentication required.
+ */
+
+// Types
 export type MuscleGroup = 'Chest' | 'Back' | 'Legs' | 'Shoulders' | 'Arms' | 'Abs' | 'Cardio';
 export type Equipment = 'Dumbbell' | 'Barbell' | 'Machine' | 'Cable' | 'Bodyweight';
 export type LoggingType = 'weight_reps' | 'duration';
@@ -16,7 +24,6 @@ export interface Exercise {
   loggingType: LoggingType;
   imageUrl: string;
   imageNeedsReview?: boolean;
-  // Extended Metadata
   secondaryMuscles?: string[];
   description?: string;
   cues?: string[];
@@ -112,26 +119,86 @@ export interface ProgressionSuggestion {
   lastStatsText: string;
 }
 
-export const ROUTINE_COLORS = [
-  { name: 'Strength Violet', value: '#8b5cf6' },
-  { name: 'Energetic Blue', value: '#3b82f6' },
-  { name: 'Fit Green', value: '#10b981' },
-  { name: 'Active Red', value: '#f43f5e' },
-  { name: 'Focus Amber', value: '#f59e0b' },
-  { name: 'Indigo Power', value: '#6366f1' },
-  { name: 'Cyan Clarity', value: '#06b6d4' },
-  { name: 'Orange Energy', value: '#f97316' },
-  { name: 'Gray Grit', value: '#64748b' },
-];
+// Storage Constants
+const DB_NAME = 'gymtrackr_local_db';
+const DB_VERSION = 1;
+const STORES = {
+  EXERCISES: 'exercises',
+  ROUTINES: 'routines',
+  STATS: 'exercise_stats',
+  LOGS: 'workout_logs',
+  HISTORY: 'exercise_history',
+  SUMMARY: 'last_summary',
+  ACTIVE_SESSION: 'active_session'
+};
 
-// Conversion Constants
+// IndexedDB Helper
+const openDB = (): Promise<IDBDatabase> => {
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined') return reject('Not in browser');
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = (event) => {
+      const db = (event.target as IDBOpenDBRequest).result;
+      Object.values(STORES).forEach(store => {
+        if (!db.objectStoreNames.contains(store)) {
+          db.createObjectStore(store, store === STORES.SUMMARY || store === STORES.ACTIVE_SESSION ? { keyPath: 'id' } : { keyPath: 'id' });
+        }
+      });
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+};
+
+// Generic CRUD helpers
+async function dbGet<T>(storeName: string, id: string): Promise<T | null> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(storeName, 'readonly');
+    const store = transaction.objectStore(storeName);
+    const request = store.get(id);
+    request.onsuccess = () => resolve(request.result || null);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function dbGetAll<T>(storeName: string): Promise<T[]> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(storeName, 'readonly');
+    const store = transaction.objectStore(storeName);
+    const request = store.getAll();
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function dbPut<T>(storeName: string, data: T): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(storeName, 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const request = store.put(data);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function dbDelete(storeName: string, id: string): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(storeName, 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const request = store.delete(id);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// --- Domain Logic ---
+
 const KG_TO_LB = 2.20462;
 
-/**
- * Unit Conversion Helpers
- * Internally we store everything in KG.
- * Support 0.25 precision for Metric.
- */
 export function kgToDisplay(kg: number, system: 'Metric' | 'Imperial'): number {
   if (system === 'Metric') return Math.round(kg * 100) / 100;
   return Math.round(kg * KG_TO_LB * 10) / 10;
@@ -142,272 +209,90 @@ export function displayToKg(value: number, system: 'Metric' | 'Imperial'): numbe
   return value / KG_TO_LB;
 }
 
-/**
- * Normalizes an exercise name for consistent mapping.
- */
 export function normalizeExerciseName(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]/g, '_')
-    .replace(/_{2,}/g, '_');
+  return name.toLowerCase().trim().replace(/[^a-z0-9]/g, '_').replace(/_{2,}/g, '_');
 }
 
-/**
- * Coaching Cues and Metadata Database
- * Generates context-aware coaching information.
- */
-export const getCoachingData = (name: string, equipment: Equipment, muscle: MuscleGroup) => {
-  const n = name.toLowerCase();
-  const data: Partial<Exercise> = {
-    cues: ["Control the movement", "Full range of motion", "Brace your core"],
-    alternatives: [],
-    mistakes: ["Using momentum", "Short range of motion"],
-    secondaryMuscles: []
-  };
-
-  // Chest Patterns
-  if (muscle === 'Chest') {
-    data.cues = ["Retract shoulder blades", "Squeeze chest at top", "Control descent", "Stack wrists over elbows"];
-    data.secondaryMuscles = ["Triceps", "Front Delts"];
-    data.mistakes = ["Flaring elbows too wide", "Bouncing bar off chest"];
-    if (n.includes('dumbbell')) {
-      data.alternatives = [{ name: "Barbell Bench Press", id: "barbell_bench_press" }];
-    } else {
-      data.alternatives = [{ name: "Dumbbell Bench Press", id: "dumbbell_bench_press" }];
-    }
-  } 
-  // Back Patterns
-  else if (muscle === 'Back') {
-    data.cues = ["Pull with elbows", "Squeeze shoulder blades", "Avoid torso rock", "Chest up throughout"];
-    data.secondaryMuscles = ["Biceps", "Rear Delts", "Forearms"];
-    data.mistakes = ["Using too much body English", "Rounded lower back"];
-    if (n.includes('row')) {
-      data.alternatives = [{ name: "Lat Pulldown", id: "wide_grip_pulldown" }];
-    } else {
-      data.alternatives = [{ name: "Seated Cable Row", id: "seated_cable_row" }];
-    }
+export const getExercises = async (): Promise<Exercise[]> => {
+  const stored = await dbGetAll<Exercise>(STORES.EXERCISES);
+  if (stored.length === 0) {
+    const initial = (exercisesData.exercises as any[]).map(ex => {
+      const muscleGroup = mapBodyPart(ex.body_part);
+      const equipment = determineEquipment(ex.canonical_name);
+      const imageData = getExerciseImage(ex.canonical_name, ex.id, muscleGroup, equipment);
+      const loggingType = determineLoggingType(ex.canonical_name);
+      return {
+        id: ex.id,
+        name: ex.canonical_name,
+        muscleGroup,
+        equipment,
+        defaultSets: 3,
+        defaultReps: loggingType === 'duration' ? 0 : 12,
+        defaultDurationSeconds: loggingType === 'duration' ? 60 : undefined,
+        loggingType,
+        imageUrl: imageData.url,
+        imageNeedsReview: imageData.needsReview,
+        ...getCoachingData(ex.canonical_name, equipment, muscleGroup)
+      } as Exercise;
+    });
+    for (const ex of initial) await dbPut(STORES.EXERCISES, ex);
+    return initial;
   }
-  // Leg Patterns
-  else if (muscle === 'Legs') {
-    data.cues = ["Drive through heels", "Keep chest proud", "Knees out", "Brace core heavily"];
-    data.secondaryMuscles = ["Glutes", "Lower Back", "Adductors"];
-    data.mistakes = ["Knees caving in", "Heels lifting off floor"];
-    if (n.includes('squat')) {
-      data.alternatives = [{ name: "Leg Press", id: "leg_press" }];
-    } else if (n.includes('deadlift')) {
-      data.alternatives = [{ name: "Romanian Deadlift", id: "romanian_deadlift" }];
-    }
-  }
-  // Arm Patterns
-  else if (muscle === 'Arms') {
-    data.cues = ["Isolate the muscle", "No momentum", "Full extension", "Keep elbows stationary"];
-    data.secondaryMuscles = ["Forearms"];
-    data.mistakes = ["Swinging the weight", "Partial range of motion"];
-    if (n.includes('bicep')) {
-      data.alternatives = [{ name: "Hammer Curl", id: "hammer_curl" }];
-    } else {
-      data.alternatives = [{ name: "Skull Crushers", id: "skull_crushers" }];
-    }
-  }
-  // Shoulder Patterns
-  else if (muscle === 'Shoulders') {
-    data.cues = ["Neutral wrists", "Drive vertically", "Core braced", "Controlled negative"];
-    data.secondaryMuscles = ["Triceps", "Upper Traps"];
-    data.mistakes = ["Arching lower back", "Partial reps"];
-    data.alternatives = [{ name: "Arnold Press", id: "arnold_press" }];
-  }
-
-  return data;
+  return stored;
 };
 
-const exerciseImageMap: Record<string, string> = {
-  barbell_bench_press: 'bench_press',
-  dumbbell_bench_press: 'dumbbell_press',
-  incline_barbell_bench_press: 'incline_bench',
-  pec_deck: 'pec_deck_machine',
-  chest_dips: 'chest_dips',
-  push_ups: 'push_ups',
-  barbell_deadlift: 'deadlift',
-  barbell_row: 'bent_over_row',
-  pull_up: 'pull_up',
-  wide_grip_pulldown: 'lat_pulldown',
-  seated_cable_row: 'cable_row',
-  hyperextensions: 'back_extension',
-  barbell_squat: 'barbell_squat',
-  leg_press: 'leg_press_machine',
-  leg_extension: 'leg_extension_machine',
-  lying_leg_curl: 'leg_curl_machine',
-  romanian_deadlift: 'romanian_deadlift',
-  calf_raise_standing: 'calf_raise',
-  dumbbell_shoulder_press: 'shoulder_press',
-  dumbbell_lateral_raise: 'lateral_raise',
-  face_pull: 'face_pull_cable',
-  arnold_press: 'arnold_press',
-  barbell_curl: 'bicep_curl',
-  triceps_pressdown: 'tricep_pushdown',
-  skull_crushers: 'skull_crusher_tricep',
-  hammer_curl: 'hammer_curl',
-  plank: 'plank_core',
-  crunch: 'abs_crunch',
-  hanging_leg_raise: 'hanging_leg_raise',
-  running_treadmill: 'treadmill_running',
-  burpees: 'burpees_exercise',
-};
-
-const categoryFallbackMap: Record<string, string> = {
-  'Chest_Barbell': 'barbell_chest_generic',
-  'Chest_Dumbbell': 'dumbbell_chest_generic',
-  'Chest_Machine': 'machine_chest_generic',
-  'Back_Barbell': 'barbell_back_generic',
-  'Back_Cable': 'cable_back_generic',
-  'Legs_Barbell': 'barbell_legs_generic',
-  'Legs_Machine': 'machine_legs_generic',
-  'Arms_Dumbbell': 'dumbbell_arms_generic',
-  'Shoulders_Dumbbell': 'dumbbell_shoulders_generic',
-  'Abs_Bodyweight': 'bodyweight_abs_generic',
-  'Cardio_Bodyweight': 'cardio_generic',
-};
-
-export function getExerciseImage(
-  name: string,
-  id: string,
-  muscleGroup: MuscleGroup,
-  equipment: Equipment
-): { url: string; needsReview: boolean } {
-  const normalizedId = normalizeExerciseName(id);
-  const normalizedName = normalizeExerciseName(name);
-
-  if (exerciseImageMap[normalizedId]) {
-    return {
-      url: `https://picsum.photos/seed/${exerciseImageMap[normalizedId]}/600/400`,
-      needsReview: false,
-    };
-  }
-
-  const fallbackKey = `${muscleGroup}_${equipment}`;
-  const fallbackSeed = categoryFallbackMap[fallbackKey] || normalizeExerciseName(`${muscleGroup}_${equipment}`);
-  
-  return {
-    url: `https://picsum.photos/seed/${fallbackSeed}/600/400`,
-    needsReview: true,
-  };
-}
-
-const mapBodyPart = (part: string | null): MuscleGroup => {
-  if (!part) return 'Cardio';
-  const p = part.toLowerCase();
-  if (p.includes('chest')) return 'Chest';
-  if (p.includes('back')) return 'Back';
-  if (p.includes('legs') || p.includes('calves')) return 'Legs';
-  if (p.includes('shoulders')) return 'Shoulders';
-  if (p.includes('biceps') || p.includes('triceps') || p.includes('arms')) return 'Arms';
-  if (p.includes('abdominals') || p.includes('abs')) return 'Abs';
-  return 'Cardio';
-};
-
-const determineEquipment = (name: string): Equipment => {
-  const n = name.toLowerCase();
-  if (n.includes('dumbbell') || n.includes('db')) return 'Dumbbell';
-  if (n.includes('barbell') || n.includes('bb')) return 'Barbell';
-  if (n.includes('cable')) return 'Cable';
-  if (n.includes('machine') || n.includes('pressdown') || n.includes('extension') || n.includes('pec deck')) return 'Machine';
-  return 'Bodyweight';
-};
-
-const determineLoggingType = (name: string): LoggingType => {
-  const n = name.toLowerCase();
-  if (
-    n.includes('plank') || 
-    n.includes('hold') || 
-    n.includes('sit') || 
-    n.includes('hang') || 
-    n.includes('stretch')
-  ) return 'duration';
-  return 'weight_reps';
-};
-
-export const DEFAULT_EXERCISES: Exercise[] = (exercisesData.exercises as any[]).map(ex => {
-  const muscleGroup = mapBodyPart(ex.body_part);
-  const equipment = determineEquipment(ex.canonical_name);
-  const imageData = getExerciseImage(ex.canonical_name, ex.id, muscleGroup, equipment);
-  const coaching = getCoachingData(ex.canonical_name, equipment, muscleGroup);
-  const loggingType = determineLoggingType(ex.canonical_name);
-
-  return {
-    id: ex.id,
-    name: ex.canonical_name,
-    muscleGroup,
-    equipment,
-    defaultSets: 3,
-    defaultReps: loggingType === 'duration' ? 0 : 12,
-    defaultDurationSeconds: loggingType === 'duration' ? 60 : undefined,
-    loggingType,
+export const addExercise = async (exercise: Omit<Exercise, 'id' | 'imageUrl'>): Promise<Exercise> => {
+  const id = Date.now().toString();
+  const imageData = getExerciseImage(exercise.name, id, exercise.muscleGroup, exercise.equipment);
+  const coaching = getCoachingData(exercise.name, exercise.equipment, exercise.muscleGroup);
+  const newEx: Exercise = {
+    ...exercise,
+    id,
     imageUrl: imageData.url,
     imageNeedsReview: imageData.needsReview,
-    ...coaching
+    ...coaching,
+    ...exercise // Allow overrides from UI
   };
-});
+  await dbPut(STORES.EXERCISES, newEx);
+  return newEx;
+};
 
-const EXERCISES_KEY = 'user_exercises_v16';
-const STATS_KEY = 'exercise_stats_v12';
-const ROUTINES_KEY = 'user_routines_v12';
-const LOGS_KEY = 'workout_logs_v6';
-const HISTORY_KEY = 'exercise_history_v2';
-const LAST_SUMMARY_KEY = 'last_workout_summary_v1';
-const ACTIVE_SESSION_KEY = 'active_workout_session_v1';
+export const updateExercise = async (updatedEx: Exercise) => {
+  await dbPut(STORES.EXERCISES, updatedEx);
+};
 
-export const getExercises = (): Exercise[] => {
-  if (typeof window === 'undefined') return DEFAULT_EXERCISES;
-  const stored = localStorage.getItem(EXERCISES_KEY);
-  if (!stored) {
-    localStorage.setItem(EXERCISES_KEY, JSON.stringify(DEFAULT_EXERCISES));
-    return DEFAULT_EXERCISES;
+export const getRoutines = async (): Promise<Routine[]> => {
+  const stored = await dbGetAll<Routine>(STORES.ROUTINES);
+  if (stored.length === 0) {
+    const exercises = await getExercises();
+    const initial: Routine[] = [
+      { id: 'r1', name: 'Full Body Strength', exercises: [exercises[0], exercises[5] || exercises[0]], color: '#8b5cf6' },
+    ];
+    for (const r of initial) await dbPut(STORES.ROUTINES, r);
+    return initial;
   }
-  return JSON.parse(stored);
+  return stored;
 };
 
-export const addExercise = (exercise: Omit<Exercise, 'id' | 'imageUrl'>) => {
-  const exercises = getExercises();
-  const imageData = getExerciseImage(exercise.name, '', exercise.muscleGroup, exercise.equipment);
-  
-  const generatedCoaching = getCoachingData(exercise.name, exercise.equipment, exercise.muscleGroup);
-  
-  const newExercise: Exercise = {
-    ...exercise,
-    cues: exercise.cues && exercise.cues.length > 0 ? exercise.cues : generatedCoaching.cues,
-    secondaryMuscles: exercise.secondaryMuscles && exercise.secondaryMuscles.length > 0 ? exercise.secondaryMuscles : generatedCoaching.secondaryMuscles,
-    alternatives: exercise.alternatives && exercise.alternatives.length > 0 ? exercise.alternatives : generatedCoaching.alternatives,
-    mistakes: exercise.mistakes && exercise.mistakes.length > 0 ? exercise.mistakes : generatedCoaching.mistakes,
-    id: Date.now().toString(),
-    imageUrl: imageData.url,
-    imageNeedsReview: imageData.needsReview
-  };
-  exercises.push(newExercise);
-  localStorage.setItem(EXERCISES_KEY, JSON.stringify(exercises));
-  return newExercise;
+export const saveRoutine = async (routine: Routine) => {
+  await dbPut(STORES.ROUTINES, routine);
 };
 
-export const updateExercise = (updatedEx: Exercise) => {
-  const exercises = getExercises();
-  const index = exercises.findIndex(e => e.id === updatedEx.id);
-  if (index > -1) {
-    exercises[index] = updatedEx;
-    localStorage.setItem(EXERCISES_KEY, JSON.stringify(exercises));
-  }
+export const deleteRoutine = async (id: string) => {
+  await dbDelete(STORES.ROUTINES, id);
 };
 
-export const getExerciseStats = (exerciseId: string): ExerciseStats => {
-  if (typeof window === 'undefined') return { sets: {} };
-  const allStats = JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
-  return allStats[exerciseId] || { sets: {} };
+export const getExerciseStats = async (exerciseId: string): Promise<ExerciseStats> => {
+  const stats = await dbGet<{ id: string; stats: ExerciseStats }>(STORES.STATS, exerciseId);
+  return stats?.stats || { sets: {} };
 };
 
-export const saveAllWorkoutStats = (exercises: RoutineExercise[]): WorkoutSummaryData => {
-  if (typeof window === 'undefined') throw new Error("Client side only");
-  
-  const allStats = JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
-  const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '{}');
+export const getExerciseHistory = async (exerciseId: string): Promise<HistoryPoint[]> => {
+  const history = await dbGet<{ id: string; points: HistoryPoint[] }>(STORES.HISTORY, exerciseId);
+  return history?.points || [];
+};
+
+export const saveAllWorkoutStats = async (exercises: RoutineExercise[]): Promise<WorkoutSummaryData> => {
   const date = new Date().toLocaleDateString('en-CA');
   const settings = getSettings();
   const unitLabel = settings.unitSystem === 'Metric' ? 'kg' : 'lb';
@@ -427,9 +312,8 @@ export const saveAllWorkoutStats = (exercises: RoutineExercise[]): WorkoutSummar
 
   const muscleCounts: Record<string, number> = {};
 
-  exercises.forEach(ex => {
-    const exHistory = history[ex.id] || [];
-    
+  for (const ex of exercises) {
+    const exHistory = await getExerciseHistory(ex.id);
     let maxWeight = 0;
     let maxReps = 0;
     let maxDuration = 0;
@@ -438,29 +322,22 @@ export const saveAllWorkoutStats = (exercises: RoutineExercise[]): WorkoutSummar
     let validSets = 0;
     const exerciseRecords: string[] = [];
 
-    // Check historical PRs
-    const prevBestWeight = Math.max(...exHistory.map((h: HistoryPoint) => h.weight), 0);
-    const prevBestVolume = Math.max(...exHistory.map((h: HistoryPoint) => h.volume), 0);
-    const prevBestE1RM = Math.max(...exHistory.map((h: HistoryPoint) => h.e1RM), 0);
+    const prevBestWeight = Math.max(...exHistory.map(h => h.weight), 0);
+    const prevBestVolume = Math.max(...exHistory.map(h => h.volume), 0);
+    const prevBestE1RM = Math.max(...exHistory.map(h => h.e1RM), 0);
+
+    const currentStats = await getExerciseStats(ex.id);
 
     ex.sets.forEach((set, idx) => {
       if (set.completed || set.weight > 0 || set.reps > 0 || (set.durationSeconds && set.durationSeconds > 0)) {
-        if (!allStats[ex.id]) allStats[ex.id] = { sets: {} };
-        allStats[ex.id].sets[idx.toString()] = { 
-          weight: set.weight, 
-          reps: set.reps,
-          durationSeconds: set.durationSeconds 
-        };
-        
+        currentStats.sets[idx.toString()] = { weight: set.weight, reps: set.reps, durationSeconds: set.durationSeconds };
         maxWeight = Math.max(maxWeight, set.weight);
         maxReps = Math.max(maxReps, set.reps);
         maxDuration = Math.max(maxDuration, set.durationSeconds || 0);
         totalVolume += (set.weight * set.reps);
         validSets++;
-
         if (set.reps >= 1 && set.reps <= 10 && set.weight > 0) {
-          const e1rm = set.weight * (1 + set.reps / 30);
-          bestE1RM = Math.max(bestE1RM, e1rm);
+          bestE1RM = Math.max(bestE1RM, set.weight * (1 + set.reps / 30));
         }
       }
     });
@@ -471,24 +348,11 @@ export const saveAllWorkoutStats = (exercises: RoutineExercise[]): WorkoutSummar
       summary.exerciseCount++;
       muscleCounts[ex.muscleGroup] = (muscleCounts[ex.muscleGroup] || 0) + validSets;
 
-      // Detect Records
       if (maxWeight > prevBestWeight && maxWeight > 0) {
-        const delta = maxWeight - prevBestWeight;
-        const val = kgToDisplay(maxWeight, settings.unitSystem);
-        const d = kgToDisplay(delta, settings.unitSystem);
-        exerciseRecords.push(`New Max Weight: ${val}${unitLabel} (+${d}${unitLabel})`);
+        exerciseRecords.push(`New Max Weight: ${kgToDisplay(maxWeight, settings.unitSystem)}${unitLabel} (+${kgToDisplay(maxWeight - prevBestWeight, settings.unitSystem)}${unitLabel})`);
       }
       if (totalVolume > prevBestVolume && totalVolume > 0) {
-        const delta = totalVolume - prevBestVolume;
-        const val = Math.round(kgToDisplay(totalVolume, settings.unitSystem));
-        const d = Math.round(kgToDisplay(delta, settings.unitSystem));
-        exerciseRecords.push(`New Volume PR: ${val}${unitLabel} (+${d}${unitLabel})`);
-      }
-      if (bestE1RM > prevBestE1RM && bestE1RM > 0) {
-        const delta = bestE1RM - prevBestE1RM;
-        const val = Math.round(kgToDisplay(bestE1RM, settings.unitSystem));
-        const d = Math.round(kgToDisplay(delta, settings.unitSystem));
-        exerciseRecords.push(`New Best 1RM: ${val}${unitLabel} (+${d}${unitLabel})`);
+        exerciseRecords.push(`New Volume PR: ${Math.round(kgToDisplay(totalVolume, settings.unitSystem))}${unitLabel}`);
       }
 
       summary.exercises.push({
@@ -504,191 +368,35 @@ export const saveAllWorkoutStats = (exercises: RoutineExercise[]): WorkoutSummar
         records: exerciseRecords
       });
 
-      // Update history
-      const historyPoint: HistoryPoint = {
-        date,
-        weight: maxWeight,
-        reps: maxReps,
-        durationSeconds: maxDuration,
-        sets: validSets,
-        volume: totalVolume,
-        e1RM: bestE1RM
-      };
-      const existingIdx = exHistory.findIndex((p: HistoryPoint) => p.date === date);
-      if (existingIdx > -1) {
-        exHistory[existingIdx] = historyPoint;
-      } else {
-        exHistory.push(historyPoint);
-      }
-      history[ex.id] = exHistory;
+      const updatedHistory = [...exHistory];
+      const historyPoint = { date, weight: maxWeight, reps: maxReps, durationSeconds: maxDuration, sets: validSets, volume: totalVolume, e1RM: bestE1RM };
+      const existingIdx = updatedHistory.findIndex(p => p.date === date);
+      if (existingIdx > -1) updatedHistory[existingIdx] = historyPoint;
+      else updatedHistory.push(historyPoint);
+      
+      await dbPut(STORES.STATS, { id: ex.id, stats: currentStats });
+      await dbPut(STORES.HISTORY, { id: ex.id, points: updatedHistory });
     }
-  });
-
-  // Global Record Detection (Total Workout Volume)
-  const allLogs = getWorkoutLogs();
-  const prevMaxTotalVolume = Math.max(...allLogs.map(l => l.totalVolume || 0), 0);
-  if (summary.totalVolume > prevMaxTotalVolume && allLogs.length > 0) {
-    const delta = summary.totalVolume - prevMaxTotalVolume;
-    const val = Math.round(kgToDisplay(summary.totalVolume, settings.unitSystem));
-    const d = Math.round(kgToDisplay(delta, settings.unitSystem));
-    summary.globalRecords.push(`New Total Volume PR: ${val}${unitLabel} (+${d}${unitLabel})`);
   }
 
-  // Calculate Muscle Split
-  const totalSetsRecorded = Object.values(muscleCounts).reduce((a, b) => a + b, 0);
+  const allLogs = await dbGetAll<WorkoutLog>(STORES.LOGS);
+  const prevMaxVol = Math.max(...allLogs.map(l => l.totalVolume || 0), 0);
+  if (summary.totalVolume > prevMaxVol && allLogs.length > 0) {
+    summary.globalRecords.push(`New Total Volume PR: ${Math.round(kgToDisplay(summary.totalVolume, settings.unitSystem))}${unitLabel}`);
+  }
+
+  const totalSets = Object.values(muscleCounts).reduce((a, b) => a + b, 0);
   summary.muscleSplit = Object.entries(muscleCounts).map(([muscle, count]) => ({
     muscle: muscle as MuscleGroup,
     count,
-    percentage: Math.round((count / totalSetsRecorded) * 100)
+    percentage: Math.round((count / totalSets) * 100)
   })).sort((a, b) => b.count - a.count);
   
-  localStorage.setItem(STATS_KEY, JSON.stringify(allStats));
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-  localStorage.setItem(LAST_SUMMARY_KEY, JSON.stringify(summary));
-
+  await dbPut(STORES.SUMMARY, { id: 'latest', ...summary });
   return summary;
 };
 
-export const getExerciseHistory = (exerciseId: string): HistoryPoint[] => {
-  if (typeof window === 'undefined') return [];
-  const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '{}');
-  return history[exerciseId] || [];
-};
-
-export const detectPlateau = (exerciseId: string): PlateauAnalysis => {
-  const history = getExerciseHistory(exerciseId);
-  if (history.length < 4) {
-    return { status: 'Progressing', reason: 'Collecting initial data...', suggestions: [] };
-  }
-
-  const recent = history.slice(-3);
-  const previous = history[history.length - 4];
-
-  // Logic: Compare the best performance in the last 3 sessions against the session before that
-  const maxWeightRecent = Math.max(...recent.map(h => h.weight));
-  const maxVolumeRecent = Math.max(...recent.map(h => h.volume));
-  const maxE1RMRecent = Math.max(...recent.map(h => h.e1RM));
-  const maxDurationRecent = Math.max(...recent.map(h => h.durationSeconds || 0));
-
-  // Thresholds for "meaningful progress" (e.g. 1% increase)
-  const isProgressing = 
-    maxWeightRecent > previous.weight * 1.01 || 
-    maxE1RMRecent > previous.e1RM * 1.01 ||
-    maxVolumeRecent > previous.volume * 1.01 ||
-    (previous.durationSeconds && maxDurationRecent > previous.durationSeconds * 1.01);
-
-  if (isProgressing) {
-    return { status: 'Progressing', reason: 'You are consistently hitting new personal records.', suggestions: [] };
-  }
-
-  // If flat for exactly 3 sessions, it's a plateau
-  const suggestions = [
-    "Increase your rep target by 2-3 per set while keeping weight constant.",
-    "Try adding one extra high-intensity working set to your routine.",
-    "Swap this exercise for a close variation (e.g., Incline vs Flat) for 4 weeks.",
-    "Slow down the eccentric (lowering) phase to 3 seconds for better recruitment.",
-    "Decrease weight by 10% and focus on explosive power and perfect form."
-  ];
-
-  return { 
-    status: 'Plateau', 
-    reason: `Your performance on this exercise has been stagnant for ${recent.length} sessions.`, 
-    suggestions: suggestions.sort(() => 0.5 - Math.random()).slice(0, 2)
-  };
-};
-
-export const getProgressionSuggestion = (exerciseId: string): ProgressionSuggestion | null => {
-  const history = getExerciseHistory(exerciseId);
-  if (history.length === 0) return null;
-
-  const last = history[history.length - 1];
-  const settings = getSettings();
-  const unitLabel = settings.unitSystem === 'Metric' ? 'kg' : 'lb';
-  const weightStep = settings.unitSystem === 'Metric' ? 0.25 : 5;
-
-  const ex = getExercises().find(e => e.id === exerciseId);
-  if (!ex) return null;
-
-  const lastStatsText = ex.loggingType === 'duration' 
-    ? `${last.durationSeconds}s`
-    : `${last.weight > 0 ? kgToDisplay(last.weight, settings.unitSystem) + unitLabel + ' x ' : ''}${last.reps} reps`;
-
-  if (ex.loggingType === 'duration') {
-    return {
-      type: 'increase_duration',
-      suggestedDuration: (last.durationSeconds || 0) + 10,
-      reason: "You completed your last hold successfully. Let's push for 10 more seconds to improve endurance.",
-      lastStatsText
-    };
-  }
-
-  // Weight/Reps logic
-  const plateau = detectPlateau(exerciseId);
-  
-  if (plateau.status === 'Plateau') {
-    return {
-      type: 'deload',
-      suggestedWeight: Math.max(0, last.weight * 0.9),
-      suggestedReps: last.reps + 2,
-      reason: "You've hit a plateau. Let's reduce the load by 10% and focus on explosive power and extra volume to break through.",
-      lastStatsText
-    };
-  }
-
-  // If reps are high, increase weight
-  if (last.reps >= 12) {
-    return {
-      type: 'increase_weight',
-      suggestedWeight: last.weight + displayToKg(weightStep, settings.unitSystem),
-      suggestedReps: 8,
-      reason: `You hit 12 reps easily. Time to increase the weight by ${weightStep}${unitLabel} and work in a lower rep range to build strength.`,
-      lastStatsText
-    };
-  }
-
-  // Otherwise, aim for more reps
-  return {
-    type: 'increase_reps',
-    suggestedWeight: last.weight,
-    suggestedReps: last.reps + 2,
-    reason: "Great job on the weight. Now let's try to squeeze out 2 more reps per set with the same load.",
-    lastStatsText
-  };
-};
-
-export const getRoutines = (): Routine[] => {
-  if (typeof window === 'undefined') return [];
-  const stored = localStorage.getItem(ROUTINES_KEY);
-  if (!stored) {
-    const exercises = getExercises();
-    const initial: Routine[] = [
-      { id: 'r1', name: 'Full Body Strength', exercises: [exercises[0], exercises[5] || exercises[0]], color: '#8b5cf6' },
-    ];
-    localStorage.setItem(ROUTINES_KEY, JSON.stringify(initial));
-    return initial;
-  }
-  return JSON.parse(stored);
-};
-
-export const saveRoutine = (routine: Routine) => {
-  const routines = getRoutines();
-  const index = routines.findIndex(r => r.id === routine.id);
-  if (index > -1) {
-    routines[index] = routine;
-  } else {
-    routines.push(routine);
-  }
-  localStorage.setItem(ROUTINES_KEY, JSON.stringify(routines));
-};
-
-export const deleteRoutine = (id: string) => {
-  const routines = getRoutines().filter(r => r.id !== id);
-  localStorage.setItem(ROUTINES_KEY, JSON.stringify(routines));
-};
-
-export const logWorkout = (routine: Routine, durationSeconds: number, totalVolume: number) => {
-  if (typeof window === 'undefined') return;
-  const logs: WorkoutLog[] = JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
+export const logWorkout = async (routine: Routine, durationSeconds: number, totalVolume: number) => {
   const newLog: WorkoutLog = {
     id: Date.now().toString(),
     routineId: routine.id,
@@ -698,59 +406,121 @@ export const logWorkout = (routine: Routine, durationSeconds: number, totalVolum
     durationSeconds,
     totalVolume
   };
-  logs.push(newLog);
-  localStorage.setItem(LOGS_KEY, JSON.stringify(logs));
-  
-  const routines = getRoutines();
-  const index = routines.findIndex(r => r.id === routine.id);
-  if (index > -1) {
-    routines[index].lastPerformed = newLog.date;
-    localStorage.setItem(ROUTINES_KEY, JSON.stringify(routines));
+  await dbPut(STORES.LOGS, newLog);
+  const routines = await getRoutines();
+  const rIdx = routines.findIndex(r => r.id === routine.id);
+  if (rIdx > -1) {
+    routines[rIdx].lastPerformed = newLog.date;
+    await saveRoutine(routines[rIdx]);
   }
-
-  // Update last summary metadata
-  const lastSummary = JSON.parse(localStorage.getItem(LAST_SUMMARY_KEY) || '{}');
-  if (lastSummary) {
-    lastSummary.routineName = routine.name;
-    lastSummary.routineColor = routine.color || '#8b5cf6';
-    lastSummary.durationSeconds = durationSeconds;
-    localStorage.setItem(LAST_SUMMARY_KEY, JSON.stringify(lastSummary));
+  const summary = await dbGet<WorkoutSummaryData>(STORES.SUMMARY, 'latest');
+  if (summary) {
+    summary.durationSeconds = durationSeconds;
+    summary.routineName = routine.name;
+    summary.routineColor = routine.color || '#8b5cf6';
+    await dbPut(STORES.SUMMARY, summary);
   }
-
-  clearActiveWorkoutSession();
+  await dbDelete(STORES.ACTIVE_SESSION, 'current');
 };
 
-export const getWorkoutLogs = (): WorkoutLog[] => {
-  if (typeof window === 'undefined') return [];
-  return JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
+export const getWorkoutLogs = async (): Promise<WorkoutLog[]> => {
+  return dbGetAll<WorkoutLog>(STORES.LOGS);
 };
 
-export const getLastWorkoutSummary = (): WorkoutSummaryData | null => {
-  if (typeof window === 'undefined') return null;
-  const stored = localStorage.getItem(LAST_SUMMARY_KEY);
-  return stored ? JSON.parse(stored) : null;
+export const getLastWorkoutSummary = async (): Promise<WorkoutSummaryData | null> => {
+  return dbGet<WorkoutSummaryData>(STORES.SUMMARY, 'latest');
 };
 
-/**
- * Active Workout Session Management
- * Stores the start time and routine ID of an ongoing workout.
- */
-export const startActiveWorkoutSession = (routineId: string) => {
-  if (typeof window === 'undefined') return;
-  const session = {
-    routineId,
-    startTime: Date.now()
-  };
-  localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(session));
+export const startActiveWorkoutSession = async (routineId: string) => {
+  await dbPut(STORES.ACTIVE_SESSION, { id: 'current', routineId, startTime: Date.now() });
 };
 
-export const getActiveWorkoutSession = (): { routineId: string; startTime: number } | null => {
-  if (typeof window === 'undefined') return null;
-  const stored = localStorage.getItem(ACTIVE_SESSION_KEY);
-  return stored ? JSON.parse(stored) : null;
+export const getActiveWorkoutSession = async (): Promise<{ routineId: string; startTime: number } | null> => {
+  return dbGet<{ routineId: string; startTime: number }>(STORES.ACTIVE_SESSION, 'current');
 };
 
-export const clearActiveWorkoutSession = () => {
-  if (typeof window === 'undefined') return;
-  localStorage.removeItem(ACTIVE_SESSION_KEY);
+export const clearActiveWorkoutSession = async () => {
+  await dbDelete(STORES.ACTIVE_SESSION, 'current');
 };
+
+// Suggestions & Analysis (Proxies to history)
+
+export const detectPlateau = async (exerciseId: string): Promise<PlateauAnalysis> => {
+  const history = await getExerciseHistory(exerciseId);
+  if (history.length < 4) return { status: 'Progressing', reason: 'Collecting initial data...', suggestions: [] };
+  const recent = history.slice(-3);
+  const prev = history[history.length - 4];
+  const isProgressing = Math.max(...recent.map(h => h.weight)) > prev.weight * 1.01 || Math.max(...recent.map(h => h.volume)) > prev.volume * 1.01;
+  if (isProgressing) return { status: 'Progressing', reason: 'Consistently hitting new records.', suggestions: [] };
+  const tips = ["Increase rep target", "Add extra set", "Swap variation", "Slow eccentrics", "Strategic reset"];
+  return { status: 'Plateau', reason: `Flat for ${recent.length} sessions.`, suggestions: tips.sort(() => 0.5 - Math.random()).slice(0, 2) };
+};
+
+export const getProgressionSuggestion = async (exerciseId: string): Promise<ProgressionSuggestion | null> => {
+  const history = await getExerciseHistory(exerciseId);
+  if (history.length === 0) return null;
+  const last = history[history.length - 1];
+  const settings = getSettings();
+  const unitLabel = settings.unitSystem === 'Metric' ? 'kg' : 'lb';
+  const exercises = await getExercises();
+  const ex = exercises.find(e => e.id === exerciseId);
+  if (!ex) return null;
+  const lastText = ex.loggingType === 'duration' ? `${last.durationSeconds}s` : `${last.weight > 0 ? kgToDisplay(last.weight, settings.unitSystem) + unitLabel + ' x ' : ''}${last.reps} reps`;
+
+  if (ex.loggingType === 'duration') return { type: 'increase_duration', suggestedDuration: (last.durationSeconds || 0) + 10, reason: "Improve endurance.", lastStatsText: lastText };
+  const plateau = await detectPlateau(exerciseId);
+  if (plateau.status === 'Plateau') return { type: 'deload', suggestedWeight: last.weight * 0.9, suggestedReps: last.reps + 2, reason: "Break plateau.", lastStatsText: lastText };
+  if (last.reps >= 12) return { type: 'increase_weight', suggestedWeight: last.weight + displayToKg(settings.unitSystem === 'Metric' ? 0.25 : 5, settings.unitSystem), suggestedReps: 8, reason: "Strength build.", lastStatsText: lastText };
+  return { type: 'increase_reps', suggestedWeight: last.weight, suggestedReps: last.reps + 2, reason: "Volume overload.", lastStatsText: lastText };
+};
+
+// Utils
+
+const mapBodyPart = (part: string | null): MuscleGroup => {
+  if (!part) return 'Cardio';
+  const p = part.toLowerCase();
+  if (p.includes('chest')) return 'Chest';
+  if (p.includes('back')) return 'Back';
+  if (p.includes('legs') || p.includes('calves')) return 'Legs';
+  if (p.includes('shoulders')) return 'Shoulders';
+  if (p.includes('biceps') || p.includes('triceps')) return 'Arms';
+  if (p.includes('abdominals') || p.includes('abs')) return 'Abs';
+  return 'Cardio';
+};
+
+const determineEquipment = (name: string): Equipment => {
+  const n = name.toLowerCase();
+  if (n.includes('dumbbell') || n.includes('db')) return 'Dumbbell';
+  if (n.includes('barbell') || n.includes('bb')) return 'Barbell';
+  if (n.includes('cable')) return 'Cable';
+  if (n.includes('machine') || n.includes('pressdown') || n.includes('extension')) return 'Machine';
+  return 'Bodyweight';
+};
+
+const determineLoggingType = (name: string): LoggingType => {
+  const n = name.toLowerCase();
+  if (n.includes('plank') || n.includes('hold') || n.includes('hang')) return 'duration';
+  return 'weight_reps';
+};
+
+export function getExerciseImage(name: string, id: string, muscleGroup: MuscleGroup, equipment: Equipment): { url: string; needsReview: boolean } {
+  const exerciseImageMap: Record<string, string> = { barbell_bench_press: 'bench_press', barbell_deadlift: 'deadlift', barbell_squat: 'barbell_squat', plank: 'plank_core', running_treadmill: 'treadmill_running' };
+  const mapped = exerciseImageMap[normalizeExerciseName(id)];
+  if (mapped) return { url: `https://picsum.photos/seed/${mapped}/600/400`, needsReview: false };
+  return { url: `https://picsum.photos/seed/${normalizeExerciseName(muscleGroup + equipment)}/600/400`, needsReview: true };
+}
+
+export const getCoachingData = (name: string, equipment: Equipment, muscle: MuscleGroup) => {
+  if (muscle === 'Chest') return { cues: ["Retract blades", "Squeeze at top"], mistakes: ["Elbow flare"], secondaryMuscles: ["Triceps"] };
+  if (muscle === 'Back') return { cues: ["Pull with elbows", "Neutral spine"], mistakes: ["Body swing"], secondaryMuscles: ["Biceps"] };
+  if (muscle === 'Legs') return { cues: ["Heel drive", "Knees out"], mistakes: ["Knee cave"], secondaryMuscles: ["Glutes"] };
+  return { cues: ["Control movement"], mistakes: ["Using momentum"] };
+};
+
+export const ROUTINE_COLORS = [
+  { name: 'Strength Violet', value: '#8b5cf6' },
+  { name: 'Energetic Blue', value: '#3b82f6' },
+  { name: 'Fit Green', value: '#10b981' },
+  { name: 'Active Red', value: '#f43f5e' },
+  { name: 'Focus Amber', value: '#f59e0b' },
+];

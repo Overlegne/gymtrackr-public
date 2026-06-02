@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from 'react';
@@ -21,14 +22,19 @@ import {
 
 export default function RoutinesPage() {
   const [routines, setRoutines] = useState<Routine[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setRoutines(getRoutines());
+    async function load() {
+      setRoutines(await getRoutines());
+      setLoading(false);
+    }
+    load();
   }, []);
 
-  const handleDelete = (id: string) => {
-    deleteRoutine(id);
-    setRoutines(getRoutines());
+  const handleDelete = async (id: string) => {
+    await deleteRoutine(id);
+    setRoutines(await getRoutines());
   };
 
   return (
@@ -120,7 +126,7 @@ export default function RoutinesPage() {
           </Card>
         ))}
 
-        {routines.length === 0 && (
+        {!loading && routines.length === 0 && (
           <div className="text-center py-20 space-y-4">
             <div className="mx-auto w-20 h-20 bg-muted/30 rounded-full flex items-center justify-center border-4 border-dashed border-muted/50">
               <Dumbbell className="h-10 w-10 text-muted-foreground/40" />
