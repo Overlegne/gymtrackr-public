@@ -1,12 +1,14 @@
+
 "use client"
 
 import { useState } from 'react';
 import { BottomNav } from '@/components/BottomNav';
-import { EXERCISES, type MuscleGroup, type Equipment } from '@/lib/store';
+import { EXERCISES, type MuscleGroup } from '@/lib/store';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, ChevronRight } from 'lucide-react';
+import { Search, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import Image from 'next/image';
 
 export default function ExercisesPage() {
   const [search, setSearch] = useState('');
@@ -52,17 +54,28 @@ export default function ExercisesPage() {
 
       <div className="space-y-3">
         {filtered.map(ex => (
-          <Card key={ex.id} className="card-hover">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <h3 className="font-bold">{ex.name}</h3>
-                <div className="flex gap-2 mt-1">
-                  <span className="text-[10px] text-primary uppercase font-bold tracking-wider">{ex.muscleGroup}</span>
-                  <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">•</span>
-                  <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{ex.equipment}</span>
-                </div>
+          <Card key={ex.id} className="card-hover overflow-hidden">
+            <CardContent className="p-0 flex items-center">
+              <div className="relative h-20 w-24 shrink-0 bg-muted">
+                <Image 
+                  src={ex.imageUrl} 
+                  alt={ex.name} 
+                  fill 
+                  className="object-cover"
+                  data-ai-hint="gym exercise"
+                />
               </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              <div className="flex-1 p-4 flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold">{ex.name}</h3>
+                  <div className="flex gap-2 mt-1">
+                    <span className="text-[10px] text-primary uppercase font-bold tracking-wider">{ex.muscleGroup}</span>
+                    <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">•</span>
+                    <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{ex.equipment}</span>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </div>
             </CardContent>
           </Card>
         ))}

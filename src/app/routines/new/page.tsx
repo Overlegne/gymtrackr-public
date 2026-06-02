@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from 'react';
@@ -5,11 +6,12 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { EXERCISES, saveRoutine, type Exercise } from '@/lib/store';
-import { ChevronLeft, Plus, Search, Trash2, Check, Dumbbell } from 'lucide-react';
+import { EXERCISES, saveRoutine, type Exercise, getExerciseStats } from '@/lib/store';
+import { ChevronLeft, Plus, Search, Trash2, Dumbbell } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 
 export default function NewRoutinePage() {
   const router = useRouter();
@@ -85,31 +87,34 @@ export default function NewRoutinePage() {
           </div>
 
           <div className="space-y-3">
-            {selectedExercises.map((ex, index) => (
-              <Card key={ex.id} className="border-none shadow-sm card-hover">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                      <Dumbbell className="h-6 w-6" />
+            {selectedExercises.map((ex) => {
+              const stats = getExerciseStats(ex.id);
+              return (
+                <Card key={ex.id} className="border-none shadow-sm card-hover overflow-hidden">
+                  <CardContent className="p-0 flex items-center">
+                    <div className="relative h-16 w-20 bg-muted shrink-0">
+                      <Image src={ex.imageUrl} alt={ex.name} fill className="object-cover" data-ai-hint="gym exercise" />
                     </div>
-                    <div>
-                      <h3 className="font-bold">{ex.name}</h3>
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
-                        {ex.defaultSets} sets • {ex.defaultReps} reps
-                      </p>
+                    <div className="flex-1 p-4 flex items-center justify-between">
+                      <div>
+                        <h3 className="font-bold">{ex.name}</h3>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
+                          {ex.defaultSets} sets • {stats.reps || ex.defaultReps} reps {stats.weight ? `• ${stats.weight}kg` : ''}
+                        </p>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-destructive hover:bg-destructive/10"
+                        onClick={() => setSelectedExercises(prev => prev.filter(e => e.id !== ex.id))}
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </Button>
                     </div>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="text-destructive hover:bg-destructive/10"
-                    onClick={() => setSelectedExercises(prev => prev.filter(e => e.id !== ex.id))}
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
 
             {selectedExercises.length === 0 && (
               <div 
@@ -124,7 +129,6 @@ export default function NewRoutinePage() {
         </div>
       </div>
 
-      {/* Picker Modal Overlay */}
       {showPicker && (
         <div className="fixed inset-0 z-50 bg-black/50 animate-in fade-in duration-200">
           <div className="absolute inset-x-0 bottom-0 h-[80vh] bg-background rounded-t-[2.5rem] flex flex-col p-6 shadow-2xl animate-in slide-in-from-bottom duration-300">
@@ -147,30 +151,30 @@ export default function NewRoutinePage() {
               {filteredExercises.map(ex => (
                 <Card 
                   key={ex.id} 
-                  className="border-none shadow-sm active:bg-primary/5 cursor-pointer"
+                  className="border-none shadow-sm active:bg-primary/5 cursor-pointer overflow-hidden"
                   onClick={() => {
                     setSelectedExercises(prev => [...prev, ex]);
                   }}
                 >
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div>
-                      <h3 className="font-bold">{ex.name}</h3>
-                      <div className="flex gap-2 mt-1">
-                        <Badge variant="secondary" className="text-[9px] uppercase tracking-wider">{ex.muscleGroup}</Badge>
-                        <Badge variant="outline" className="text-[9px] uppercase tracking-wider">{ex.equipment}</Badge>
-                      </div>
+                  <CardContent className="p-0 flex items-center">
+                    <div className="relative h-16 w-20 bg-muted shrink-0">
+                      <Image src={ex.imageUrl} alt={ex.name} fill className="object-cover" data-ai-hint="gym exercise" />
                     </div>
-                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                      <Plus className="h-5 w-5" />
+                    <div className="flex-1 p-4 flex items-center justify-between">
+                      <div>
+                        <h3 className="font-bold">{ex.name}</h3>
+                        <div className="flex gap-2 mt-1">
+                          <Badge variant="secondary" className="text-[9px] uppercase tracking-wider">{ex.muscleGroup}</Badge>
+                          <Badge variant="outline" className="text-[9px] uppercase tracking-wider">{ex.equipment}</Badge>
+                        </div>
+                      </div>
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-2">
+                        <Plus className="h-5 w-5" />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
               ))}
-              {filteredExercises.length === 0 && (
-                <div className="text-center py-20 text-muted-foreground italic">
-                  Geen ongebruikte oefeningen gevonden.
-                </div>
-              )}
             </div>
           </div>
         </div>

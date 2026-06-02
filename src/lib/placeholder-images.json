@@ -1,3 +1,64 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "bench-press",
+      "description": "Iemand die een bench press uitvoert in de gym",
+      "imageUrl": "https://picsum.photos/seed/bench/600/400",
+      "imageHint": "bench press"
+    },
+    {
+      "id": "squat",
+      "description": "Iemand die een barbell squat uitvoert",
+      "imageUrl": "https://picsum.photos/seed/squat/600/400",
+      "imageHint": "barbell squat"
+    },
+    {
+      "id": "deadlift",
+      "description": "Een deadlift uitvoering",
+      "imageUrl": "https://picsum.photos/seed/deadlift/600/400",
+      "imageHint": "deadlift gym"
+    },
+    {
+      "id": "lat-pulldown",
+      "description": "Lat pulldown machine gebruik",
+      "imageUrl": "https://picsum.photos/seed/lat/600/400",
+      "imageHint": "lat pulldown"
+    },
+    {
+      "id": "shoulder-press",
+      "description": "Dumbbell shoulder press",
+      "imageUrl": "https://picsum.photos/seed/shoulder/600/400",
+      "imageHint": "shoulder press"
+    },
+    {
+      "id": "bicep-curl",
+      "description": "Bicep curl met dumbbells",
+      "imageUrl": "https://picsum.photos/seed/bicep/600/400",
+      "imageHint": "bicep curl"
+    },
+    {
+      "id": "tricep-ext",
+      "description": "Cable tricep extension",
+      "imageUrl": "https://picsum.photos/seed/tricep/600/400",
+      "imageHint": "tricep extension"
+    },
+    {
+      "id": "leg-press",
+      "description": "Leg press machine",
+      "imageUrl": "https://picsum.photos/seed/legpress/600/400",
+      "imageHint": "leg press"
+    },
+    {
+      "id": "chest-fly",
+      "description": "Dumbbell chest fly",
+      "imageUrl": "https://picsum.photos/seed/chestfly/600/400",
+      "imageHint": "chest fly"
+    },
+    {
+      "id": "seated-row",
+      "description": "Seated cable row",
+      "imageUrl": "https://picsum.photos/seed/row/600/400",
+      "imageHint": "seated row"
+    }
+  ]
 }

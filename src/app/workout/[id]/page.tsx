@@ -1,21 +1,22 @@
+
 "use client"
 
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   getRoutines, 
-  getExerciseWeight, 
-  saveExerciseWeight, 
+  getExerciseStats, 
+  saveExerciseStats, 
   type Routine, 
   type RoutineExercise 
 } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, Check, Timer, Save, MoreVertical, Minus, Plus } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { ChevronLeft, Check, Timer, Minus, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function WorkoutPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -23,21 +24,23 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
   const { toast } = useToast();
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [exercises, setExercises] = useState<RoutineExercise[]>([]);
-  const [startTime] = useState(new Date());
 
   useEffect(() => {
     const routines = getRoutines();
     const found = routines.find(r => r.id === id);
     if (found) {
       setRoutine(found);
-      const initialized = found.exercises.map(ex => ({
-        ...ex,
-        sets: Array.from({ length: ex.defaultSets }, () => ({
-          reps: ex.defaultReps,
-          weight: getExerciseWeight(ex.id),
-          completed: false
-        }))
-      }));
+      const initialized = found.exercises.map(ex => {
+        const stats = getExerciseStats(ex.id);
+        return {
+          ...ex,
+          sets: Array.from({ length: ex.defaultSets }, () => ({
+            reps: stats.reps || ex.defaultReps,
+            weight: stats.weight || 0,
+            completed: false
+          }))
+        };
+      });
       setExercises(initialized);
     }
   }, [id]);
@@ -47,13 +50,14 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
     const set = newExs[exIndex].sets[setIndex];
     set.completed = !set.completed;
     
-    // Save weight when a set is completed
     if (set.completed) {
-      saveExerciseWeight(newExs[exIndex].id, set.weight);
+      saveExerciseStats(newExs[exIndex].id, set.weight, set.reps);
       
-      // Update other sets of the SAME exercise in this workout to match weight
       newExs[exIndex].sets.forEach((s, i) => {
-        if (!s.completed) s.weight = set.weight;
+        if (!s.completed) {
+          s.weight = set.weight;
+          s.reps = set.reps;
+        }
       });
     }
     
@@ -102,9 +106,22 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
         {exercises.map((ex, exIdx) => (
           <Card key={ex.id} className="border-none shadow-md overflow-hidden">
             <CardHeader className="bg-primary/5 pb-3">
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-lg">{ex.name}</CardTitle>
-                <Badge variant="outline" className="text-[10px] uppercase">{ex.muscleGroup}</Badge>
+              <div className="flex justify-between items-center gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="relative w-12 h-12 rounded-lg overflow-hidden border bg-muted shrink-0">
+                    <Image 
+                      src={ex.imageUrl} 
+                      alt={ex.name} 
+                      fill 
+                      className="object-cover"
+                      data-ai-hint="gym exercise"
+                    />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">{ex.name}</CardTitle>
+                    <Badge variant="outline" className="text-[10px] uppercase">{ex.muscleGroup}</Badge>
+                  </div>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-0">
@@ -191,10 +208,11 @@ export default function WorkoutPage({ params }: { params: Promise<{ id: string }
                   size="sm" 
                   className="w-full text-primary font-bold gap-2 bg-primary/5 hover:bg-primary/10 h-10 rounded-xl"
                   onClick={() => {
+                    const stats = getExerciseStats(ex.id);
                     const newExs = [...exercises];
                     newExs[exIdx].sets.push({
-                      reps: ex.defaultReps,
-                      weight: getExerciseWeight(ex.id),
+                      reps: stats.reps || ex.defaultReps,
+                      weight: stats.weight || 0,
                       completed: false
                     });
                     setExercises(newExs);
