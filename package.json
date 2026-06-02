@@ -1,3 +1,4 @@
+
 {
   "name": "gymtrackr",
   "version": "0.1.0",
@@ -13,6 +14,7 @@
   },
   "dependencies": {
     "@capacitor/android": "^8.3.4",
+    "@capacitor/app": "^7.0.0",
     "@capacitor/core": "^8.3.4",
     "@genkit-ai/google-genai": "^1.28.0",
     "@hookform/resolvers": "^4.1.3",

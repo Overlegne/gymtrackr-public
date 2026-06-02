@@ -1,9 +1,11 @@
 
+
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "@/components/theme-provider"
 import { CustomStyleInjector } from "@/components/CustomStyleInjector"
+import { NativeAppHandler } from "@/components/NativeAppHandler"
 
 export const metadata: Metadata = {
   title: 'Gymtrackr',
@@ -47,6 +49,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <CustomStyleInjector />
+          <NativeAppHandler />
           <div className="mx-auto max-w-md min-h-screen flex flex-col bg-background relative overflow-x-hidden">
             <main className="flex-1 pb-24">
               {children}
