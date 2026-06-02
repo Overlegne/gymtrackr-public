@@ -1,4 +1,3 @@
-
 /**
  * @fileOverview SERVER-SIDE ONLY flow for parsing workout data.
  * This file handles text extraction from PDFs, Word docs, and Excel files,
@@ -8,10 +7,15 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-// Imports below are safe because this file is only executed in a Node environment
-import pdf from 'pdf-parse';
-import * as XLSX from 'xlsx';
-import mammoth from 'mammoth';
+// Dynamic imports used inside functions to prevent bundling issues if imported by client
+const getExtractors = async () => {
+  const [pdf, XLSX, mammoth] = await Promise.all([
+    import('pdf-parse'),
+    import('xlsx'),
+    import('mammoth')
+  ]);
+  return { pdf: pdf.default, XLSX, mammoth: mammoth.default };
+};
 
 const ImportedExerciseSchema = z.object({
   id: z.string(),
@@ -59,6 +63,7 @@ export async function parseWorkoutFile(input: ParseWorkoutFileInput): Promise<Pa
   let isImage = false;
 
   const buffer = Buffer.from(fileBase64, 'base64');
+  const { pdf, XLSX, mammoth } = await getExtractors();
 
   try {
     if (mimeType === 'application/pdf') {

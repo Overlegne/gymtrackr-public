@@ -21,20 +21,23 @@ import { getWorkoutLogs, type WorkoutLog } from "@/lib/store"
 import { cn } from "@/lib/utils"
 
 export function WorkoutCalendarMonth() {
-  const [currentMonth, setCurrentMonth] = React.useState(new Date())
+  const [currentMonth, setCurrentMonth] = React.useState<Date | null>(null)
   const [logs, setLogs] = React.useState<WorkoutLog[]>([])
+  const [isMounted, setIsMounted] = React.useState(false)
 
   React.useEffect(() => {
+    setIsMounted(true)
+    setCurrentMonth(new Date())
     async function load() {
       setLogs(await getWorkoutLogs());
     }
     load();
   }, [])
 
-  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1))
-  const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1))
+  const nextMonth = () => currentMonth && setCurrentMonth(addMonths(currentMonth, 1))
+  const prevMonth = () => currentMonth && setCurrentMonth(subMonths(currentMonth, 1))
 
-  const monthStart = startOfMonth(currentMonth)
+  const monthStart = currentMonth ? startOfMonth(currentMonth) : new Date()
   const monthEnd = endOfMonth(monthStart)
   const startDate = startOfWeek(monthStart, { weekStartsOn: 1 })
   const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 })
@@ -67,9 +70,10 @@ export function WorkoutCalendarMonth() {
     rows.push(newRow)
   }
 
-  const logsForMonth = logs.filter(log => isSameMonth(new Date(log.date), currentMonth))
+  const logsForMonth = currentMonth ? logs.filter(log => isSameMonth(new Date(log.date), currentMonth)) : []
   
   const streak = React.useMemo(() => {
+    if (!isMounted) return 0;
     const logDates = new Set(logs.map(l => l.date))
     let count = 0
     let curr = new Date()
@@ -78,7 +82,15 @@ export function WorkoutCalendarMonth() {
       curr.setDate(curr.getDate() - 1)
     }
     return count
-  }, [logs])
+  }, [logs, isMounted])
+
+  if (!isMounted || !currentMonth) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-pulse text-muted-foreground font-black uppercase text-[10px] tracking-widest">Loading Calendar...</div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

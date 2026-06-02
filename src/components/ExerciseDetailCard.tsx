@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -17,7 +18,7 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { getSettings } from '@/lib/settings-store';
+import { getSettings, type UserSettings, DEFAULT_SETTINGS } from '@/lib/settings-store';
 import {
   Tooltip,
   TooltipContent,
@@ -32,16 +33,22 @@ interface ExerciseDetailCardProps {
 }
 
 export function ExerciseDetailCard({ exercise, lastPerformance }: ExerciseDetailCardProps) {
-  const settings = useMemo(() => getSettings(), []);
-  const unitLabel = settings.unitSystem === 'Metric' ? 'KG' : 'LB';
+  const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [suggestion, setSuggestion] = useState<ProgressionSuggestion | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setSettings(getSettings());
+    setIsMounted(true);
     async function loadSuggestion() {
       setSuggestion(await getProgressionSuggestion(exercise.id));
     }
     loadSuggestion();
   }, [exercise.id]);
+
+  const unitLabel = settings.unitSystem === 'Metric' ? 'KG' : 'LB';
+
+  if (!isMounted) return null;
 
   return (
     <div className="space-y-6">
