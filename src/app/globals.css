@@ -5,19 +5,19 @@
 
 @layer base {
   :root {
-    --background: 252 14% 95%; /* Default Light Background */
+    --background: 252 14% 95%;
     --foreground: 250 20% 15%;
     --card: 0 0% 100%;
     --card-foreground: 250 20% 15%;
     --popover: 0 0% 100%;
     --popover-foreground: 250 20% 15%;
-    --primary: 250 69% 51%; /* Default Strength Violet */
+    --primary: 250 69% 51%;
     --primary-foreground: 0 0% 100%;
     --secondary: 250 20% 90%;
     --secondary-foreground: 250 69% 30%;
     --muted: 252 10% 90%;
     --muted-foreground: 250 10% 40%;
-    --accent: 217 100% 65%; /* Energetic Blue */
+    --accent: 217 100% 65%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -47,7 +47,7 @@
     --muted-foreground: 250 10% 65%;
     --accent: 217 100% 70%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62.8% 40%;
     --destructive-foreground: 0 0% 98%;
     --border: 250 20% 18%;
     --input: 250 20% 18%;
@@ -75,7 +75,7 @@
   @apply transition-transform duration-200 active:scale-[0.98];
 }
 
-/* Custom scrollbar for a cleaner feel */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 5px;
 }

@@ -33,72 +33,75 @@ export default function RoutinesPage() {
   };
 
   return (
-    <div className="p-5 space-y-6">
+    <div className="p-5 space-y-6 bg-background min-h-screen">
       <header className="flex justify-between items-center py-4">
-        <h1 className="text-2xl font-bold">My Routines</h1>
+        <div>
+          <h1 className="text-2xl font-black tracking-tight">My Routines</h1>
+          <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Your training templates</p>
+        </div>
         <Link href="/routines/new">
-          <Button size="sm" className="bg-primary rounded-full">
+          <Button size="sm" className="bg-primary rounded-full px-4 font-black uppercase text-[10px] tracking-widest h-9">
             <Plus className="h-4 w-4 mr-1" /> New
           </Button>
         </Link>
       </header>
 
-      <div className="space-y-4 pb-20">
+      <div className="space-y-4 pb-32">
         {routines.map((routine) => (
-          <Card key={routine.id} className="relative overflow-hidden card-hover border-l-4" style={{ borderLeftColor: routine.color || '#8b5cf6' }}>
+          <Card key={routine.id} className="relative overflow-hidden card-hover border-none bg-card shadow-sm border-l-4" style={{ borderLeft: `4px solid ${routine.color || 'hsl(var(--primary))'}` }}>
             <CardContent className="p-5">
               <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-bold text-xl mb-1">{routine.name}</h3>
-                  <div className="flex gap-2">
-                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: `${routine.color}20`, color: routine.color }}>
+                <div className="flex-1 min-w-0 pr-4">
+                  <h3 className="font-black text-xl mb-1 truncate text-foreground">{routine.name}</h3>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest" style={{ backgroundColor: `${routine.color}20`, color: routine.color }}>
                       {routine.exercises.length} Exercises
                     </span>
                     {routine.lastPerformed && (
-                      <span className="text-xs px-2 py-0.5 bg-muted text-muted-foreground rounded-full font-medium">
+                      <span className="text-[9px] px-2 py-0.5 bg-muted text-muted-foreground rounded-full font-black uppercase tracking-widest">
                         Last: {new Date(routine.lastPerformed).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
                       </span>
                     )}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 shrink-0">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive h-10 w-10">
+                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive h-10 w-10 bg-muted/50 rounded-full">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="rounded-[2.5rem] bg-card border-none">
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Routine?</AlertDialogTitle>
-                        <AlertDialogDescription>
+                        <AlertDialogTitle className="text-xl font-black">Delete Routine?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm font-medium">
                           Are you sure you want to delete "{routine.name}"? This action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(routine.id)} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
+                        <AlertDialogCancel className="rounded-xl font-black uppercase text-[10px] tracking-widest">Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(routine.id)} className="bg-destructive text-destructive-foreground rounded-xl font-black uppercase text-[10px] tracking-widest">Delete</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
                   
                   <Link href={`/workout/${routine.id}`}>
-                    <Button className="rounded-xl h-10 px-4 text-white" style={{ backgroundColor: routine.color || '#8b5cf6' }}>
-                      <Play className="h-4 w-4 mr-2 fill-current" /> Start
+                    <Button className="rounded-xl h-10 px-4 text-white font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20" style={{ backgroundColor: routine.color || 'hsl(var(--primary))' }}>
+                      <Play className="h-3 w-3 mr-2 fill-current" /> Start
                     </Button>
                   </Link>
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5 opacity-70">
                 {routine.exercises.slice(0, 3).map((ex, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Dumbbell className="h-3 w-3" />
-                    <span>{ex.name}</span>
+                  <div key={i} className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground">
+                    <Dumbbell className="h-3 w-3 text-primary/40" />
+                    <span className="truncate">{ex.name}</span>
                   </div>
                 ))}
                 {routine.exercises.length > 3 && (
-                  <p className="text-xs text-muted-foreground italic pl-5">And {routine.exercises.length - 3} more...</p>
+                  <p className="text-[10px] text-muted-foreground/60 italic pl-5">And {routine.exercises.length - 3} more...</p>
                 )}
               </div>
             </CardContent>
@@ -107,12 +110,15 @@ export default function RoutinesPage() {
 
         {routines.length === 0 && (
           <div className="text-center py-20 space-y-4">
-            <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center">
-              <Dumbbell className="h-8 w-8 text-muted-foreground" />
+            <div className="mx-auto w-20 h-20 bg-muted/30 rounded-full flex items-center justify-center border-4 border-dashed border-muted/50">
+              <Dumbbell className="h-10 w-10 text-muted-foreground/40" />
             </div>
-            <p className="text-muted-foreground">You haven't created any routines yet.</p>
-            <Link href="/routines/new">
-              <Button className="bg-primary">Get Started</Button>
+            <div className="space-y-1">
+              <p className="text-foreground font-black uppercase text-xs tracking-widest">No routines found</p>
+              <p className="text-muted-foreground text-[10px] font-medium max-w-[200px] mx-auto">Create a template to track your favorite workouts easily.</p>
+            </div>
+            <Link href="/routines/new" className="inline-block mt-4">
+              <Button className="bg-primary rounded-xl font-black uppercase text-[10px] tracking-widest px-8">Get Started</Button>
             </Link>
           </div>
         )}

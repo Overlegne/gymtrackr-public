@@ -9,8 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ChevronLeft, TrendingUp, Calendar, Info } from 'lucide-react';
 import Link from 'next/link';
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -91,7 +89,7 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
           <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
             <TrendingUp className="h-8 w-8" />
           </div>
-          <p className="text-muted-foreground font-medium max-w-[200px]">
+          <p className="text-muted-foreground font-bold text-sm max-w-[200px] uppercase tracking-widest">
             Log this exercise a few times to see your progress.
           </p>
         </div>
@@ -99,38 +97,42 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
     }
 
     return (
-      <div className="h-[250px] w-full mt-4">
+      <div className="h-[260px] w-full mt-6">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData}>
             <defs>
               <linearGradient id="colorMetric" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
                 <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.3} />
             <XAxis 
               dataKey="formattedDate" 
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))', fontWeight: 'bold' }}
               minTickGap={30}
             />
             <YAxis 
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))', fontWeight: 'bold' }}
               domain={['auto', 'auto']}
+              width={30}
             />
             <Tooltip 
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
                   const data = payload[0].payload;
                   return (
-                    <div className="bg-white border rounded-lg shadow-lg p-3 text-xs space-y-1">
-                      <p className="font-bold text-muted-foreground">{new Date(data.date).toLocaleDateString('en-US', { dateStyle: 'medium' })}</p>
-                      <p className="font-black text-primary text-sm">{payload[0].value} {unit}</p>
-                      {data.sets && <p className="text-[10px] text-muted-foreground uppercase font-bold">{data.sets} Sets loggeed</p>}
+                    <div className="bg-card border border-border/60 rounded-2xl shadow-xl p-4 text-xs space-y-2 ring-1 ring-black/5">
+                      <p className="font-black text-muted-foreground uppercase tracking-widest text-[9px] border-b pb-1 mb-1">{new Date(data.date).toLocaleDateString('en-US', { dateStyle: 'medium' })}</p>
+                      <div className="flex items-baseline gap-1">
+                        <span className="font-black text-primary text-base">{payload[0].value}</span>
+                        <span className="font-black text-muted-foreground text-[10px] uppercase">{unit}</span>
+                      </div>
+                      {data.sets && <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest bg-muted/30 px-2 py-0.5 rounded-full inline-block">{data.sets} Sets loggeed</p>}
                     </div>
                   );
                 }
@@ -141,11 +143,11 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
               type="monotone" 
               dataKey={dataKey} 
               stroke="hsl(var(--primary))" 
-              strokeWidth={3}
+              strokeWidth={4}
               fillOpacity={1} 
               fill="url(#colorMetric)"
-              dot={{ r: 4, fill: 'hsl(var(--primary))', strokeWidth: 2, stroke: '#fff' }}
-              activeDot={{ r: 6, strokeWidth: 0 }}
+              dot={{ r: 4, fill: 'hsl(var(--primary))', strokeWidth: 2, stroke: 'hsl(var(--card))' }}
+              activeDot={{ r: 6, strokeWidth: 3, stroke: 'hsl(var(--card))' }}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -154,15 +156,15 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50/50">
-      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b px-5 py-4 flex items-center gap-4">
+    <div className="flex flex-col min-h-screen bg-background">
+      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border/50 px-5 py-4 flex items-center gap-4">
         <Link href="/exercises">
-          <Button variant="ghost" size="icon" className="rounded-full">
+          <Button variant="ghost" size="icon" className="rounded-full bg-muted/30">
             <ChevronLeft className="h-5 w-5" />
           </Button>
         </Link>
-        <div>
-          <h1 className="text-xl font-bold truncate">{exercise.name}</h1>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl font-black truncate text-foreground">{exercise.name}</h1>
           <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Progress Analytics</p>
         </div>
       </header>
@@ -170,39 +172,39 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
       <main className="p-5 space-y-6 pb-24">
         {stats && (
           <div className="grid grid-cols-2 gap-4">
-            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
-              <CardContent className="p-4 flex flex-col gap-1">
-                <span className="text-[9px] font-black uppercase text-muted-foreground tracking-wider">Best Weight</span>
+            <Card className="border-none shadow-sm bg-card rounded-[2rem] overflow-hidden ring-1 ring-border/20">
+              <CardContent className="p-5 flex flex-col gap-1">
+                <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Best Weight</span>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black">{stats.bestWeight}</span>
-                  <span className="text-xs font-bold text-muted-foreground">kg</span>
+                  <span className="text-2xl font-black text-foreground">{stats.bestWeight}</span>
+                  <span className="text-[10px] font-black text-muted-foreground uppercase">kg</span>
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
-              <CardContent className="p-4 flex flex-col gap-1">
-                <span className="text-[9px] font-black uppercase text-muted-foreground tracking-wider">Best e1RM</span>
+            <Card className="border-none shadow-sm bg-card rounded-[2rem] overflow-hidden ring-1 ring-border/20">
+              <CardContent className="p-5 flex flex-col gap-1">
+                <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Best e1RM</span>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black">{Math.round(stats.bestE1RM)}</span>
-                  <span className="text-xs font-bold text-muted-foreground">kg</span>
+                  <span className="text-2xl font-black text-foreground">{Math.round(stats.bestE1RM)}</span>
+                  <span className="text-[10px] font-black text-muted-foreground uppercase">kg</span>
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
-              <CardContent className="p-4 flex flex-col gap-1">
-                <span className="text-[9px] font-black uppercase text-muted-foreground tracking-wider">Max Volume</span>
+            <Card className="border-none shadow-sm bg-card rounded-[2rem] overflow-hidden ring-1 ring-border/20">
+              <CardContent className="p-5 flex flex-col gap-1">
+                <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Max Volume</span>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black">{Math.round(stats.maxVolume)}</span>
-                  <span className="text-xs font-bold text-muted-foreground">kg</span>
+                  <span className="text-2xl font-black text-foreground">{Math.round(stats.maxVolume)}</span>
+                  <span className="text-[10px] font-black text-muted-foreground uppercase">kg</span>
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
-              <CardContent className="p-4 flex flex-col gap-1">
-                <span className="text-[9px] font-black uppercase text-muted-foreground tracking-wider">Best Reps</span>
+            <Card className="border-none shadow-sm bg-card rounded-[2rem] overflow-hidden ring-1 ring-border/20">
+              <CardContent className="p-5 flex flex-col gap-1">
+                <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Best Reps</span>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black">{stats.bestReps}</span>
-                  <span className="text-xs font-bold text-muted-foreground">reps</span>
+                  <span className="text-2xl font-black text-foreground">{stats.bestReps}</span>
+                  <span className="text-[10px] font-black text-muted-foreground uppercase">reps</span>
                 </div>
               </CardContent>
             </Card>
@@ -210,15 +212,15 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
         )}
 
         <div className="space-y-4">
-          <div className="flex justify-center bg-white p-1 rounded-2xl shadow-sm border border-slate-100">
+          <div className="flex justify-center bg-card p-1.5 rounded-[1.5rem] shadow-sm ring-1 ring-border/30">
             {(['30d', '90d', '1y', 'all'] as TimeRange[]).map((range) => (
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
-                className={`flex-1 py-2 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${
+                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${
                   timeRange === range 
-                    ? 'bg-primary text-white shadow-md' 
-                    : 'text-muted-foreground'
+                    ? 'bg-primary text-white shadow-lg' 
+                    : 'text-muted-foreground hover:bg-muted/50'
                 }`}
               >
                 {range}
@@ -226,15 +228,15 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
             ))}
           </div>
 
-          <Card className="border-none shadow-xl shadow-slate-200/50 bg-white rounded-[2.5rem] overflow-hidden">
+          <Card className="border-none shadow-xl shadow-black/5 bg-card rounded-[2.5rem] overflow-hidden ring-1 ring-border/20">
             <CardHeader className="pb-2">
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-lg font-black">Performance Chart</CardTitle>
-                  <CardDescription className="text-[10px] font-bold uppercase tracking-wider">Metrics over time</CardDescription>
+                  <CardTitle className="text-lg font-black text-foreground">Performance Chart</CardTitle>
+                  <CardDescription className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Metrics over time</CardDescription>
                 </div>
                 {stats && stats.weightTrend !== 0 && (
-                  <Badge variant={stats.weightTrend > 0 ? 'default' : 'destructive'} className="rounded-full h-6 px-3">
+                  <Badge variant={stats.weightTrend > 0 ? 'default' : 'destructive'} className="rounded-full h-7 px-4 font-black uppercase tracking-widest text-[9px]">
                     {stats.weightTrend > 0 ? '+' : ''}{stats.weightTrend}kg Trend
                   </Badge>
                 )}
@@ -242,11 +244,11 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="weight" className="w-full">
-                <TabsList className="grid grid-cols-4 w-full h-10 rounded-xl bg-slate-100/50">
-                  <TabsTrigger value="weight" className="text-[10px] font-black uppercase rounded-lg">Weight</TabsTrigger>
-                  <TabsTrigger value="reps" className="text-[10px] font-black uppercase rounded-lg">Reps</TabsTrigger>
-                  <TabsTrigger value="volume" className="text-[10px] font-black uppercase rounded-lg">Volume</TabsTrigger>
-                  <TabsTrigger value="e1RM" className="text-[10px] font-black uppercase rounded-lg">1RM</TabsTrigger>
+                <TabsList className="grid grid-cols-4 w-full h-11 rounded-2xl bg-muted/30 p-1">
+                  <TabsTrigger value="weight" className="text-[9px] font-black uppercase tracking-widest rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-sm">Weight</TabsTrigger>
+                  <TabsTrigger value="reps" className="text-[9px] font-black uppercase tracking-widest rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-sm">Reps</TabsTrigger>
+                  <TabsTrigger value="volume" className="text-[9px] font-black uppercase tracking-widest rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-sm">Vol</TabsTrigger>
+                  <TabsTrigger value="e1RM" className="text-[9px] font-black uppercase tracking-widest rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-sm">1RM</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="weight">{renderChart('weight', 'Max Weight', 'kg')}</TabsContent>
@@ -257,11 +259,11 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
                     <TooltipProvider>
                       <UITooltip>
                         <TooltipTrigger asChild>
-                          <Button variant="ghost" size="icon" className="absolute top-0 right-0 h-8 w-8 text-muted-foreground">
+                          <Button variant="ghost" size="icon" className="absolute top-0 right-0 h-9 w-9 text-muted-foreground bg-muted/20 rounded-full">
                             <Info className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-[200px] text-[10px] leading-relaxed">
+                        <TooltipContent className="max-w-[200px] text-[10px] font-bold leading-relaxed bg-popover text-popover-foreground border-border/50">
                           <p>Estimated 1RM is calculated using the Epley formula: Weight × (1 + Reps/30). Only valid for sets with 1-10 reps.</p>
                         </TooltipContent>
                       </UITooltip>
@@ -271,12 +273,12 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
                 </TabsContent>
               </Tabs>
 
-              <div className="mt-6 pt-6 border-t border-dashed flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary/5 flex items-center justify-center text-primary">
+              <div className="mt-8 pt-8 border-t border-dashed border-border/60 flex items-center gap-4">
+                <div className="h-11 w-11 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
                   <Calendar className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-slate-600">
+                  <p className="text-xs font-black text-foreground uppercase tracking-widest">
                     {history.length > 0 
                       ? `Last logged: ${new Date(history[history.length - 1].date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}`
                       : 'No workouts recorded yet'}
