@@ -1,13 +1,14 @@
 
 /**
  * @fileOverview SERVER-SIDE ONLY flow for parsing workout data.
- * This file is part of the remote parsing service and is NOT bundled with the mobile app.
+ * This file handles text extraction from PDFs, Word docs, and Excel files,
+ * then uses Genkit to structure it into a routine.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-// These imports are safe because this file is only executed in a Node environment (Model 2 Parsing Service)
+// Imports below are safe because this file is only executed in a Node environment
 import pdf from 'pdf-parse';
 import * as XLSX from 'xlsx';
 import mammoth from 'mammoth';
@@ -26,7 +27,7 @@ const ImportedExerciseSchema = z.object({
 
 const ImportedRoutineDaySchema = z.object({
   id: z.string(),
-  name: z.string().describe('The name of the workout day (e.g., "Push", "Dag 1").'),
+  name: z.string().describe('The name of the workout day (e.g., "Push", "Day 1").'),
   confidence: z.number(),
   exercises: z.array(ImportedExerciseSchema),
 });
@@ -49,34 +50,36 @@ const ParseWorkoutFileInputSchema = z.object({
 export type ParseWorkoutFileInput = z.infer<typeof ParseWorkoutFileInputSchema>;
 
 /**
- * Main entry point for the parsing logic (to be called by an API endpoint).
+ * Main entry point for the parsing logic.
+ * Extracts raw text from binary formats before sending to the LLM.
  */
 export async function parseWorkoutFile(input: ParseWorkoutFileInput): Promise<ParseWorkoutFileOutput> {
   const { fileBase64, fileName, mimeType } = input;
-
   let extractedText = '';
   let isImage = false;
 
   const buffer = Buffer.from(fileBase64, 'base64');
 
-  if (mimeType === 'application/pdf') {
-    const pdfData = await pdf(buffer);
-    extractedText = pdfData.text;
-  } else if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv' || fileName.endsWith('.ods')) {
-    const workbook = XLSX.read(buffer, { type: 'buffer' });
-    const firstSheetName = workbook.SheetNames[0];
-    extractedText = XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheetName]);
-  } else if (mimeType.includes('word') || mimeType.includes('officedocument.wordprocessingml.document')) {
-    const docResult = await mammoth.extractRawText({ buffer });
-    extractedText = docResult.value;
-  } else if (mimeType.startsWith('image/')) {
-    isImage = true;
-  } else {
-    try {
+  try {
+    if (mimeType === 'application/pdf') {
+      const pdfData = await pdf(buffer);
+      extractedText = pdfData.text;
+    } else if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv' || fileName.endsWith('.ods')) {
+      const workbook = XLSX.read(buffer, { type: 'buffer' });
+      const firstSheetName = workbook.SheetNames[0];
+      extractedText = XLSX.utils.sheet_to_csv(workbook.Sheets[firstSheetName]);
+    } else if (mimeType.includes('word') || mimeType.includes('officedocument.wordprocessingml.document')) {
+      const docResult = await mammoth.extractRawText({ buffer });
+      extractedText = docResult.value;
+    } else if (mimeType.startsWith('image/')) {
+      isImage = true;
+    } else {
       extractedText = buffer.toString('utf-8');
-    } catch (e) {
-      extractedText = '';
     }
+  } catch (e) {
+    console.error('Text extraction failed:', e);
+    // Fallback to image-only parsing if the file is an image, otherwise error
+    if (!isImage) throw new Error('Could not extract text from file.');
   }
 
   return parseWorkoutFileFlow({
@@ -112,10 +115,12 @@ The user has provided an image of their workout plan:
 
 Rules:
 1. Identify the workout name/title.
-2. Group exercises into logical 'days' or 'sessions' if present.
+2. Group exercises into logical 'days' or 'sessions' (e.g., Day 1, Upper, Lower, Push).
 3. For each exercise, identify: name, sets, and reps (or duration for timed holds).
-4. Set 'needsReview' to true if the data is ambiguous.
-5. Provide a confidence score for each item.`,
+4. If a value is missing (e.g., reps), leave it null but flag 'needsReview' as true.
+5. Set 'needsReview' to true if the data is ambiguous or hard to read.
+6. Provide a confidence score (0.0 to 1.0) for each day and exercise.
+7. List any text that looks like an exercise but lacks clear sets/reps in 'unmatchedItems'.`,
 });
 
 const parseWorkoutFileFlow = ai.defineFlow(

@@ -1,7 +1,7 @@
 
 /**
  * @fileOverview Client for the remote workout parsing service.
- * Separates AI logic from the mobile app bundle.
+ * Separates AI logic from the mobile app bundle to keep the APK lightweight.
  */
 
 export interface ParsedExercise {
@@ -35,11 +35,10 @@ export interface ParsingRequest {
 
 /**
  * Calls the external parsing service. 
- * Note: In a production Capacitor app, this would be an absolute URL to your hosted API.
  */
 export async function callParsingService(request: ParsingRequest): Promise<ParsingResponse> {
-  // Use the window location as a base if running in a web context, 
-  // or a configured API URL for the mobile app.
+  // Use a configurable URL or default to the internal API route
+  // Note: For bundled Capacitor, this must be an absolute URL pointing to your deployed server.
   const API_URL = process.env.NEXT_PUBLIC_PARSING_SERVICE_URL || '/api/parse-workout';
 
   try {
@@ -53,7 +52,7 @@ export async function callParsingService(request: ParsingRequest): Promise<Parsi
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Parsing service returned ${response.status}`);
+      throw new Error(errorData.message || `Parsing service error (${response.status})`);
     }
 
     return await response.json();
