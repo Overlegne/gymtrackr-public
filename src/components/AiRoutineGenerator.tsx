@@ -18,7 +18,6 @@ export function AiRoutineGenerator() {
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      // We pass some dummy preferences for now, but in a real app these could come from user input
       const result = await getAiGeneratedRoutineSuggestion({
         muscleGroupFocus: ['Borst', 'Rug'],
         equipmentAvailable: ['Halter', 'Barbell', 'Machine']
@@ -38,10 +37,8 @@ export function AiRoutineGenerator() {
   const handleAddRoutine = () => {
     if (!suggestion) return;
     
-    // Get all current exercises to check for matches
     const allExercises = getExercises();
     
-    // Map AI exercises to our database IDs where possible, otherwise use new ones
     const mappedExercises = suggestion.exercises.map((ex, i) => {
       const existing = allExercises.find(e => e.name.toLowerCase() === ex.name.toLowerCase());
       return existing || {

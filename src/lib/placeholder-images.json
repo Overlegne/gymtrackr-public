@@ -2,63 +2,99 @@
   "placeholderImages": [
     {
       "id": "bench-press",
-      "description": "Iemand die een bench press uitvoert in de gym",
-      "imageUrl": "https://picsum.photos/seed/bench/600/400",
+      "description": "Barbell Bench Press voor borsttraining",
+      "imageUrl": "https://picsum.photos/seed/bench1/600/400",
       "imageHint": "bench press"
     },
     {
-      "id": "squat",
-      "description": "Iemand die een barbell squat uitvoert",
-      "imageUrl": "https://picsum.photos/seed/squat/600/400",
-      "imageHint": "barbell squat"
-    },
-    {
-      "id": "deadlift",
-      "description": "Een deadlift uitvoering",
-      "imageUrl": "https://picsum.photos/seed/deadlift/600/400",
-      "imageHint": "deadlift gym"
-    },
-    {
-      "id": "lat-pulldown",
-      "description": "Lat pulldown machine gebruik",
-      "imageUrl": "https://picsum.photos/seed/lat/600/400",
-      "imageHint": "lat pulldown"
-    },
-    {
-      "id": "shoulder-press",
-      "description": "Dumbbell shoulder press",
-      "imageUrl": "https://picsum.photos/seed/shoulder/600/400",
-      "imageHint": "shoulder press"
-    },
-    {
-      "id": "bicep-curl",
-      "description": "Bicep curl met dumbbells",
-      "imageUrl": "https://picsum.photos/seed/bicep/600/400",
-      "imageHint": "bicep curl"
-    },
-    {
-      "id": "tricep-ext",
-      "description": "Cable tricep extension",
-      "imageUrl": "https://picsum.photos/seed/tricep/600/400",
-      "imageHint": "tricep extension"
-    },
-    {
-      "id": "leg-press",
-      "description": "Leg press machine",
-      "imageUrl": "https://picsum.photos/seed/legpress/600/400",
-      "imageHint": "leg press"
+      "id": "incline-press",
+      "description": "Incline Dumbbell Press voor bovenkant borst",
+      "imageUrl": "https://picsum.photos/seed/incline/600/400",
+      "imageHint": "incline dumbbell press"
     },
     {
       "id": "chest-fly",
-      "description": "Dumbbell chest fly",
-      "imageUrl": "https://picsum.photos/seed/chestfly/600/400",
+      "description": "Dumbbell Chest Fly voor borstisolatie",
+      "imageUrl": "https://picsum.photos/seed/chestfly1/600/400",
       "imageHint": "chest fly"
     },
     {
+      "id": "squat",
+      "description": "Barbell Squat voor krachtige benen",
+      "imageUrl": "https://picsum.photos/seed/squat1/600/400",
+      "imageHint": "barbell squat"
+    },
+    {
+      "id": "lunges",
+      "description": "Dumbbell Lunges voor balans en benen",
+      "imageUrl": "https://picsum.photos/seed/lunges/600/400",
+      "imageHint": "lunges exercise"
+    },
+    {
+      "id": "deadlift",
+      "description": "Conventional Deadlift voor de gehele achterketen",
+      "imageUrl": "https://picsum.photos/seed/deadlift1/600/400",
+      "imageHint": "deadlift exercise"
+    },
+    {
+      "id": "lat-pulldown",
+      "description": "Wide Grip Lat Pulldown voor een brede rug",
+      "imageUrl": "https://picsum.photos/seed/lat1/600/400",
+      "imageHint": "lat pulldown"
+    },
+    {
       "id": "seated-row",
-      "description": "Seated cable row",
-      "imageUrl": "https://picsum.photos/seed/row/600/400",
-      "imageHint": "seated row"
+      "description": "Seated Cable Row voor rugdikte",
+      "imageUrl": "https://picsum.photos/seed/row1/600/400",
+      "imageHint": "seated cable row"
+    },
+    {
+      "id": "pull-ups",
+      "description": "Bodyweight Pull-ups voor kracht",
+      "imageUrl": "https://picsum.photos/seed/pullup/600/400",
+      "imageHint": "pull ups"
+    },
+    {
+      "id": "shoulder-press",
+      "description": "Overhead Barbell Press voor schouders",
+      "imageUrl": "https://picsum.photos/seed/shoulder1/600/400",
+      "imageHint": "shoulder press"
+    },
+    {
+      "id": "lateral-raise",
+      "description": "Dumbbell Lateral Raise voor zijkant schouders",
+      "imageUrl": "https://picsum.photos/seed/lateral/600/400",
+      "imageHint": "lateral raise"
+    },
+    {
+      "id": "bicep-curl",
+      "description": "Dumbbell Bicep Curls",
+      "imageUrl": "https://picsum.photos/seed/bicep1/600/400",
+      "imageHint": "bicep curl"
+    },
+    {
+      "id": "tricep-pushdown",
+      "description": "Cable Tricep Pushdown",
+      "imageUrl": "https://picsum.photos/seed/tricep1/600/400",
+      "imageHint": "tricep pushdown"
+    },
+    {
+      "id": "leg-press",
+      "description": "Seated Leg Press machine",
+      "imageUrl": "https://picsum.photos/seed/legpress1/600/400",
+      "imageHint": "leg press"
+    },
+    {
+      "id": "plank",
+      "description": "Core stability plank",
+      "imageUrl": "https://picsum.photos/seed/plank/600/400",
+      "imageHint": "plank exercise"
+    },
+    {
+      "id": "leg-raise",
+      "description": "Hanging Leg Raises voor buikspieren",
+      "imageUrl": "https://picsum.photos/seed/legraise/600/400",
+      "imageHint": "leg raise"
     }
   ]
 }
