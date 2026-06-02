@@ -1,0 +1,79 @@
+"use client"
+
+import { useState } from 'react';
+import { BottomNav } from '@/components/BottomNav';
+import { EXERCISES, type MuscleGroup, type Equipment } from '@/lib/store';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Search, Filter, ChevronRight } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+
+export default function ExercisesPage() {
+  const [search, setSearch] = useState('');
+  const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'Alle'>('Alle');
+
+  const muscleGroups: (MuscleGroup | 'Alle')[] = ['Alle', 'Borst', 'Rug', 'Benen', 'Schouders', 'Armen', 'Buik'];
+
+  const filtered = EXERCISES.filter(ex => {
+    const matchesSearch = ex.name.toLowerCase().includes(search.toLowerCase());
+    const matchesMuscle = selectedMuscle === 'Alle' || ex.muscleGroup === selectedMuscle;
+    return matchesSearch && matchesMuscle;
+  });
+
+  return (
+    <div className="p-5 space-y-6">
+      <header className="py-4">
+        <h1 className="text-2xl font-bold">Oefeningen</h1>
+        <p className="text-muted-foreground text-sm">Vind de juiste oefening voor je training.</p>
+      </header>
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input 
+          placeholder="Zoek oefening..." 
+          className="pl-10 rounded-xl"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      <div className="flex overflow-x-auto gap-2 pb-2 no-scrollbar">
+        {muscleGroups.map(muscle => (
+          <Badge 
+            key={muscle}
+            variant={selectedMuscle === muscle ? 'default' : 'outline'}
+            className="cursor-pointer whitespace-nowrap px-4 py-1.5 rounded-full"
+            onClick={() => setSelectedMuscle(muscle)}
+          >
+            {muscle}
+          </Badge>
+        ))}
+      </div>
+
+      <div className="space-y-3">
+        {filtered.map(ex => (
+          <Card key={ex.id} className="card-hover">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div>
+                <h3 className="font-bold">{ex.name}</h3>
+                <div className="flex gap-2 mt-1">
+                  <span className="text-[10px] text-primary uppercase font-bold tracking-wider">{ex.muscleGroup}</span>
+                  <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">•</span>
+                  <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{ex.equipment}</span>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </CardContent>
+          </Card>
+        ))}
+        {filtered.length === 0 && (
+          <div className="text-center py-10">
+            <p className="text-muted-foreground">Geen oefeningen gevonden.</p>
+          </div>
+        )}
+      </div>
+
+      <BottomNav />
+    </div>
+  );
+}

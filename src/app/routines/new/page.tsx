@@ -1,0 +1,180 @@
+"use client"
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { EXERCISES, saveRoutine, type Exercise } from '@/lib/store';
+import { ChevronLeft, Plus, Search, Trash2, Check, Dumbbell } from 'lucide-react';
+import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+
+export default function NewRoutinePage() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [name, setName] = useState('');
+  const [selectedExercises, setSelectedExercises] = useState<Exercise[]>([]);
+  const [search, setSearch] = useState('');
+  const [showPicker, setShowPicker] = useState(false);
+
+  const handleSave = () => {
+    if (!name) {
+      toast({ variant: "destructive", title: "Naam vereist", description: "Geef je routine een naam." });
+      return;
+    }
+    if (selectedExercises.length === 0) {
+      toast({ variant: "destructive", title: "Oefeningen vereist", description: "Voeg minimaal één oefening toe." });
+      return;
+    }
+
+    saveRoutine({
+      id: Date.now().toString(),
+      name,
+      exercises: selectedExercises
+    });
+
+    toast({ title: "Routine opgeslagen!", description: `"${name}" is nu beschikbaar.` });
+    router.push('/routines');
+  };
+
+  const filteredExercises = EXERCISES.filter(ex => 
+    ex.name.toLowerCase().includes(search.toLowerCase()) &&
+    !selectedExercises.find(s => s.id === ex.id)
+  );
+
+  return (
+    <div className="flex flex-col min-h-screen bg-background">
+      <header className="sticky top-0 z-20 bg-white border-b px-5 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link href="/routines">
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <ChevronLeft className="h-6 w-6" />
+            </Button>
+          </Link>
+          <h1 className="text-xl font-bold">Nieuwe Routine</h1>
+        </div>
+        <Button onClick={handleSave} className="bg-primary text-white font-bold rounded-xl px-6">
+          Opslaan
+        </Button>
+      </header>
+
+      <div className="p-5 space-y-6">
+        <div className="space-y-2">
+          <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Naam van routine</label>
+          <Input 
+            placeholder="bijv. Borst & Rug Focus" 
+            className="text-lg font-bold h-14 rounded-2xl bg-white shadow-sm border-none px-5"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Oefeningen ({selectedExercises.length})</h2>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowPicker(true)}
+              className="text-primary border-primary rounded-full px-4"
+            >
+              <Plus className="h-4 w-4 mr-1" /> Toevoegen
+            </Button>
+          </div>
+
+          <div className="space-y-3">
+            {selectedExercises.map((ex, index) => (
+              <Card key={ex.id} className="border-none shadow-sm card-hover">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                      <Dumbbell className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold">{ex.name}</h3>
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
+                        {ex.defaultSets} sets • {ex.defaultReps} reps
+                      </p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="text-destructive hover:bg-destructive/10"
+                    onClick={() => setSelectedExercises(prev => prev.filter(e => e.id !== ex.id))}
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+
+            {selectedExercises.length === 0 && (
+              <div 
+                onClick={() => setShowPicker(true)}
+                className="py-12 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center text-muted-foreground cursor-pointer hover:bg-primary/5 transition-colors"
+              >
+                <Plus className="h-8 w-8 mb-2 opacity-50" />
+                <p className="font-medium">Klik om oefeningen te kiezen</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Picker Modal Overlay */}
+      {showPicker && (
+        <div className="fixed inset-0 z-50 bg-black/50 animate-in fade-in duration-200">
+          <div className="absolute inset-x-0 bottom-0 h-[80vh] bg-background rounded-t-[2.5rem] flex flex-col p-6 shadow-2xl animate-in slide-in-from-bottom duration-300">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Kies Oefening</h2>
+              <Button variant="ghost" className="font-bold text-primary" onClick={() => setShowPicker(false)}>Klaar</Button>
+            </div>
+
+            <div className="relative mb-6">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Zoek oefening..." 
+                className="pl-10 h-12 rounded-xl bg-muted/50 border-none"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-3 no-scrollbar pb-10">
+              {filteredExercises.map(ex => (
+                <Card 
+                  key={ex.id} 
+                  className="border-none shadow-sm active:bg-primary/5 cursor-pointer"
+                  onClick={() => {
+                    setSelectedExercises(prev => [...prev, ex]);
+                  }}
+                >
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold">{ex.name}</h3>
+                      <div className="flex gap-2 mt-1">
+                        <Badge variant="secondary" className="text-[9px] uppercase tracking-wider">{ex.muscleGroup}</Badge>
+                        <Badge variant="outline" className="text-[9px] uppercase tracking-wider">{ex.equipment}</Badge>
+                      </div>
+                    </div>
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <Plus className="h-5 w-5" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {filteredExercises.length === 0 && (
+                <div className="text-center py-20 text-muted-foreground italic">
+                  Geen ongebruikte oefeningen gevonden.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
