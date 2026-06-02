@@ -6,7 +6,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { getExercises, getExerciseStats, updateExercise, type Exercise, type MuscleGroup } from '@/lib/store';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ChevronRight, History, Dumbbell, Target, Edit, Upload, Link as LinkIcon, Check } from 'lucide-react';
+import { Search, ChevronRight, History, Dumbbell, Target, Edit, Upload, Link as LinkIcon, Check, TrendingUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { AddExerciseDialog } from '@/components/AddExerciseDialog';
 import {
@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function ExercisesPage() {
   const { toast } = useToast();
@@ -280,6 +281,13 @@ export default function ExercisesPage() {
 
                 {!isEditingImage && (
                   <>
+                    <Link href={`/exercises/${selectedExercise.id}/progress`} className="block">
+                      <Button className="w-full rounded-2xl h-14 font-black uppercase tracking-widest gap-2 bg-primary text-white shadow-lg hover:bg-primary/90 transition-all active:scale-95">
+                        <TrendingUp className="h-5 w-5" />
+                        View Progress
+                      </Button>
+                    </Link>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-muted/30 p-4 rounded-2xl border flex flex-col items-center justify-center text-center gap-2">
                         <Target className="h-5 w-5 text-primary" />
@@ -298,13 +306,13 @@ export default function ExercisesPage() {
                     </div>
 
                     <div className="space-y-3">
-                      <h4 className="font-bold flex items-center gap-2">
-                        <History className="h-4 w-4 text-primary" />
-                        Performance History
+                      <h4 className="font-bold flex items-center gap-2 text-primary">
+                        <History className="h-4 w-4" />
+                        Last Performance
                       </h4>
                       {loggedSets.length > 0 ? (
                         <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 space-y-3">
-                          <p className="text-xs text-muted-foreground font-medium border-b pb-2">Last recorded workout values:</p>
+                          <p className="text-xs text-muted-foreground font-medium border-b pb-2">Your last recorded values:</p>
                           {loggedSets.map((set) => (
                             <div key={set.index} className="flex justify-between items-center text-sm">
                               <span className="font-bold text-muted-foreground">Set {set.index + 1}</span>
@@ -321,12 +329,6 @@ export default function ExercisesPage() {
                           <p className="text-sm text-muted-foreground italic">No history logged yet. Complete a workout to see your progress here!</p>
                         </div>
                       )}
-                    </div>
-
-                    <div className="pt-2">
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        Tip: Focus on progressive overload. Try to slightly increase the weight or reps compared to your previous session to see constant improvement.
-                      </p>
                     </div>
                   </>
                 )}

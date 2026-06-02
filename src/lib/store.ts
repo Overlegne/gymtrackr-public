@@ -24,6 +24,15 @@ export interface ExerciseStats {
   sets: { [setIndex: string]: SetStats };
 }
 
+export interface HistoryPoint {
+  date: string;
+  weight: number;
+  reps: number;
+  sets: number;
+  volume: number;
+  e1RM: number;
+}
+
 export interface RoutineExercise extends Exercise {
   sets: {
     reps: number;
@@ -73,59 +82,41 @@ export function normalizeExerciseName(name: string): string {
 
 /**
  * Deterministic mapping of exercises to stable image seeds/hints.
- * Maps normalized names/IDs to specific descriptive seeds.
  */
 const exerciseImageMap: Record<string, string> = {
-  // Chest
   barbell_bench_press: 'bench_press',
   dumbbell_bench_press: 'dumbbell_press',
   incline_barbell_bench_press: 'incline_bench',
   pec_deck: 'pec_deck_machine',
   chest_dips: 'chest_dips',
   push_ups: 'push_ups',
-  
-  // Back
   barbell_deadlift: 'deadlift',
   barbell_row: 'bent_over_row',
   pull_up: 'pull_up',
   wide_grip_pulldown: 'lat_pulldown',
   seated_cable_row: 'cable_row',
   hyperextensions: 'back_extension',
-
-  // Legs
   barbell_squat: 'barbell_squat',
   leg_press: 'leg_press_machine',
   leg_extension: 'leg_extension_machine',
   lying_leg_curl: 'leg_curl_machine',
   romanian_deadlift: 'romanian_deadlift',
   calf_raise_standing: 'calf_raise',
-
-  // Shoulders
   dumbbell_shoulder_press: 'shoulder_press',
   dumbbell_lateral_raise: 'lateral_raise',
   face_pull: 'face_pull_cable',
   arnold_press: 'arnold_press',
-
-  // Arms
   barbell_curl: 'bicep_curl',
   triceps_pressdown: 'tricep_pushdown',
   skull_crushers: 'skull_crusher_tricep',
   hammer_curl: 'hammer_curl',
-
-  // Abs
   plank: 'plank_core',
   crunch: 'abs_crunch',
   hanging_leg_raise: 'hanging_leg_raise',
-
-  // Cardio
   running_treadmill: 'treadmill_running',
   burpees: 'burpees_exercise',
 };
 
-/**
- * Category-based fallback images for items without exact matches.
- * Uses Equipment + Muscle Group pattern.
- */
 const categoryFallbackMap: Record<string, string> = {
   'Chest_Barbell': 'barbell_chest_generic',
   'Chest_Dumbbell': 'dumbbell_chest_generic',
@@ -140,12 +131,6 @@ const categoryFallbackMap: Record<string, string> = {
   'Cardio_Bodyweight': 'cardio_generic',
 };
 
-/**
- * Gets the most appropriate image URL for an exercise based on strict priority.
- * 1. Exact slug/ID match
- * 2. Exact name match
- * 3. Category fallback (Equipment + Muscle Group)
- */
 export function getExerciseImage(
   name: string,
   id: string,
@@ -155,7 +140,6 @@ export function getExerciseImage(
   const normalizedId = normalizeExerciseName(id);
   const normalizedName = normalizeExerciseName(name);
 
-  // 1. Check for exact ID/Slug match
   if (exerciseImageMap[normalizedId]) {
     return {
       url: `https://picsum.photos/seed/${exerciseImageMap[normalizedId]}/600/400`,
@@ -163,7 +147,6 @@ export function getExerciseImage(
     };
   }
 
-  // 2. Check for exact Name match
   if (exerciseImageMap[normalizedName]) {
     return {
       url: `https://picsum.photos/seed/${exerciseImageMap[normalizedName]}/600/400`,
@@ -171,7 +154,6 @@ export function getExerciseImage(
     };
   }
 
-  // 3. Fallback to category-specific image
   const fallbackKey = `${muscleGroup}_${equipment}`;
   const fallbackSeed = categoryFallbackMap[fallbackKey] || normalizeExerciseName(`${muscleGroup}_${equipment}`);
   
@@ -223,6 +205,7 @@ const EXERCISES_KEY = 'user_exercises_v15';
 const STATS_KEY = 'exercise_stats_v11';
 const ROUTINES_KEY = 'user_routines_v11';
 const LOGS_KEY = 'workout_logs_v5';
+const HISTORY_KEY = 'exercise_history_v1';
 
 export const getExercises = (): Exercise[] => {
   if (typeof window === 'undefined') return DEFAULT_EXERCISES;
@@ -266,19 +249,70 @@ export const getExerciseStats = (exerciseId: string): ExerciseStats => {
 export const saveAllWorkoutStats = (exercises: RoutineExercise[]) => {
   if (typeof window === 'undefined') return;
   const allStats = JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
+  const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '{}');
+  const date = new Date().toLocaleDateString('en-CA');
   
   exercises.forEach(ex => {
+    // Current Best Stats
     if (!allStats[ex.id]) {
       allStats[ex.id] = { sets: {} };
     }
+    
+    // Calculate best metrics for this workout session
+    let maxWeight = 0;
+    let maxReps = 0;
+    let totalVolume = 0;
+    let bestE1RM = 0;
+    let validSets = 0;
+
     ex.sets.forEach((set, idx) => {
       if (set.completed || set.weight > 0 || set.reps > 0) {
+        // Update current bests per set index
         allStats[ex.id].sets[idx.toString()] = { weight: set.weight, reps: set.reps };
+        
+        // Tracking for history
+        maxWeight = Math.max(maxWeight, set.weight);
+        maxReps = Math.max(maxReps, set.reps);
+        totalVolume += (set.weight * set.reps);
+        validSets++;
+
+        // Epley 1RM Formula: w * (1 + r/30)
+        if (set.reps >= 1 && set.reps <= 10 && set.weight > 0) {
+          const e1rm = set.weight * (1 + set.reps / 30);
+          bestE1RM = Math.max(bestE1RM, e1rm);
+        }
       }
     });
+
+    // Save historical data if any sets were performed
+    if (validSets > 0) {
+      if (!history[ex.id]) history[ex.id] = [];
+      const historyPoint: HistoryPoint = {
+        date,
+        weight: maxWeight,
+        reps: maxReps,
+        sets: validSets,
+        volume: totalVolume,
+        e1RM: bestE1RM
+      };
+      // Only keep one entry per day per exercise (latest)
+      const existingIdx = history[ex.id].findIndex((p: HistoryPoint) => p.date === date);
+      if (existingIdx > -1) {
+        history[ex.id][existingIdx] = historyPoint;
+      } else {
+        history[ex.id].push(historyPoint);
+      }
+    }
   });
   
   localStorage.setItem(STATS_KEY, JSON.stringify(allStats));
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+};
+
+export const getExerciseHistory = (exerciseId: string): HistoryPoint[] => {
+  if (typeof window === 'undefined') return [];
+  const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '{}');
+  return history[exerciseId] || [];
 };
 
 export const getRoutines = (): Routine[] => {
