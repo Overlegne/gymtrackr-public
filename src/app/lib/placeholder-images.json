@@ -1,20 +1,14 @@
 
 {
   "placeholderImages": [
-    { "id": "bench-press", "description": "Barbell Bench Press", "imageUrl": "https://picsum.photos/seed/bench1/600/400", "imageHint": "bench press" },
-    { "id": "inc-bench", "description": "Incline Barbell Bench Press", "imageUrl": "https://picsum.photos/seed/incbench/600/400", "imageHint": "incline bench press" },
-    { "id": "db-bench", "description": "Dumbbell Bench Press", "imageUrl": "https://picsum.photos/seed/dbbench/600/400", "imageHint": "dumbbell bench" },
-    { "id": "flys", "description": "Dumbbell Chest Flys", "imageUrl": "https://picsum.photos/seed/flys/600/400", "imageHint": "chest flys" },
-    { "id": "squat", "description": "Barbell Squat", "imageUrl": "https://picsum.photos/seed/squat1/600/400", "imageHint": "barbell squat" },
-    { "id": "deadlift", "description": "Conventional Deadlift", "imageUrl": "https://picsum.photos/seed/deadlift1/600/400", "imageHint": "deadlift exercise" },
-    { "id": "rdl", "description": "Romanian Deadlift", "imageUrl": "https://picsum.photos/seed/rdl/600/400", "imageHint": "romanian deadlift" },
-    { "id": "row", "description": "Bent Over Barbell Row", "imageUrl": "https://picsum.photos/seed/row1/600/400", "imageHint": "barbell row" },
-    { "id": "lat-pulldown", "description": "Lat Pulldown Machine", "imageUrl": "https://picsum.photos/seed/lat1/600/400", "imageHint": "lat pulldown" },
-    { "id": "overhead-press", "description": "Overhead Barbell Press", "imageUrl": "https://picsum.photos/seed/shoulder1/600/400", "imageHint": "overhead press" },
-    { "id": "lateral-raise", "description": "Dumbbell Lateral Raise", "imageUrl": "https://picsum.photos/seed/lateral/600/400", "imageHint": "lateral raise" },
-    { "id": "bicep-curl", "description": "Barbell Bicep Curl", "imageUrl": "https://picsum.photos/seed/bicep1/600/400", "imageHint": "bicep curl" },
-    { "id": "tricep-pushdown", "description": "Tricep Cable Pushdown", "imageUrl": "https://picsum.photos/seed/tricep1/600/400", "imageHint": "tricep pushdown" },
-    { "id": "plank", "description": "Core Plank", "imageUrl": "https://picsum.photos/seed/plank/600/400", "imageHint": "plank exercise" },
-    { "id": "run", "description": "Treadmill Running", "imageUrl": "https://picsum.photos/seed/run/600/400", "imageHint": "treadmill run" }
+    { "id": "bench", "description": "Barbell Bench Press", "imageUrl": "https://picsum.photos/seed/bench/600/400", "imageHint": "bench press" },
+    { "id": "squat", "description": "Barbell Squat", "imageUrl": "https://picsum.photos/seed/squat/600/400", "imageHint": "barbell squat" },
+    { "id": "deadlift", "description": "Conventional Deadlift", "imageUrl": "https://picsum.photos/seed/deadlift/600/400", "imageHint": "deadlift" },
+    { "id": "shoulder", "description": "Shoulder Press", "imageUrl": "https://picsum.photos/seed/shoulder/600/400", "imageHint": "shoulder press" },
+    { "id": "bicep", "description": "Bicep Curl", "imageUrl": "https://picsum.photos/seed/bicep/600/400", "imageHint": "bicep curl" },
+    { "id": "tricep", "description": "Tricep Extension", "imageUrl": "https://picsum.photos/seed/tricep/600/400", "imageHint": "tricep pushdown" },
+    { "id": "back", "description": "Lat Pulldown", "imageUrl": "https://picsum.photos/seed/back/600/400", "imageHint": "lat pulldown" },
+    { "id": "abs", "description": "Core Exercise", "imageUrl": "https://picsum.photos/seed/abs/600/400", "imageHint": "abs workout" },
+    { "id": "cardio", "description": "Cardio Training", "imageUrl": "https://picsum.photos/seed/cardio/600/400", "imageHint": "running treadmill" }
   ]
 }

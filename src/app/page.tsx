@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from 'react';
@@ -5,8 +6,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getRoutines, type Routine } from '@/lib/store';
-import { Play, Calendar, Trophy, ArrowRight } from 'lucide-react';
-import { AiRoutineGenerator } from '@/components/AiRoutineGenerator';
+import { Play, Calendar, Trophy, ArrowRight, Dumbbell } from 'lucide-react';
 import Link from 'next/link';
 
 export default function HomePage() {
@@ -54,7 +54,7 @@ export default function HomePage() {
         </div>
         
         <div className="space-y-3">
-          {routines.slice(0, 2).map((routine) => (
+          {routines.slice(0, 3).map((routine) => (
             <Card key={routine.id} className="card-hover">
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
@@ -80,7 +80,20 @@ export default function HomePage() {
         </div>
       </section>
 
-      <AiRoutineGenerator />
+      <section className="bg-muted/30 p-6 rounded-3xl space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+            <Dumbbell className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="font-bold">Ontdek oefeningen</h3>
+            <p className="text-xs text-muted-foreground">Bekijk onze database met {getExercises().length}+ oefeningen.</p>
+          </div>
+        </div>
+        <Link href="/exercises" className="block">
+          <Button variant="outline" className="w-full rounded-xl">Oefeningen bekijken</Button>
+        </Link>
+      </section>
 
       <BottomNav />
     </div>
