@@ -77,10 +77,33 @@ const aiGeneratedRoutineSuggestionFlow = ai.defineFlow(
     outputSchema: AiGeneratedRoutineSuggestionOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
-    if (!output) {
-      throw new Error('Failed to generate routine suggestion.');
+    let attempts = 0;
+    const maxAttempts = 3;
+    let lastError;
+
+    while (attempts < maxAttempts) {
+      try {
+        const { output } = await prompt(input);
+        if (!output) {
+          throw new Error('Failed to generate routine suggestion.');
+        }
+        return output;
+      } catch (err: any) {
+        lastError = err;
+        const isRetryable = err.message?.includes('503') || 
+                           err.message?.includes('high demand') || 
+                           err.message?.includes('UNAVAILABLE');
+
+        if (isRetryable) {
+          attempts++;
+          if (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
+            continue;
+          }
+        }
+        throw err;
+      }
     }
-    return output;
+    throw lastError;
   }
 );

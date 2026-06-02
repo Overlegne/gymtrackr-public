@@ -91,13 +91,38 @@ const parseWorkoutPdfFlow = ai.defineFlow(
     outputSchema: ParseWorkoutPdfOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
-    if (!output) {
-      throw new Error('Failed to parse workout data from text.');
+    let attempts = 0;
+    const maxAttempts = 3;
+    let lastError;
+
+    while (attempts < maxAttempts) {
+      try {
+        const { output } = await prompt(input);
+        if (!output) {
+          throw new Error('Failed to parse workout data from text.');
+        }
+        return {
+          ...output,
+          sourceFileName: input.fileName,
+        };
+      } catch (err: any) {
+        lastError = err;
+        // Check for 503 or high demand errors
+        const isRetryable = err.message?.includes('503') || 
+                           err.message?.includes('high demand') || 
+                           err.message?.includes('UNAVAILABLE');
+        
+        if (isRetryable) {
+          attempts++;
+          if (attempts < maxAttempts) {
+            // Wait with exponential backoff (2s, 4s)
+            await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
+            continue;
+          }
+        }
+        throw err;
+      }
     }
-    return {
-      ...output,
-      sourceFileName: input.fileName,
-    };
+    throw lastError;
   }
 );
