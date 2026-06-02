@@ -13,6 +13,12 @@ export interface Exercise {
   defaultReps: number;
   imageUrl: string;
   imageNeedsReview?: boolean;
+  // Extended Metadata
+  secondaryMuscles?: string[];
+  description?: string;
+  cues?: string[];
+  alternatives?: { name: string; id: string }[];
+  mistakes?: string[];
 }
 
 export interface SetStats {
@@ -81,8 +87,39 @@ export function normalizeExerciseName(name: string): string {
 }
 
 /**
- * Deterministic mapping of exercises to stable image seeds/hints.
+ * Coaching Cues and Metadata Database
  */
+const getCoachingData = (name: string, equipment: Equipment, muscle: MuscleGroup) => {
+  const n = name.toLowerCase();
+  const data: Partial<Exercise> = {
+    cues: ["Control the movement", "Full range of motion", "Brace your core"],
+    alternatives: [],
+    mistakes: ["Using momentum", "Short range of motion"]
+  };
+
+  if (n.includes('bench press')) {
+    data.cues = ["Keep chest up", "Retract shoulder blades", "Stack wrists under elbows", "Drive through heels"];
+    data.alternatives = n.includes('barbell') 
+      ? [{ name: "Dumbbell Bench Press", id: "dumbbell_bench_press" }] 
+      : [{ name: "Barbell Bench Press", id: "barbell_bench_press" }];
+    data.secondaryMuscles = ["Triceps", "Front Deltoids"];
+  } else if (n.includes('squat')) {
+    data.cues = ["Keep chest proud", "Drive knees outward", "Core braced", "Weight on heels"];
+    data.alternatives = [{ name: "Leg Press", id: "leg_press" }];
+    data.secondaryMuscles = ["Glutes", "Lower Back", "Adductors"];
+  } else if (n.includes('deadlift')) {
+    data.cues = ["Flat back", "Keep bar close to body", "Push the floor away", "Lock out at top"];
+    data.alternatives = [{ name: "Romanian Deadlift", id: "romanian_deadlift" }];
+    data.secondaryMuscles = ["Hamstrings", "Glutes", "Traps", "Forearms"];
+  } else if (n.includes('row')) {
+    data.cues = ["Pull to hips", "Squeeze shoulder blades", "Avoid torso rock", "Full stretch at bottom"];
+    data.alternatives = [{ name: "Lat Pulldown", id: "wide_grip_pulldown" }];
+    data.secondaryMuscles = ["Biceps", "Rear Deltoids", "Lower Back"];
+  }
+
+  return data;
+};
+
 const exerciseImageMap: Record<string, string> = {
   barbell_bench_press: 'bench_press',
   dumbbell_bench_press: 'dumbbell_press',
@@ -188,6 +225,7 @@ export const DEFAULT_EXERCISES: Exercise[] = (exercisesData.exercises as any[]).
   const muscleGroup = mapBodyPart(ex.body_part);
   const equipment = determineEquipment(ex.canonical_name);
   const imageData = getExerciseImage(ex.canonical_name, ex.id, muscleGroup, equipment);
+  const coaching = getCoachingData(ex.canonical_name, equipment, muscleGroup);
 
   return {
     id: ex.id,
@@ -197,7 +235,8 @@ export const DEFAULT_EXERCISES: Exercise[] = (exercisesData.exercises as any[]).
     defaultSets: 3,
     defaultReps: 12,
     imageUrl: imageData.url,
-    imageNeedsReview: imageData.needsReview
+    imageNeedsReview: imageData.needsReview,
+    ...coaching
   };
 });
 
@@ -220,8 +259,10 @@ export const getExercises = (): Exercise[] => {
 export const addExercise = (exercise: Omit<Exercise, 'id' | 'imageUrl'>) => {
   const exercises = getExercises();
   const imageData = getExerciseImage(exercise.name, '', exercise.muscleGroup, exercise.equipment);
+  const coaching = getCoachingData(exercise.name, exercise.equipment, exercise.muscleGroup);
   const newExercise: Exercise = {
     ...exercise,
+    ...coaching,
     id: Date.now().toString(),
     imageUrl: imageData.url,
     imageNeedsReview: imageData.needsReview
