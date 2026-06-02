@@ -3,23 +3,28 @@
 
 import { BottomNav } from '@/components/BottomNav';
 import { WorkoutCalendar } from '@/components/WorkoutCalendar';
+import { ChevronLeft } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export default function ActivityPage() {
   return (
-    <div className="p-5 space-y-6">
-      <header className="py-4">
-        <h1 className="text-2xl font-bold">Activity</h1>
-        <p className="text-muted-foreground text-sm">Track your workout history and consistency.</p>
+    <div className="flex flex-col min-h-screen bg-slate-50/50">
+      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b px-5 py-6 flex items-center gap-4">
+        <Link href="/">
+          <Button variant="ghost" size="icon" className="rounded-full bg-slate-50">
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-2xl font-black tracking-tight">Your Activity</h1>
+          <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Training History</p>
+        </div>
       </header>
 
-      <WorkoutCalendar />
-
-      <div className="bg-muted/30 p-5 rounded-2xl border">
-        <h3 className="font-bold text-sm mb-2">Did you know?</h3>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          Consistent training is key to long-term progress. Use this calendar to keep an eye on your weekly volume and rest days.
-        </p>
-      </div>
+      <main className="flex-1 p-5 pb-32">
+        <WorkoutCalendar />
+      </main>
 
       <BottomNav />
     </div>
