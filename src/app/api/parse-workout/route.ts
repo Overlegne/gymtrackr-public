@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { parseWorkoutFile } from '@/ai/flows/parse-workout-file';
 
@@ -7,6 +6,8 @@ import { parseWorkoutFile } from '@/ai/flows/parse-workout-file';
  * This route is intended to run on a Node.js server (e.g., Vercel, Cloud Run).
  * It is NOT included in the static Capacitor bundle.
  */
+
+export const maxDuration = 60; // Increase timeout to 60 seconds for AI processing
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,6 +31,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(result);
   } catch (error: any) {
     console.error('Parsing API Error:', error);
+    
+    // Check for specific Genkit or downstream timeout errors
+    if (error.message?.includes('DEADLINE_EXCEEDED') || error.message?.includes('timeout')) {
+      return NextResponse.json(
+        { 
+          message: 'The AI service took too long to respond. Please try again with a smaller file or clearer text.', 
+          details: error.message 
+        },
+        { status: 504 }
+      );
+    }
+
     return NextResponse.json(
       { 
         message: 'Internal parsing error', 

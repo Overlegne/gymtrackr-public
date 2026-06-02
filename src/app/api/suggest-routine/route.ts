@@ -6,6 +6,8 @@ import { getAiGeneratedRoutineSuggestion } from '@/ai/flows/ai-generated-routine
  * This route is intended to run on a Node.js server.
  */
 
+export const maxDuration = 60; // Increase timeout to 60 seconds
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
