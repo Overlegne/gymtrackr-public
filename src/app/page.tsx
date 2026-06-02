@@ -47,14 +47,14 @@ export default function HomePage() {
 
       <section className="space-y-4">
         <div className="flex justify-between items-end">
-          <h2 className="text-xl font-bold">Recent Routines</h2>
+          <h2 className="text-xl font-bold">My Routines</h2>
           <Link href="/routines" className="text-sm text-primary font-medium flex items-center gap-1">
-            Show all <ArrowRight className="h-4 w-4" />
+            Manage <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
         
         <div className="space-y-3">
-          {routines.slice(0, 3).map((routine) => (
+          {routines.map((routine) => (
             <Card key={routine.id} className="card-hover border-l-4" style={{ borderLeftColor: routine.color || '#8b5cf6' }}>
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
