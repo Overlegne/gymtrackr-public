@@ -152,17 +152,45 @@ const parseWorkoutFileFlow = ai.defineFlow(
       ? `data:${input.mimeType};base64,${input.fileBase64}` 
       : undefined;
 
-    const { output } = await prompt({
-      extractedText: input.extractedText,
-      fileName: input.fileName,
-      imageDataUri,
-    });
-    
-    if (!output) throw new Error('Failed to parse workout data.');
-    
-    return {
-      ...output,
-      sourceFileName: input.fileName,
-    };
+    let attempts = 0;
+    const maxAttempts = 3;
+    let lastError;
+
+    while (attempts < maxAttempts) {
+      try {
+        const { output } = await prompt({
+          extractedText: input.extractedText,
+          fileName: input.fileName,
+          imageDataUri,
+        });
+        
+        if (!output) throw new Error('Failed to parse workout data.');
+        
+        return {
+          ...output,
+          sourceFileName: input.fileName,
+        };
+      } catch (err: any) {
+        lastError = err;
+        const message = err.message || '';
+        const isRetryable = message.includes('429') || 
+                           message.includes('RESOURCE_EXHAUSTED') ||
+                           message.includes('503') || 
+                           message.includes('high demand') || 
+                           message.includes('UNAVAILABLE') ||
+                           message.includes('DEADLINE_EXCEEDED');
+
+        if (isRetryable) {
+          attempts++;
+          if (attempts < maxAttempts) {
+            // Exponential backoff
+            await new Promise(resolve => setTimeout(resolve, 2000 * attempts));
+            continue;
+          }
+        }
+        throw err;
+      }
+    }
+    throw lastError;
   }
 );

@@ -97,10 +97,13 @@ const aiGeneratedRoutineSuggestionFlow = ai.defineFlow(
         return output;
       } catch (err: any) {
         lastError = err;
-        const isRetryable = err.message?.includes('503') || 
-                           err.message?.includes('high demand') || 
-                           err.message?.includes('UNAVAILABLE') ||
-                           err.message?.includes('DEADLINE_EXCEEDED');
+        const message = err.message || '';
+        const isRetryable = message.includes('429') || 
+                           message.includes('RESOURCE_EXHAUSTED') ||
+                           message.includes('503') || 
+                           message.includes('high demand') || 
+                           message.includes('UNAVAILABLE') ||
+                           message.includes('DEADLINE_EXCEEDED');
 
         if (isRetryable) {
           attempts++;
