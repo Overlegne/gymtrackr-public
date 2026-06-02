@@ -115,7 +115,7 @@ export default function WorkoutSummaryPage() {
                       <TrendingUp className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="font-black text-sm text-foreground">{rec}</p>
+                      <p className="font-black text-xs text-foreground leading-tight">{rec}</p>
                       <p className="text-[9px] font-black uppercase text-primary tracking-widest">New Personal Milestone</p>
                     </div>
                   </div>
@@ -128,7 +128,7 @@ export default function WorkoutSummaryPage() {
                       <Trophy className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="font-black text-sm text-foreground">{rec}</p>
+                      <p className="font-black text-xs text-foreground leading-tight">{rec}</p>
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{ex.name}</p>
                     </div>
                   </div>

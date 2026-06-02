@@ -1,5 +1,6 @@
 
 import exercisesData from './exercises.json';
+import { getSettings } from './settings-store';
 
 export type MuscleGroup = 'Chest' | 'Back' | 'Legs' | 'Shoulders' | 'Arms' | 'Abs' | 'Cardio';
 export type Equipment = 'Dumbbell' | 'Barbell' | 'Machine' | 'Cable' | 'Bodyweight';
@@ -390,6 +391,8 @@ export const saveAllWorkoutStats = (exercises: RoutineExercise[]): WorkoutSummar
   const allStats = JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
   const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '{}');
   const date = new Date().toLocaleDateString('en-CA');
+  const settings = getSettings();
+  const unitLabel = settings.unitSystem === 'Metric' ? 'kg' : 'lb';
   
   const summary: WorkoutSummaryData = {
     routineName: '',
@@ -407,7 +410,6 @@ export const saveAllWorkoutStats = (exercises: RoutineExercise[]): WorkoutSummar
   const muscleCounts: Record<string, number> = {};
 
   exercises.forEach(ex => {
-    const exStats = allStats[ex.id] || { sets: {} };
     const exHistory = history[ex.id] || [];
     
     let maxWeight = 0;
@@ -452,9 +454,24 @@ export const saveAllWorkoutStats = (exercises: RoutineExercise[]): WorkoutSummar
       muscleCounts[ex.muscleGroup] = (muscleCounts[ex.muscleGroup] || 0) + validSets;
 
       // Detect Records
-      if (maxWeight > prevBestWeight && maxWeight > 0) exerciseRecords.push('New Max Weight');
-      if (totalVolume > prevBestVolume && totalVolume > 0) exerciseRecords.push('New Exercise Volume');
-      if (bestE1RM > prevBestE1RM && bestE1RM > 0) exerciseRecords.push('New Best e1RM');
+      if (maxWeight > prevBestWeight && maxWeight > 0) {
+        const delta = maxWeight - prevBestWeight;
+        const val = kgToDisplay(maxWeight, settings.unitSystem);
+        const d = kgToDisplay(delta, settings.unitSystem);
+        exerciseRecords.push(`New Max Weight: ${val}${unitLabel} (+${d}${unitLabel})`);
+      }
+      if (totalVolume > prevBestVolume && totalVolume > 0) {
+        const delta = totalVolume - prevBestVolume;
+        const val = Math.round(kgToDisplay(totalVolume, settings.unitSystem));
+        const d = Math.round(kgToDisplay(delta, settings.unitSystem));
+        exerciseRecords.push(`New Volume PR: ${val}${unitLabel} (+${d}${unitLabel})`);
+      }
+      if (bestE1RM > prevBestE1RM && bestE1RM > 0) {
+        const delta = bestE1RM - prevBestE1RM;
+        const val = Math.round(kgToDisplay(bestE1RM, settings.unitSystem));
+        const d = Math.round(kgToDisplay(delta, settings.unitSystem));
+        exerciseRecords.push(`New Best 1RM: ${val}${unitLabel} (+${d}${unitLabel})`);
+      }
 
       summary.exercises.push({
         id: ex.id,
@@ -493,7 +510,10 @@ export const saveAllWorkoutStats = (exercises: RoutineExercise[]): WorkoutSummar
   const allLogs = getWorkoutLogs();
   const prevMaxTotalVolume = Math.max(...allLogs.map(l => l.totalVolume || 0), 0);
   if (summary.totalVolume > prevMaxTotalVolume && allLogs.length > 0) {
-    summary.globalRecords.push('New Total Volume PR');
+    const delta = summary.totalVolume - prevMaxTotalVolume;
+    const val = Math.round(kgToDisplay(summary.totalVolume, settings.unitSystem));
+    const d = Math.round(kgToDisplay(delta, settings.unitSystem));
+    summary.globalRecords.push(`New Total Volume PR: ${val}${unitLabel} (+${d}${unitLabel})`);
   }
 
   // Calculate Muscle Split
