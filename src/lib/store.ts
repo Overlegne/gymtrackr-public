@@ -96,6 +96,14 @@ export interface WorkoutSummaryData {
   globalRecords: string[];
 }
 
+export type PlateauStatus = 'Progressing' | 'Stable' | 'Plateau';
+
+export interface PlateauAnalysis {
+  status: PlateauStatus;
+  reason: string;
+  suggestions: string[];
+}
+
 export const ROUTINE_COLORS = [
   { name: 'Strength Violet', value: '#8b5cf6' },
   { name: 'Energetic Blue', value: '#3b82f6' },
@@ -535,6 +543,48 @@ export const getExerciseHistory = (exerciseId: string): HistoryPoint[] => {
   if (typeof window === 'undefined') return [];
   const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '{}');
   return history[exerciseId] || [];
+};
+
+export const detectPlateau = (exerciseId: string): PlateauAnalysis => {
+  const history = getExerciseHistory(exerciseId);
+  if (history.length < 4) {
+    return { status: 'Progressing', reason: 'Collecting initial data...', suggestions: [] };
+  }
+
+  const recent = history.slice(-3);
+  const previous = history[history.length - 4];
+
+  // Logic: Compare the best performance in the last 3 sessions against the session before that
+  const maxWeightRecent = Math.max(...recent.map(h => h.weight));
+  const maxVolumeRecent = Math.max(...recent.map(h => h.volume));
+  const maxE1RMRecent = Math.max(...recent.map(h => h.e1RM));
+  const maxDurationRecent = Math.max(...recent.map(h => h.durationSeconds || 0));
+
+  // Thresholds for "meaningful progress" (e.g. 1% increase)
+  const isProgressing = 
+    maxWeightRecent > previous.weight * 1.01 || 
+    maxE1RMRecent > previous.e1RM * 1.01 ||
+    maxVolumeRecent > previous.volume * 1.01 ||
+    (previous.durationSeconds && maxDurationRecent > previous.durationSeconds * 1.01);
+
+  if (isProgressing) {
+    return { status: 'Progressing', reason: 'You are consistently hitting new personal records.', suggestions: [] };
+  }
+
+  // If flat for exactly 3 sessions, it's a plateau
+  const suggestions = [
+    "Increase your rep target by 2-3 per set while keeping weight constant.",
+    "Try adding one extra high-intensity working set to your routine.",
+    "Swap this exercise for a close variation (e.g., Incline vs Flat) for 4 weeks.",
+    "Slow down the eccentric (lowering) phase to 3 seconds for better recruitment.",
+    "Decrease weight by 10% and focus on explosive power and perfect form."
+  ];
+
+  return { 
+    status: 'Plateau', 
+    reason: `Your performance on this exercise has been stagnant for ${recent.length} sessions.`, 
+    suggestions: suggestions.sort(() => 0.5 - Math.random()).slice(0, 2)
+  };
 };
 
 export const getRoutines = (): Routine[] => {

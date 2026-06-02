@@ -3,10 +3,18 @@
 
 import { use, useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { getExercises, getExerciseHistory, kgToDisplay, type HistoryPoint, type Exercise } from '@/lib/store';
+import { 
+  getExercises, 
+  getExerciseHistory, 
+  kgToDisplay, 
+  detectPlateau,
+  type HistoryPoint, 
+  type Exercise,
+  type PlateauAnalysis
+} from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ChevronLeft, TrendingUp, Calendar, Info } from 'lucide-react';
+import { ChevronLeft, TrendingUp, Calendar, Info, AlertCircle, Lightbulb, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import {
   XAxis,
@@ -26,16 +34,17 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getSettings } from '@/lib/settings-store';
+import { cn } from '@/lib/utils';
 
 type TimeRange = '30d' | '90d' | '1y' | 'all';
 
 export default function ExerciseProgressPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const router = useRouter();
   const [timeRange, setTimeRange] = useState<TimeRange>('90d');
   const [isMounted, setIsMounted] = useState(false);
   const [exercise, setExercise] = useState<Exercise | null>(null);
   const [history, setHistory] = useState<HistoryPoint[]>([]);
+  const [plateau, setPlateau] = useState<PlateauAnalysis | null>(null);
 
   const settings = useMemo(() => getSettings(), []);
   const unitLabel = settings.unitSystem === 'Metric' ? 'kg' : 'lb';
@@ -48,6 +57,7 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
     }
     const exerciseHistory = getExerciseHistory(id).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     setHistory(exerciseHistory);
+    setPlateau(detectPlateau(id));
   }, [id]);
 
   const filteredHistory = useMemo(() => {
@@ -242,6 +252,55 @@ export default function ExerciseProgressPage({ params }: { params: Promise<{ id:
               </CardContent>
             </Card>
           </div>
+        )}
+
+        {/* Plateau Detection Section */}
+        {plateau && (
+          <Card className={cn(
+            "border-none shadow-lg rounded-[2rem] overflow-hidden ring-1 transition-all duration-500",
+            plateau.status === 'Plateau' ? "bg-amber-500/5 ring-amber-500/20" : "bg-primary/5 ring-primary/10"
+          )}>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {plateau.status === 'Plateau' ? (
+                    <AlertCircle className="h-5 w-5 text-amber-500" />
+                  ) : (
+                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                  )}
+                  <CardTitle className="text-lg font-black text-foreground">Progress Analysis</CardTitle>
+                </div>
+                <Badge variant={plateau.status === 'Plateau' ? 'destructive' : 'default'} className={cn(
+                  "rounded-full text-[9px] font-black uppercase tracking-widest px-3",
+                  plateau.status === 'Plateau' ? "bg-amber-500" : "bg-primary"
+                )}>
+                  {plateau.status === 'Plateau' ? 'Plateau Detected' : 'Progressing'}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm font-semibold text-muted-foreground leading-relaxed italic">
+                {plateau.reason}
+              </p>
+              
+              {plateau.suggestions.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-foreground">
+                    <Lightbulb className="h-4 w-4 text-amber-500" />
+                    How to Break Through:
+                  </div>
+                  <div className="grid gap-2">
+                    {plateau.suggestions.map((tip, i) => (
+                      <div key={i} className="bg-card p-3 rounded-2xl border border-border/50 text-[11px] font-bold text-muted-foreground flex gap-3 items-start group hover:border-amber-500/30 transition-colors">
+                        <span className="text-amber-500 font-black">0{i+1}</span>
+                        <span>{tip}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         <div className="space-y-4">
