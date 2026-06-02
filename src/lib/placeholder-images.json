@@ -7,10 +7,16 @@
       "imageHint": "bench press"
     },
     {
+      "id": "dumbbell-press",
+      "description": "Flat Dumbbell Press",
+      "imageUrl": "https://picsum.photos/seed/dbpress/600/400",
+      "imageHint": "dumbbell press"
+    },
+    {
       "id": "incline-press",
       "description": "Incline Dumbbell Press voor bovenkant borst",
       "imageUrl": "https://picsum.photos/seed/incline/600/400",
-      "imageHint": "incline dumbbell press"
+      "imageHint": "incline press"
     },
     {
       "id": "chest-fly",
@@ -25,20 +31,32 @@
       "imageHint": "barbell squat"
     },
     {
-      "id": "lunges",
-      "description": "Dumbbell Lunges voor balans en benen",
-      "imageUrl": "https://picsum.photos/seed/lunges/600/400",
-      "imageHint": "lunges exercise"
+      "id": "leg-press",
+      "description": "Seated Leg Press machine",
+      "imageUrl": "https://picsum.photos/seed/legpress1/600/400",
+      "imageHint": "leg press"
+    },
+    {
+      "id": "leg-extension",
+      "description": "Leg Extensions voor quads",
+      "imageUrl": "https://picsum.photos/seed/legext/600/400",
+      "imageHint": "leg extension"
     },
     {
       "id": "deadlift",
-      "description": "Conventional Deadlift voor de gehele achterketen",
+      "description": "Conventional Deadlift",
       "imageUrl": "https://picsum.photos/seed/deadlift1/600/400",
       "imageHint": "deadlift exercise"
     },
     {
+      "id": "romanian-deadlift",
+      "description": "Romanian Deadlift voor hamstrings",
+      "imageUrl": "https://picsum.photos/seed/rdl/600/400",
+      "imageHint": "romanian deadlift"
+    },
+    {
       "id": "lat-pulldown",
-      "description": "Wide Grip Lat Pulldown voor een brede rug",
+      "description": "Wide Grip Lat Pulldown",
       "imageUrl": "https://picsum.photos/seed/lat1/600/400",
       "imageHint": "lat pulldown"
     },
@@ -46,23 +64,23 @@
       "id": "seated-row",
       "description": "Seated Cable Row voor rugdikte",
       "imageUrl": "https://picsum.photos/seed/row1/600/400",
-      "imageHint": "seated cable row"
+      "imageHint": "cable row"
     },
     {
       "id": "pull-ups",
-      "description": "Bodyweight Pull-ups voor kracht",
+      "description": "Bodyweight Pull-ups",
       "imageUrl": "https://picsum.photos/seed/pullup/600/400",
       "imageHint": "pull ups"
     },
     {
-      "id": "shoulder-press",
-      "description": "Overhead Barbell Press voor schouders",
+      "id": "overhead-press",
+      "description": "Overhead Barbell Press",
       "imageUrl": "https://picsum.photos/seed/shoulder1/600/400",
-      "imageHint": "shoulder press"
+      "imageHint": "overhead press"
     },
     {
       "id": "lateral-raise",
-      "description": "Dumbbell Lateral Raise voor zijkant schouders",
+      "description": "Dumbbell Lateral Raise",
       "imageUrl": "https://picsum.photos/seed/lateral/600/400",
       "imageHint": "lateral raise"
     },
@@ -73,16 +91,22 @@
       "imageHint": "bicep curl"
     },
     {
+      "id": "hammer-curl",
+      "description": "Dumbbell Hammer Curls",
+      "imageUrl": "https://picsum.photos/seed/hammer/600/400",
+      "imageHint": "hammer curl"
+    },
+    {
       "id": "tricep-pushdown",
       "description": "Cable Tricep Pushdown",
       "imageUrl": "https://picsum.photos/seed/tricep1/600/400",
       "imageHint": "tricep pushdown"
     },
     {
-      "id": "leg-press",
-      "description": "Seated Leg Press machine",
-      "imageUrl": "https://picsum.photos/seed/legpress1/600/400",
-      "imageHint": "leg press"
+      "id": "skull-crusher",
+      "description": "EZ Bar Skull Crushers",
+      "imageUrl": "https://picsum.photos/seed/skull/600/400",
+      "imageHint": "skull crusher"
     },
     {
       "id": "plank",
@@ -92,7 +116,7 @@
     },
     {
       "id": "leg-raise",
-      "description": "Hanging Leg Raises voor buikspieren",
+      "description": "Hanging Leg Raises",
       "imageUrl": "https://picsum.photos/seed/legraise/600/400",
       "imageHint": "leg raise"
     }
