@@ -36,14 +36,12 @@ The project is intended to stay simple and practical for day-to-day workout logg
 3. Sync the Android project with `npx cap sync android` after web changes or plugin updates.
 4. Build a debug APK from the `android/` directory with `./gradlew assembleDebug`, or open the native project in Android Studio.
 
-## Android notes
-
-Adaptive and legacy launcher icons can be created in Android Studio's Image Asset Studio, which supports foreground and background layers for launcher icons.
-When using Capacitor assets, the icon and splash workflow relies on generated native resource files for Android.
+Or just install the ready made APK.
+    
 
 ## Repository structure
 
-```text
+```
 .
 ├─ android/
 ├─ app/ or src/
@@ -53,7 +51,6 @@ When using Capacitor assets, the icon and splash workflow relies on generated na
 └─ README.md
 ```
 
-The exact web app structure may vary, but the Android project lives in `android/` and is updated from the web project through Capacitor sync commands.
 ## Build commands
 
 ```bash
